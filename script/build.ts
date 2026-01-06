@@ -1,0 +1,66 @@
+import { build as esbuild } from "esbuild";
+import { build as viteBuild } from "vite";
+import { rm, readFile } from "fs/promises";
+
+// backend deps to bundle to reduce openat(2) syscalls
+// which helps cold start times
+const allowlist = [
+  "@google/generative-ai",
+  "@neondatabase/serverless",
+  "axios",
+  "connect-pg-simple",
+  "cors",
+  "date-fns",
+  "drizzle-orm",
+  "drizzle-zod",
+  "express",
+  "express-rate-limit",
+  "express-session",
+  "jsonwebtoken",
+  "memorystore",
+  "multer",
+  "nanoid",
+  "nodemailer",
+  "openai",
+  "passport",
+  "passport-local",
+  "stripe",
+  "uuid",
+  "ws",
+  "xlsx",
+  "zod",
+  "zod-validation-error",
+];
+
+async function buildAll() {
+  await rm("dist", { recursive: true, force: true });
+
+  await viteBuild();
+
+  const pkg = JSON.parse(await readFile("package.json", "utf-8"));
+  const allDeps = [
+    ...Object.keys(pkg.dependencies || {}),
+    ...Object.keys(pkg.devDependencies || {}),
+  ];
+  const externals = allDeps.filter((dep) => !allowlist.includes(dep));
+await esbuild({
+    entryPoints: ["backend/index.ts"],
+    platform: "node",
+    bundle: true,
+    format: "esm",
+    outfile: "dist/index.mjs",
+    define: {
+      "process.env.NODE_ENV": '"production"',
+    },
+banner: {
+      js: "import { createRequire } from 'module';import { fileURLToPath } from 'url';import { dirname } from 'path';const require = createRequire(import.meta.url);const __filename = fileURLToPath(import.meta.url);const __dirname = dirname(__filename);",
+    },
+    minify: true,
+    external: externals,
+    logLevel: "info",
+  });
+}
+
+buildAll().catch((err) => {
+  process.exit(1);
+});

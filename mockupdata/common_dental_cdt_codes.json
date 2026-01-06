@@ -1,0 +1,454 @@
+{
+  "success": true,
+  "data": {
+    "general": {
+      "benefits": [
+        {
+          "service": "Dental - Preventive",
+          "status": "active",
+          "percentageCovered": "100",
+          "copayAmount": "$0"
+        },
+        {
+          "service": "Dental - Basic",
+          "status": "active",
+          "percentageCovered": "80",
+          "copayAmount": "$25"
+        },
+        {
+          "service": "Dental - Major",
+          "status": "active",
+          "percentageCovered": "50",
+          "copayAmount": "$100"
+        }
+      ]
+    },
+    "procedures": [
+      {
+        "code": "D0120",
+        "description": "Periodic oral evaluation",
+        "category": "Preventive",
+        "benefit": {
+          "percentageCovered": "100"
+        }
+      },
+      {
+        "code": "D0140",
+        "description": "Limited oral evaluation",
+        "category": "Preventive",
+        "benefit": {
+          "percentageCovered": "100"
+        }
+      },
+      {
+        "code": "D0150",
+        "description": "Comprehensive oral evaluation",
+        "category": "Preventive",
+        "benefit": {
+          "percentageCovered": "100"
+        }
+      },
+      {
+        "code": "D1110",
+        "description": "Adult prophylaxis (cleaning)",
+        "category": "Preventive",
+        "benefit": {
+          "percentageCovered": "100"
+        }
+      },
+      {
+        "code": "D1120",
+        "description": "Child prophylaxis",
+        "category": "Preventive",
+        "benefit": {
+          "percentageCovered": "100"
+        }
+      },
+      {
+        "code": "D1206",
+        "description": "Topical fluoride varnish",
+        "category": "Preventive",
+        "benefit": {
+          "percentageCovered": "100"
+        }
+      },
+      {
+        "code": "D1208",
+        "description": "Topical fluoride gel",
+        "category": "Preventive",
+        "benefit": {
+          "percentageCovered": "100"
+        }
+      },
+      {
+        "code": "D1351",
+        "description": "Sealant - per tooth",
+        "category": "Preventive",
+        "benefit": {
+          "percentageCovered": "100"
+        }
+      },
+      {
+        "code": "D0210",
+        "description": "Intraoral - complete series of radiographs",
+        "category": "Radiographs",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D0220",
+        "description": "Intraoral - periapical first film",
+        "category": "Radiographs",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D0230",
+        "description": "Intraoral - periapical each additional film",
+        "category": "Radiographs",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D0270",
+        "description": "Bitewing - single film",
+        "category": "Radiographs",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D0272",
+        "description": "Bitewing - two films",
+        "category": "Radiographs",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D0273",
+        "description": "Bitewing - three films",
+        "category": "Radiographs",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D0274",
+        "description": "Bitewing - four films",
+        "category": "Radiographs",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D0330",
+        "description": "Panoramic film",
+        "category": "Radiographs",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2140",
+        "description": "Amalgam - one surface",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2150",
+        "description": "Amalgam - two surfaces",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2160",
+        "description": "Amalgam - three surfaces",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2330",
+        "description": "Resin - one surface, anterior",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2331",
+        "description": "Resin - two surfaces, anterior",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2332",
+        "description": "Resin - three surfaces, anterior",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2391",
+        "description": "Resin - one surface, posterior",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2392",
+        "description": "Resin - two surfaces, posterior",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2393",
+        "description": "Resin - three surfaces, posterior",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2740",
+        "description": "Crown - porcelain/ceramic",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2750",
+        "description": "Crown - porcelain fused to high noble metal",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2920",
+        "description": "Re-cement or re-bond crown",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D2930",
+        "description": "Prefabricated stainless steel crown - primary tooth",
+        "category": "Restorative",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D3310",
+        "description": "Endodontic therapy - anterior tooth",
+        "category": "Endodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D3320",
+        "description": "Endodontic therapy - premolar",
+        "category": "Endodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D3330",
+        "description": "Endodontic therapy - molar",
+        "category": "Endodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D4341",
+        "description": "Periodontal scaling - four or more teeth per quadrant",
+        "category": "Periodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D4342",
+        "description": "Periodontal scaling - one to three teeth per quadrant",
+        "category": "Periodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D4910",
+        "description": "Periodontal maintenance",
+        "category": "Periodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D5110",
+        "description": "Complete denture - maxillary",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D5120",
+        "description": "Complete denture - mandibular",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D5130",
+        "description": "Immediate denture - maxillary",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D5140",
+        "description": "Immediate denture - mandibular",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D5211",
+        "description": "Maxillary partial denture - one tooth",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D5212",
+        "description": "Maxillary partial denture - two teeth",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D5213",
+        "description": "Maxillary partial denture - three teeth",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D5221",
+        "description": "Mandibular partial denture - one tooth",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D5222",
+        "description": "Mandibular partial denture - two teeth",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D5223",
+        "description": "Mandibular partial denture - three teeth",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D6240",
+        "description": "Pontic - porcelain/ceramic",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D6250",
+        "description": "Pontic - porcelain fused to high noble metal",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D6750",
+        "description": "Crown - porcelain fused to high noble metal",
+        "category": "Prosthodontics",
+        "benefit": {
+          "percentageCovered": "50"
+        }
+      },
+      {
+        "code": "D7960",
+        "description": "Frenulectomy - separate procedure",
+        "category": "Miscellaneous",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D9110",
+        "description": "Palliative treatment - emergency",
+        "category": "Miscellaneous",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D9430",
+        "description": "Office visit - post-op",
+        "category": "Miscellaneous",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D9610",
+        "description": "Therapeutic parenteral medications",
+        "category": "Miscellaneous",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      },
+      {
+        "code": "D9920",
+        "description": "Behavior management",
+        "category": "Miscellaneous",
+        "benefit": {
+          "percentageCovered": "80"
+        }
+      }
+    ]
+  },
+  "note": "Common dental CDT codes with mock benefit coverage data"
+}

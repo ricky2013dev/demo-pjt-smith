@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Table Design</title>
+    <style>
+        /* General Page Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            padding: 40px;
+        }
+
+        /* Table Styling */
+        .project-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .project-table thead {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        .project-table th, .project-table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .project-table tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .project-table tbody tr:last-of-type td {
+            border-bottom: 2px solid #2c3e50;
+        }
+
+        /* --- THE PROGRESS STEPPER CSS --- */
+        
+        .progress-wrapper {
+            min-width: 200px; /* Ensure it doesn't get too squished */
+        }
+
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 4px; /* Space between segments */
+        }
+
+        .step {
+            flex-grow: 1;
+            height: 8px;
+            background-color: #e0e0e0; /* Default Gray */
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Completed Step (Green) */
+        .step.completed {
+            background-color: #27ae60;
+        }
+
+        /* Active Step (Blue with Pulse) */
+        .step.active {
+            background-color: #3498db;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.6);
+        }
+
+        /* Tooltip Logic */
+        .step:hover::after {
+            content: attr(data-title); /* Grabs text from HTML */
+            position: absolute;
+            bottom: 140%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            z-index: 10;
+            opacity: 0;
+            animation: fadeIn 0.2s forwards;
+        }
+        
+        /* Tooltip Arrow */
+        .step:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+            opacity: 0;
+            animation: fadeIn 0.2s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Text Label for current status */
+        .status-text {
+            display: block;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h2>Order Progress Tracker</h2>
+
+    <table class="project-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Client Name</th>
+                <th>Project</th>
+                <th>Progress (5 Stages)</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>#1001</td>
+                <td>Acme Corp</td>
+                <td>Website Redesign</td>
+                <td>
+                    <div class="progress-wrapper">
+                        <div class="steps-container">
+                            <div class="step active" data-title="Planning"></div>
+                            <div class="step" data-title="Design"></div>
+                            <div class="step" data-title="Development"></div>
+                            <div class="step" data-title="Testing"></div>
+                            <div class="step" data-title="Launch"></div>
+                        </div>
+                        <span class="status-text">Planning</span>
+                    </div>
+                </td>
+                <td><button>View</button></td>
+            </tr>
+
+            <tr>
+                <td>#1002</td>
+                <td>John Doe</td>
+                <td>Mobile App</td>
+                <td>
+                    <div class="progress-wrapper">
+                        <div class="steps-container">
+                            <div class="step completed" data-title="Planning"></div>
+                            <div class="step completed" data-title="Design"></div>
+                            <div class="step active" data-title="Development"></div>
+                            <div class="step" data-title="Testing"></div>
+                            <div class="step" data-title="Launch"></div>
+                        </div>
+                        <span class="status-text">Development</span>
+                    </div>
+                </td>
+                <td><button>View</button></td>
+            </tr>
+
+            <tr>
+                <td>#1003</td>
+                <td>Sarah Smith</td>
+                <td>Logo Design</td>
+                <td>
+                    <div class="progress-wrapper">
+                        <div class="steps-container">
+                            <div class="step completed" data-title="Planning"></div>
+                            <div class="step completed" data-title="Design"></div>
+                            <div class="step completed" data-title="Development"></div>
+                            <div class="step completed" data-title="Testing"></div>
+                            <div class="step completed" data-title="Launch"></div>
+                        </div>
+                        <span class="status-text" style="color:#27ae60;">Completed</span>
+                    </div>
+                </td>
+                <td><button>View</button></td>
+            </tr>
+            
+            <tr>
+                <td>#1004</td>
+                <td>Beta Inc</td>
+                <td>SEO Audit</td>
+                <td>
+                    <div class="progress-wrapper">
+                        <div class="steps-container">
+                            <div class="step completed" data-title="Initiation"></div>
+                            <div class="step active" data-title="Analysis"></div>
+                            <div class="step" data-title="Strategy"></div>
+                            <div class="step" data-title="Implementation"></div>
+                            <div class="step" data-title="Reporting"></div>
+                        </div>
+                        <span class="status-text">Analysis</span>
+                    </div>
+                </td>
+                <td><button>View</button></td>
+            </tr>
+
+            <tr>
+                <td>#1005</td>
+                <td>Gamma LLC</td>
+                <td>Migration</td>
+                <td>
+                    <div class="progress-wrapper">
+                        <div class="steps-container">
+                            <div class="step completed" data-title="Audit"></div>
+                            <div class="step completed" data-title="Backup"></div>
+                            <div class="step completed" data-title="Transfer"></div>
+                            <div class="step active" data-title="Verification"></div>
+                            <div class="step" data-title="Live"></div>
+                        </div>
+                        <span class="status-text">Verification</span>
+                    </div>
+                </td>
+                <td><button>View</button></td>
+            </tr>
+            
+            </tbody>
+    </table>
+
+</body>
+</html>

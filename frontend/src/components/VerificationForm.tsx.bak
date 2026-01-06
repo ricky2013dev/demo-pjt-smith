@@ -1,0 +1,1630 @@
+import React, { useRef, useState } from "react";
+import { Patient } from "../types/patient";
+
+interface VerificationFormProps {
+  patient: Patient;
+}
+
+// Dummy data for the verification form
+const dummyVerificationData = {
+  // Patient Information - will be overridden by parent component data
+  patientSSN: "123-45-6789",
+  relationshipToSubscriber: "Self",
+
+  // Subscriber Information
+  subscriberName: "John Smith",
+  subscriberSSN: "987-65-4321",
+  subscriberDOB: "01/15/1975",
+  subscriberID: "SUB123456789",
+
+  // Insurance Information
+  insuranceCompany: "Blue Cross Blue Shield",
+  insurerType: { primary: true, secondary: false },
+  insuranceAddress: "123 Insurance Way, Chicago, IL 60601",
+  insurancePhone: "(800) 555-1234",
+  employer: "ABC Corporation",
+  groupNumber: "GRP-987654",
+  effectiveDate: "01/01/2024",
+  renewalMonth: "January",
+  yearlyMax: "$2,000",
+  deductiblePerIndividual: "$50",
+  deductiblePerFamily: "$150",
+  deductibleAppliesTo: { preventative: false, basic: true, major: true },
+
+  // Preventative Coverage
+  preventativeCoveredAt: "100",
+  preventativeWaitingPeriod: false,
+  preventativeEffectiveDate: "01/01/2024",
+  bitewingFrequency: "Every 6 months",
+  prophylaxisExamFrequency: "Every 6 months",
+  lastFMS: "03/15/2023",
+  eligibleForFMSNow: true,
+  eligibleForFMSEvery: "3",
+  fluorideVarnishFrequency: "Every 6 months (under 18)",
+  fluorideAgeLimitExists: true,
+  fluorideAgeLimit: "18",
+  sealantCoverage: true,
+  sealantTeethCovered: { molars: true, premolars: true },
+  sealantAgeLimitExists: true,
+  sealantAgeLimit: "16",
+  sealantReplacement: "Once per tooth per lifetime",
+
+  // Basic Coverage
+  basicCoveredAt: "80",
+  basicWaitingPeriod: false,
+  basicEffectiveDate: "01/01/2024",
+  basicIncludes: "Fillings, extractions, root canals, periodontal treatment",
+
+  // Major Coverage
+  majorCoveredAt: "50",
+  majorWaitingPeriod: true,
+  majorEffectiveDate: "07/01/2024",
+  majorIncludes: "Crowns, bridges, dentures, implants",
+
+  // Periodontal Coverage
+  srpHistory: true,
+  srpHistoryDate: "06/15/2023",
+  srpCovered: true,
+  srpFrequency: "Once per quadrant per 24 months",
+  srpAllQuadrantsSameVisit: false,
+  srpWaitingPeriod: "3 months between quadrants",
+  adultProphylaxisWithSRP: false,
+  adultProphylaxisWaitingPeriod: "Same day not allowed",
+  periodontalMaintenanceCovered: true,
+  periodontalMaintenanceFrequency: "4 times per year",
+
+  // Implant Coverage
+  endostealImplantsCovered: true,
+  endostealImplantsCoveredAt: "50",
+  boneReplacementGraftsCovered: true,
+  boneReplacementGraftsCoveredAt: "50",
+  guidedTissueRegenerationCovered: true,
+  guidedTissueRegenerationCoveredAt: "50",
+  implantAbutmentsCovered: true,
+  implantAbutmentsCoveredAt: "50",
+  implantCrownsCovered: true,
+  implantCrownsCoveredAt: "50",
+  implantPreDeterminationRequired: true,
+
+  // Orthodontic Coverage
+  orthodonticsCovered: true,
+  orthodonticsCoveredAt: "50",
+  orthodonticsAgeLimitExists: true,
+  orthodonticsAgeLimit: "19",
+  orthodonticsLifetimeMaxExists: true,
+  orthodonticsLifetimeMax: "$2,000",
+
+  // Miscellaneous
+  nightguardsCovered: true,
+  nightguardsCoveredAt: "80",
+  nitrousOxideCovered: true,
+  nitrousOxideCoveredAt: "50",
+  crownsAndBridgesReplacement: "5",
+  denturesReplacement: "7",
+  missingToothClauseCovered: false,
+
+  // Additional Notes
+  additionalNotes: "Patient has history of dental anxiety. Recommend gentle approach and consider sedation options for major procedures."
+};
+
+const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
+  const formRef = useRef<HTMLDivElement>(null);
+  const [formData] = useState(dummyVerificationData);
+
+  const getFullName = () => {
+    const given = patient.name.given.join(" ");
+    return `${given} ${patient.name.family}`.trim();
+  };
+
+  const handlePrint = () => {
+    if (!formRef.current) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const formData = formRef.current;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Dental Insurance Verification Form</title>
+          <style>
+            @page {
+              size: letter;
+              margin: 0.5in;
+            }
+
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              font-size: 11pt;
+              line-height: 1.3;
+              color: #000;
+              background: #fff;
+            }
+
+            .header {
+              text-align: center;
+              margin-bottom: 20px;
+              border-bottom: 3px solid #000;
+              padding-bottom: 10px;
+            }
+
+            .header h1 {
+              font-size: 16pt;
+              font-weight: bold;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 5px;
+            }
+
+            .header p {
+              font-size: 9pt;
+              margin-top: 5px;
+            }
+
+            .section {
+              margin-bottom: 15px;
+              page-break-inside: avoid;
+            }
+
+            .section-header {
+              background: #000;
+              color: #fff;
+              padding: 6px 10px;
+              font-weight: bold;
+              font-size: 10pt;
+              text-transform: uppercase;
+              margin-bottom: 10px;
+              letter-spacing: 0.5px;
+            }
+
+            .field-group {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 15px 20px;
+              margin-bottom: 10px;
+            }
+
+            .field-group-full {
+              display: block;
+              margin-bottom: 10px;
+            }
+
+            .field {
+              margin-bottom: 8px;
+            }
+
+            .field-label {
+              font-size: 9pt;
+              font-weight: bold;
+              margin-bottom: 3px;
+              display: block;
+            }
+
+            .field-value {
+              border-bottom: 1px solid #000;
+              min-height: 20px;
+              padding: 2px 5px;
+              font-size: 10pt;
+            }
+
+            .field-value.large {
+              min-height: 60px;
+              border: 1px solid #000;
+              padding: 5px;
+            }
+
+            .checkbox-group {
+              display: flex;
+              gap: 20px;
+              align-items: center;
+              margin-top: 3px;
+            }
+
+            .checkbox-item {
+              display: flex;
+              align-items: center;
+              gap: 5px;
+              font-size: 10pt;
+            }
+
+            .checkbox {
+              width: 14px;
+              height: 14px;
+              border: 2px solid #000;
+              display: inline-block;
+              vertical-align: middle;
+            }
+
+            .radio {
+              width: 14px;
+              height: 14px;
+              border: 2px solid #000;
+              border-radius: 50%;
+              display: inline-block;
+              vertical-align: middle;
+            }
+
+            .footer {
+              margin-top: 30px;
+              padding-top: 15px;
+              border-top: 2px solid #000;
+              page-break-inside: avoid;
+            }
+
+            .signature-section {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 40px;
+              margin-top: 20px;
+            }
+
+            .signature-line {
+              border-bottom: 2px solid #000;
+              margin-top: 30px;
+              margin-bottom: 5px;
+            }
+
+            @media print {
+              body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+              }
+
+              .no-print {
+                display: none;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Dental Insurance Verification Form</h1>
+            <p>Form Date: ${new Date().toLocaleDateString()}</p>
+          </div>
+
+          ${generatePrintContent(formData)}
+
+          <div class="footer">
+            <div class="section-header">Additional Notes</div>
+            <div class="field-value large"></div>
+
+            <div class="signature-section">
+              <div>
+                <div class="signature-line"></div>
+                <div class="field-label">Signature</div>
+              </div>
+              <div>
+                <div class="signature-line"></div>
+                <div class="field-label">Date</div>
+              </div>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+  };
+
+  const generatePrintContent = (formElement: HTMLDivElement): string => {
+    const inputs = formElement.querySelectorAll('input, textarea');
+    const values: { [key: string]: string } = {};
+
+    inputs.forEach((input) => {
+      const element = input as HTMLInputElement | HTMLTextAreaElement;
+      if (element.type === 'checkbox') {
+        values[element.name || ''] = (element as HTMLInputElement).checked ? '☑' : '☐';
+      } else if (element.type === 'radio') {
+        if ((element as HTMLInputElement).checked) {
+          values[element.name || ''] = '●';
+        } else if (!values[element.name || '']) {
+          values[element.name || ''] = '○';
+        }
+      } else {
+        values[element.name || ''] = element.value || '';
+      }
+    });
+
+    return `
+      <div class="section">
+        <div class="section-header">Patient Information</div>
+        <div class="field-group">
+          <div class="field">
+            <span class="field-label">Patient Name:</span>
+            <div class="field-value">${getFullName()}</div>
+          </div>
+          <div class="field">
+            <span class="field-label">SSN:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Date of Birth:</span>
+            <div class="field-value">${patient.birthDate}</div>
+          </div>
+          <div class="field">
+            <span class="field-label">Relationship to Subscriber:</span>
+            <div class="field-value"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Subscriber Information</div>
+        <div class="field-group">
+          <div class="field">
+            <span class="field-label">Subscriber Name:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">SSN:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Date of Birth:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Subscriber ID Number:</span>
+            <div class="field-value"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Insurance Information</div>
+        <div class="field-group">
+          <div class="field">
+            <span class="field-label">Insurance Company:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Insurer Type:</span>
+            <div class="checkbox-group">
+              <span class="checkbox-item"><span class="checkbox"></span> Primary</span>
+              <span class="checkbox-item"><span class="checkbox"></span> Secondary</span>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label">Address:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Phone:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Employer:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Group Number:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Effective Date:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Renewal Month:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Yearly Max:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Deductible Per Individual:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Deductible Per Family:</span>
+            <div class="field-value"></div>
+          </div>
+        </div>
+        <div class="field-group-full">
+          <div class="field">
+            <span class="field-label">Deductible Applies To:</span>
+            <div class="checkbox-group">
+              <span class="checkbox-item"><span class="checkbox"></span> Preventative</span>
+              <span class="checkbox-item"><span class="checkbox"></span> Basic</span>
+              <span class="checkbox-item"><span class="checkbox"></span> Major</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Preventative Coverage</div>
+        <div class="field-group">
+          <div class="field">
+            <span class="field-label">Covered at (%):</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Waiting Period:</span>
+            <div class="checkbox-group">
+              <span class="checkbox-item"><span class="radio"></span> Yes</span>
+              <span class="checkbox-item"><span class="radio"></span> No</span>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label">Effective Date:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Bitewing Frequency:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Prophylaxis/Exam Frequency:</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Last FMS:</span>
+            <div class="field-value"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Basic Coverage</div>
+        <div class="field-group">
+          <div class="field">
+            <span class="field-label">Covered at (%):</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Waiting Period:</span>
+            <div class="checkbox-group">
+              <span class="checkbox-item"><span class="radio"></span> Yes</span>
+              <span class="checkbox-item"><span class="radio"></span> No</span>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label">Effective Date:</span>
+            <div class="field-value"></div>
+          </div>
+        </div>
+        <div class="field-group-full">
+          <div class="field">
+            <span class="field-label">Includes:</span>
+            <div class="field-value"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Major Coverage</div>
+        <div class="field-group">
+          <div class="field">
+            <span class="field-label">Covered at (%):</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Waiting Period:</span>
+            <div class="checkbox-group">
+              <span class="checkbox-item"><span class="radio"></span> Yes</span>
+              <span class="checkbox-item"><span class="radio"></span> No</span>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label">Effective Date:</span>
+            <div class="field-value"></div>
+          </div>
+        </div>
+        <div class="field-group-full">
+          <div class="field">
+            <span class="field-label">Includes:</span>
+            <div class="field-value"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Miscellaneous</div>
+        <div class="field-group">
+          <div class="field">
+            <span class="field-label">Replacement on Crowns/Bridges (Years):</span>
+            <div class="field-value"></div>
+          </div>
+          <div class="field">
+            <span class="field-label">Replacement on Dentures (Years):</span>
+            <div class="field-value"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  return (
+    <div className="mt-6">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+          <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <span className="material-symbols-outlined">assignment</span>
+            Dental Insurance Verification Form
+          </h3>
+        </div>
+        <div ref={formRef} className="p-6 space-y-8">
+          {/* Patient Information Section */}
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
+              <h4 className="font-semibold text-slate-900 dark:text-white uppercase text-sm">
+                Patient Information
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Patient Name
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  defaultValue={getFullName()}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  SSN
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  defaultValue={formData.patientSSN}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Date of Birth
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  defaultValue={patient.birthDate}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Relationship to Subscriber
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  defaultValue={formData.relationshipToSubscriber}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Subscriber Information Section */}
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
+              <h4 className="font-semibold text-slate-900 dark:text-white uppercase text-sm">
+                Subscriber Information
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Subscriber Name
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  defaultValue={formData.subscriberName}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  SSN
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  defaultValue={formData.subscriberSSN}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Date of Birth
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  defaultValue={formData.subscriberDOB}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Subscriber ID Number
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  defaultValue={formData.subscriberID}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Insurance Information Section */}
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
+              <h4 className="font-semibold text-slate-900 dark:text-white uppercase text-sm">
+                Insurance Information
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Insurance Company
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Insurance company name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Insurer Type
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Primary</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Secondary</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Insurance address"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Phone
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Phone number"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Employer
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Employer name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Group Number
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Group number"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Effective Date
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="MM/DD/YYYY"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Renewal Month
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Month"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Yearly Max
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="$"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Deductible Per Individual
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="$"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Deductible Per Family
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="$"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Deductible Applies To
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Preventative</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Basic</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Major</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Preventative Coverage Section */}
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
+              <h4 className="font-semibold text-slate-900 dark:text-white uppercase text-sm">
+                Preventative Coverage
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Covered at (%)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="%"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Waiting Period?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="preventativeWaiting" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="preventativeWaiting" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Effective Date
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="MM/DD/YYYY"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Bitewing Frequency
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="e.g., Every 6 months"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Prophylaxis/Exam Frequency
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="e.g., Every 6 months"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Last FMS
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="MM/DD/YYYY"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Eligible for FMS Now?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="fmsNow" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="fmsNow" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Eligible for FMS Every (Years)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Years"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Fluoride Varnish (D1203/D1204/D1206) Frequency
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Frequency"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Age Limit on Fluoride?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="fluorideAge" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="fluorideAge" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, at what age?
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Age"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Sealant (D1351) Coverage?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="sealant" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="sealant" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Sealant Teeth Covered
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Molars</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Premolars</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Age Limit on Sealants?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="sealantAge" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="sealantAge" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, at what age?
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Age"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Replacement on Sealant
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Replacement policy"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Basic Coverage Section */}
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
+              <h4 className="font-semibold text-slate-900 dark:text-white uppercase text-sm">
+                Basic Coverage
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Covered at (%)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="%"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Waiting Period?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="basicWaiting" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="basicWaiting" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Effective Date
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="MM/DD/YYYY"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Includes
+                </label>
+                <textarea
+                  rows={2}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="List covered services"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Major Coverage Section */}
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
+              <h4 className="font-semibold text-slate-900 dark:text-white uppercase text-sm">
+                Major Coverage
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Covered at (%)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="%"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Waiting Period?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="majorWaiting" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="majorWaiting" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Effective Date
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="MM/DD/YYYY"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Includes
+                </label>
+                <textarea
+                  rows={2}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="List covered services"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Periodontal Coverage Section */}
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
+              <h4 className="font-semibold text-slate-900 dark:text-white uppercase text-sm">
+                Periodontal Coverage
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  History of SRP (D4341/D4342)?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="srpHistory" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="srpHistory" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, when?
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="MM/DD/YYYY"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  SRP Covered?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="srpCovered" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="srpCovered" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  SRP Frequency
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Frequency"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  SRP All Quadrants Same Visit?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="srpQuadrants" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="srpQuadrants" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If not, waiting period?
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Waiting period"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Adult Prophylaxis & Isolated SRP Same Visit?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="prophylaxisSRP" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="prophylaxisSRP" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If not, waiting period?
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Waiting period"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Periodontal Maintenance (D4910) Covered?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="perioMaintenance" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="perioMaintenance" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Frequency
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Frequency"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Implant Coverage Section */}
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
+              <h4 className="font-semibold text-slate-900 dark:text-white uppercase text-sm">
+                Implant Coverage
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Endosteal Implants (D6012) Covered?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="endosteal" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="endosteal" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, covered at (%)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="%"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Bone Replacement Grafts (D7953) Covered?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="boneGrafts" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="boneGrafts" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, covered at (%)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="%"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Guided-Tissue Regeneration (D4266/D4267) Covered?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="guidedTissue" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="guidedTissue" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, covered at (%)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="%"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Implant Abutments (D6056/D6057) Covered?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="abutments" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="abutments" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, covered at (%)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="%"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Implant Crowns (D6065/D6066/D6067) Covered?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="implantCrowns" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="implantCrowns" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, covered at (%)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="%"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Pre-determination Required Prior to Implant Surgery?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="preDetermination" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="preDetermination" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Orthodontic Coverage Section */}
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
+              <h4 className="font-semibold text-slate-900 dark:text-white uppercase text-sm">
+                Orthodontic Coverage
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Orthodontics Covered?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="orthodontics" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="orthodontics" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, covered at (%)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="%"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Age Limit on Orthodontic Coverage?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="orthodonticsAge" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="orthodonticsAge" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, at what age?
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Age"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Lifetime Maximum?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="orthodonticsLifetime" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="orthodonticsLifetime" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, lifetime maximum ($)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="$"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Miscellaneous Section */}
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
+              <h4 className="font-semibold text-slate-900 dark:text-white uppercase text-sm">
+                Miscellaneous
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Nightguards (D9940) Covered?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="nightguards" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="nightguards" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, covered at (%)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="%"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Nitrous Oxide (D9230) Covered?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="nitrousOxide" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="nitrousOxide" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  If yes, covered at (%)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="%"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Replacement on Crowns and Bridges (Years)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Years"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Replacement on Complete and Partial Dentures (Years)
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="Years"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Prior Extractions Covered (Missing Tooth Clause)?
+                </label>
+                <div className="flex gap-4 items-center h-10">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="missingTooth" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="missingTooth" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Notes Section */}
+          <div className="space-y-4">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
+              <h4 className="font-semibold text-slate-900 dark:text-white uppercase text-sm">
+                Additional Notes
+              </h4>
+            </div>
+            <div>
+              <textarea
+                rows={6}
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                placeholder="Add any additional notes or information..."
+              />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <button
+              onClick={handlePrint}
+              className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-lg">print</span>
+              Print Form
+            </button>
+            <button className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
+              Clear Form
+            </button>
+            <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+              Save Verification Form
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default VerificationForm;
