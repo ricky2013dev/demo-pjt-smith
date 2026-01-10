@@ -521,7 +521,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </button>
 
             {/* Request Insurance Fax - Hidden when Data Mode is ON */}
-            {!currentUser?.dataSource && (
+            {(
               <button
                 onClick={() => {
                   // Call the global openFaxModal function exposed by SmartAITransactionHistory
