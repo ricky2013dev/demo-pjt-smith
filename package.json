@@ -4,19 +4,12 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "docker:up": "docker-compose up -d && npm run db:wait",
-    "docker:down": "docker-compose down",
-    "db:wait": "until docker exec pjt-smith-postgres pg_isready -U postgres; do sleep 1; done",
-    "db:setup": "npm run db:push",
+    "init": "docker-compose up -d && until docker exec pjt-smith-postgres pg_isready -U postgres; do sleep 1; done && ./scripts/db-push.sh",
     "dev": "tsx backend/index.ts",
-    "dev:local": "npm run docker:up && tsx backend/index.ts",
-    "dev:clean": "npm run docker:down && npm run dev:local",
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.mjs",
     "check": "tsc",
-    "refresh-dates": "node mockupdata/generateDynamicDates.cjs",
-    "db:push": "./scripts/db-push.sh",
-    "seed:transactions": "tsx backend/seed-transactions.ts"
+    "docker:down": "docker-compose down"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

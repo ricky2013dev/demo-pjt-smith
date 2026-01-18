@@ -44,44 +44,29 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 Copy the output and add it to your `.env.local` as `ENCRYPTION_KEY=<generated-key>`
 
-### 4. Start the Application
+### 4. Initialize Database
 ```bash
-npm run dev:local
+npm run init
 ```
 
 This command will:
 - Start Docker PostgreSQL container
 - Wait for database to be ready
 - Push database schema
-- Start the development server
+- Seed test users (configured in `.env.local`)
 
-### 5. Access the Application
-Open your browser: `http://localhost:3000`
-
-### 6. Create Admin User (First Time Only)
-
-**Important:** You need to manually create an admin user in the database with an encrypted password.
-
+### 5. Start the Application
 ```bash
-# Step 1: Generate a bcrypt hash for your password
-node -e "const bcrypt = require('bcryptjs'); console.log(bcrypt.hashSync('youcantypeAdminPasswordHereWhaterver', 10));"
-
-# Step 2: Copy the output hash from above
-
-# Step 3: Connect to the database
-docker exec -it pjt-smith-postgres psql -U postgres -d smithai
-
-# Step 4: In the PostgreSQL prompt, paste this command (replace HASH with your generated hash):
-INSERT INTO users (email, username, password, role, "dataSource")
-VALUES ('admin@example.com', 'admin', 'PASTE_YOUR_HASH_HERE', 'admin', 'local');
-
-# Step 5: Exit PostgreSQL
-\q
+npm run dev
 ```
 
-**Login Credentials:**
-- Email: `admin@example.com`
-- Password: Whatever you used in Step 1 (e.g., `admin123`)
+### 6. Access the Application
+Open your browser: `http://localhost:3000`
+
+**Default Login Credentials** (configured in `.env.local`):
+- Dental: `dental@smithai.com` / `admin123`
+- Insurance: `insurance@smithai.com` / `admin123`
+- Admin: `admin@smithai.com` / `admin123`
 
 ### 7. Interface Tables for AI (Important)
 
@@ -102,20 +87,14 @@ The AI system checks **3 interface tables** for verification workflows:
 ## Common Commands
 
 ```bash
-# Start everything (Docker + Server)
-npm run dev:local
+# Initialize database (Docker + schema + seed users)
+npm run init
 
-# Clean restart (stops Docker first)
-npm run dev:clean
+# Start the app server
+npm run dev
 
 # Stop Docker containers
 npm run docker:down
-
-# Push database schema changes
-npm run db:push
-
-# Seed sample data (optional)
-npm run seed:transactions
 ```
 
 ## Troubleshooting
@@ -124,7 +103,7 @@ npm run seed:transactions
 If port 5432 is already in use:
 ```bash
 npm run docker:down
-npm run dev:clean
+npm run init
 ```
 
 ### Database Connection Issues
@@ -138,7 +117,7 @@ To completely reset:
 ```bash
 npm run docker:down
 docker volume prune -f
-npm run dev:clean
+npm run init
 ```
 
 ## Project Structure

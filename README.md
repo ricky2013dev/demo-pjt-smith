@@ -4,12 +4,13 @@ AI-powered dental insurance verification system with HIPAA-compliant patient man
 
 ## Quick Start
 
-See **[QUICKSTART.md](./doc/QUICKSTART.md)** for setup instructions.
-
 ```bash
-npm install
-npm run dev:local
+npm install      # Install dependencies
+npm run init     # Start Docker DB + create schema + seed users
+npm run dev      # Start the app server
 ```
+
+See **[QUICKSTART.md](./doc/QUICKSTART.md)** for full setup instructions.
 
 ## Documentation
 

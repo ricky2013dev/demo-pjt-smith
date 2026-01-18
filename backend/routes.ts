@@ -27,51 +27,6 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-  // Seed test users if they don't exist
-  const seedTestUsers = async () => {
-    try {
-      const dentalUser = await storage.getUserByEmail("dental@smithai.com");
-      if (!dentalUser) {
-        const hashedPassword = await bcrypt.hash("admin123", 10);
-        await storage.createUser({
-          email: "dental@smithai.com",
-          username: "dental_admin",
-          password: hashedPassword,
-          role: "dental",
-          dataSource: null
-        });
-      }
-
-      const insuranceUser = await storage.getUserByEmail("insurance@smithai.com");
-      if (!insuranceUser) {
-        const hashedPassword = await bcrypt.hash("admin123", 10);
-        await storage.createUser({
-          email: "insurance@smithai.com",
-          username: "insurance_admin",
-          password: hashedPassword,
-          role: "insurance",
-          dataSource: null
-        });
-      }
-
-      const adminUser = await storage.getUserByEmail("admin@smithai.com");
-      if (!adminUser) {
-        const hashedPassword = await bcrypt.hash("admin123", 10);
-        await storage.createUser({
-          email: "admin@smithai.com",
-          username: "admin",
-          password: hashedPassword,
-          role: "admin",
-          dataSource: null
-        });
-      }
-    } catch (error) {
-    }
-  };
-
-  // Seed test users on startup
-  await seedTestUsers();
-
   // Authentication routes
   /**
    * @openapi
