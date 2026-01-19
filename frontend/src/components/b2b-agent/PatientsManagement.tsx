@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import PatientGuide from './PatientGuide';
 import Header from '@/components/Header';
+import CreatePatientModal from './CreatePatientModal';
 import patientsDataMockup from '@mockupdata/patients.json';
 import type { Patient as PatientType } from '@/types/patient';
 import { useToast } from '@/hooks/use-toast';
@@ -16,24 +17,6 @@ const PatientsManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [useDatabase, setUseDatabase] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [formData, setFormData] = useState({
-    givenName: '',
-    familyName: '',
-    gender: '',
-    birthDate: '',
-    ssn: '',
-    phone: '',
-    email: '',
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    appointmentDate: '',
-    appointmentTime: '',
-    appointmentType: '',
-    appointmentProvider: '',
-  });
   const [isFetchingPMS, setIsFetchingPMS] = useState(false);
 
   useEffect(() => {
@@ -85,8 +68,35 @@ const PatientsManagement: React.FC = () => {
     }
   };
 
-  const handleCreatePatient = async (e: React.FormEvent) => {
-    e.preventDefault();
+  interface CreatePatientFormData {
+    givenName: string;
+    familyName: string;
+    gender: string;
+    birthDate: string;
+    ssn: string;
+    phone: string;
+    email: string;
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    insuranceType: 'Primary' | 'Secondary' | '';
+    insuranceProvider: string;
+    policyNumber: string;
+    groupNumber: string;
+    subscriberName: string;
+    subscriberId: string;
+    relationship: string;
+    effectiveDate: string;
+    expirationDate: string;
+    appointmentDate: string;
+    appointmentTime: string;
+    appointmentType: string;
+    appointmentProvider: string;
+  }
+
+  const handleCreatePatient = async (formData: CreatePatientFormData) => {
     try {
       const response = await fetch('/api/patients', {
         method: 'POST',
@@ -111,6 +121,17 @@ const PatientsManagement: React.FC = () => {
             state: formData.state,
             postalCode: formData.postalCode
           }] : [],
+          insurances: formData.insuranceProvider ? [{
+            type: formData.insuranceType || 'Primary',
+            provider: formData.insuranceProvider,
+            policyNumber: formData.policyNumber,
+            groupNumber: formData.groupNumber,
+            subscriberName: formData.subscriberName,
+            subscriberId: formData.subscriberId,
+            relationship: formData.relationship,
+            effectiveDate: formData.effectiveDate,
+            expirationDate: formData.expirationDate
+          }] : [],
           appointments: formData.appointmentDate && formData.appointmentTime && formData.appointmentType ? [{
             date: formData.appointmentDate,
             time: formData.appointmentTime,
@@ -134,24 +155,6 @@ const PatientsManagement: React.FC = () => {
       }
 
       setShowCreateModal(false);
-      setFormData({
-        givenName: '',
-        familyName: '',
-        gender: '',
-        birthDate: '',
-        ssn: '',
-        phone: '',
-        email: '',
-        addressLine1: '',
-        addressLine2: '',
-        city: '',
-        state: '',
-        postalCode: '',
-        appointmentDate: '',
-        appointmentTime: '',
-        appointmentType: '',
-        appointmentProvider: '',
-      });
 
       // Refresh patient list
       await fetchPatientsFromDatabase();
@@ -167,6 +170,7 @@ const PatientsManagement: React.FC = () => {
         title: "Error creating patient",
         description: error.message,
       });
+      throw error; // Re-throw to let the modal handle the error state
     }
   };
 
@@ -294,7 +298,7 @@ const PatientsManagement: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex flex-1 overflow-hidden relative">
-        {/* Buttons - Only show if using database */}
+        {/* Fetch PMS Button - Only show if using database */}
         {useDatabase && (
           <div className="absolute top-4 right-4 z-10 flex gap-3">
             <button
@@ -314,13 +318,6 @@ const PatientsManagement: React.FC = () => {
                 </>
               )}
             </button>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-slate-900 text-sm  dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg font-medium flex items-center gap-2 shadow-lg transition-colors"
-            >
-              <span className="material-symbols-outlined">add</span>
-              <span>New </span>
-            </button>
           </div>
         )}
 
@@ -329,236 +326,17 @@ const PatientsManagement: React.FC = () => {
           verificationStats={verificationStats}
           patients={patients}
           onSelectPatient={handleSelectPatient}
+          showAddButton={useDatabase}
+          onAddNewPatient={() => setShowCreateModal(true)}
         />
       </main>
 
       {/* Create Patient Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-2xl w-full p-6 my-8">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Create New Patient</h2>
-            <form onSubmit={handleCreatePatient} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 bg-slate-100 dark:bg-slate-700/50 rounded-lg p-3 border border-slate-200 dark:border-slate-600">
-                  <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Patient ID</label>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Auto-generated (e.g., P0000001)
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">First Name *</label>
-                  <input
-                    type="text"
-                    value={formData.givenName}
-                    onChange={(e) => setFormData({ ...formData, givenName: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Last Name *</label>
-                  <input
-                    type="text"
-                    value={formData.familyName}
-                    onChange={(e) => setFormData({ ...formData, familyName: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Gender</label>
-                  <select
-                    value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                  >
-                    <option value="">Select</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Birth Date</label>
-                  <input
-                    type="date"
-                    value={formData.birthDate}
-                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    SSN <span className="text-xs text-orange-600">(HIPAA Protected - Will be encrypted)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.ssn}
-                    onChange={(e) => setFormData({ ...formData, ssn: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                    placeholder="XXX-XX-XXXX"
-                    maxLength={11}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Phone</label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                    placeholder="(555) 123-4567"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                    placeholder="patient@example.com"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Address Line 1</label>
-                  <input
-                    type="text"
-                    value={formData.addressLine1}
-                    onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                    placeholder="123 Main St"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Address Line 2</label>
-                  <input
-                    type="text"
-                    value={formData.addressLine2}
-                    onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                    placeholder="Apt 4B"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">City</label>
-                  <input
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">State</label>
-                  <input
-                    type="text"
-                    value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                    placeholder="CA"
-                    maxLength={2}
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Postal Code</label>
-                  <input
-                    type="text"
-                    value={formData.postalCode}
-                    onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                    placeholder="90210"
-                  />
-                </div>
-
-                {/* Appointment Information */}
-                <div className="col-span-2 pt-4 border-t border-slate-200 dark:border-slate-700">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">Appointment Information</h3>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Appointment Date</label>
-                  <input
-                    type="date"
-                    value={formData.appointmentDate}
-                    onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Appointment Time</label>
-                  <input
-                    type="time"
-                    value={formData.appointmentTime}
-                    onChange={(e) => setFormData({ ...formData, appointmentTime: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Appointment Type</label>
-                  <select
-                    value={formData.appointmentType}
-                    onChange={(e) => setFormData({ ...formData, appointmentType: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                  >
-                    <option value="">Select Type</option>
-                    <option value="Routine Cleaning">Routine Cleaning</option>
-                    <option value="Dental Exam">Dental Exam</option>
-                    <option value="X-Ray">X-Ray</option>
-                    <option value="Filling">Filling</option>
-                    <option value="Root Canal">Root Canal</option>
-                    <option value="Crown">Crown</option>
-                    <option value="Extraction">Extraction</option>
-                    <option value="Whitening">Whitening</option>
-                    <option value="Consultation">Consultation</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Provider Name</label>
-                  <input
-                    type="text"
-                    value={formData.appointmentProvider}
-                    onChange={(e) => setFormData({ ...formData, appointmentProvider: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                    placeholder="Dr. Smith"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  Create Patient
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <CreatePatientModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreatePatient}
+      />
     </div>
   );
 };
