@@ -8,6 +8,8 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./swagger";
 import connectPgSimple from "connect-pg-simple";
 import pg from "pg";
+import crypto from "crypto";
+import { auditLog } from "./audit";
 
 const app = express();
 const httpServer = createServer(app);
@@ -15,18 +17,86 @@ const httpServer = createServer(app);
 // Trust proxy for Replit's reverse proxy
 app.set("trust proxy", 1);
 
+// HIPAA Security: Require SESSION_SECRET in production
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error('SESSION_SECRET environment variable is required in production for HIPAA compliance.');
+  }
+  console.warn('WARNING: SESSION_SECRET not set. Using temporary secret for development only.');
+}
+
+// Security Headers (HIPAA Technical Safeguards)
+app.use((req, res, next) => {
+  // Prevent clickjacking
+  res.setHeader('X-Frame-Options', 'DENY');
+  // Prevent MIME type sniffing
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // XSS Protection
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  // Referrer Policy - don't leak PHI in referrer headers
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Content Security Policy
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https:;");
+  // Strict Transport Security (HTTPS enforcement)
+  if (process.env.NODE_ENV === "production") {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  // Cache Control - prevent caching of PHI
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
+// CORS configuration for HIPAA compliance
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production')) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  }
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+// Rate limiting for brute force protection (HIPAA Security)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_MAX = 100; // requests per window
+
+app.use((req, res, next) => {
+  // Only rate limit API endpoints
+  if (!req.path.startsWith('/api')) {
+    return next();
+  }
+
+  const clientId = req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+  const now = Date.now();
+  const clientData = rateLimitMap.get(clientId);
+
+  if (!clientData || now > clientData.resetTime) {
+    rateLimitMap.set(clientId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return next();
+  }
+
+  if (clientData.count >= RATE_LIMIT_MAX) {
+    auditLog('RATE_LIMIT_EXCEEDED', { clientId, path: req.path });
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  }
+
+  clientData.count++;
+  next();
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
-    session?: any;
-  }
-}
-
-declare global {
-  namespace Express {
-    interface Request {
-      session?: any;
-    }
   }
 }
 
@@ -43,14 +113,18 @@ app.use(
       tableName: "user_sessions",
       createTableIfMissing: true,
     }),
-    secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
+    // HIPAA Security: Use crypto-generated secret if not provided (dev only)
+    secret: SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
     resave: false,
     saveUninitialized: false,
+    name: '__Host-session', // Security: Use __Host- prefix for additional cookie security
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      // HIPAA: Shorter session timeout for healthcare data (4 hours instead of 24)
+      maxAge: 1000 * 60 * 60 * 4,
+      // HIPAA Security: Use 'strict' to prevent CSRF attacks
+      sameSite: "strict",
     }
   })
 );

@@ -21,6 +21,8 @@ import { join } from "path";
 import { encrypt, decrypt, maskSensitiveData } from "./crypto";
 import multer from "multer";
 import { processInsuranceCard } from "./ocr";
+import { auditLog, logPhiAccess, logPhiDecrypt, logAuth, logSecurityViolation } from "./audit";
+import { validateCreatePatient, validateUpdatePatient, validateLogin, sanitizePatientData } from "./validation";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -81,19 +83,25 @@ export async function registerRoutes(
    */
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { email, password } = req.body;
-
-      if (!email || !password) {
-        return res.status(400).json({ error: "Email and password are required" });
+      // HIPAA Security: Validate login input
+      const validation = validateLogin(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: "Invalid login credentials format" });
       }
+
+      const { email, password } = validation.data;
 
       const user = await storage.getUserByEmail(email);
       if (!user) {
+        // HIPAA Audit: Log failed login attempt
+        logAuth('AUTH_LOGIN_FAILURE', email, false, req, 'User not found');
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
+        // HIPAA Audit: Log failed login attempt
+        logAuth('AUTH_LOGIN_FAILURE', email, false, req, 'Invalid password');
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
@@ -101,6 +109,9 @@ export async function registerRoutes(
       (req.session as any).userId = user.id;
       (req.session as any).userRole = user.role;
       (req.session as any).userEmail = user.email;
+
+      // HIPAA Audit: Log successful login
+      logAuth('AUTH_LOGIN_SUCCESS', email, true, req);
 
       res.json({
         success: true,
@@ -110,8 +121,9 @@ export async function registerRoutes(
           role: user.role
         }
       });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to login" });
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'login', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to login. Please try again." });
     }
   });
 
@@ -141,11 +153,16 @@ export async function registerRoutes(
    *               $ref: '#/components/schemas/Error'
    */
   app.post("/api/auth/logout", async (req, res) => {
+    const userEmail = (req.session as any)?.userEmail || 'unknown';
+
+    // HIPAA Audit: Log logout event
+    logAuth('AUTH_LOGOUT', userEmail, true, req);
+
     req.session?.destroy((err: any) => {
       if (err) {
         return res.status(500).json({ error: "Failed to logout" });
       }
-      res.clearCookie("connect.sid");
+      res.clearCookie("__Host-session");
       res.json({ success: true });
     });
   });
@@ -786,7 +803,24 @@ export async function registerRoutes(
   app.post("/api/patients", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any)?.userId;
-      const { patient, telecoms, addresses, insurances, appointments, treatments, verificationStatus } = req.body;
+
+      // HIPAA Security: Validate and sanitize all input data
+      const validation = validateCreatePatient(req.body);
+      if (!validation.success) {
+        auditLog('ERROR', {
+          action: 'create_patient_validation_failed',
+          success: false,
+          details: { errors: validation.error.errors.map(e => e.message) },
+        }, req);
+        return res.status(400).json({
+          error: "Invalid patient data",
+          details: validation.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
+        });
+      }
+
+      // Sanitize the validated data
+      const sanitizedData = sanitizePatientData(validation.data);
+      const { patient, telecoms, addresses, insurances, appointments, treatments, verificationStatus } = sanitizedData;
 
       if (!patient) {
         return res.status(400).json({ error: "Patient data is required" });
@@ -821,11 +855,11 @@ export async function registerRoutes(
         // Transform addresses from client format (line: string[]) to DB format (line1, line2)
         await Promise.all(addresses.map(a => storage.createPatientAddress({
           patientId: newPatient.id,
-          line1: a.line?.[0] || null,
-          line2: a.line?.[1] || null,
-          city: a.city,
-          state: a.state,
-          postalCode: a.postalCode
+          line1: a.line?.[0] ?? null,
+          line2: a.line?.[1] ?? null,
+          city: a.city ?? null,
+          state: a.state ?? null,
+          postalCode: a.postalCode ?? null
         })));
       }
 
@@ -834,34 +868,53 @@ export async function registerRoutes(
         // Encrypt HIPAA-sensitive fields (policyNumber, groupNumber, subscriberId)
         await Promise.all(insurances.map(i => storage.createInsurance({
           patientId: newPatient.id,
-          type: i.type,
-          provider: i.provider,
+          type: i.type ?? 'Primary',
+          provider: i.provider ?? '',
           policyNumber: i.policyNumber ? encrypt(i.policyNumber) : null,
           groupNumber: i.groupNumber ? encrypt(i.groupNumber) : null,
-          subscriberName: i.subscriberName,
+          subscriberName: i.subscriberName ?? null,
           subscriberId: i.subscriberId ? encrypt(i.subscriberId) : null,
-          relationship: i.relationship,
-          effectiveDate: i.effectiveDate,
-          expirationDate: i.expirationDate,
-          deductible: i.coverage?.deductible || null,
-          deductibleMet: i.coverage?.deductibleMet || null,
-          maxBenefit: i.coverage?.maxBenefit || null,
-          preventiveCoverage: i.coverage?.preventiveCoverage || null,
-          basicCoverage: i.coverage?.basicCoverage || null,
-          majorCoverage: i.coverage?.majorCoverage || null
+          relationship: i.relationship ?? null,
+          effectiveDate: i.effectiveDate ?? null,
+          expirationDate: i.expirationDate ?? null,
+          deductible: i.coverage?.deductible ?? null,
+          deductibleMet: i.coverage?.deductibleMet ?? null,
+          maxBenefit: i.coverage?.maxBenefit ?? null,
+          preventiveCoverage: i.coverage?.preventiveCoverage ?? null,
+          basicCoverage: i.coverage?.basicCoverage ?? null,
+          majorCoverage: i.coverage?.majorCoverage ?? null
         })));
       }
 
       if (appointments && Array.isArray(appointments)) {
-        await Promise.all(appointments.map(a => storage.createAppointment({ ...a, patientId: newPatient.id })));
+        await Promise.all(appointments.map((a: any) => storage.createAppointment({
+          patientId: newPatient.id,
+          date: a.date ?? '',
+          time: a.time ?? '',
+          type: a.type ?? '',
+          status: a.status ?? 'scheduled',
+          provider: a.provider ?? null
+        })));
       }
 
       if (treatments && Array.isArray(treatments)) {
-        await Promise.all(treatments.map(t => storage.createTreatment({ ...t, patientId: newPatient.id })));
+        await Promise.all(treatments.map((t: any) => storage.createTreatment({
+          patientId: newPatient.id,
+          date: t.date ?? '',
+          name: t.name ?? '',
+          cost: t.cost ?? null
+        })));
       }
 
       if (verificationStatus) {
-        await storage.createVerificationStatus({ ...verificationStatus, patientId: newPatient.id });
+        await storage.createVerificationStatus({
+          patientId: newPatient.id,
+          fetchPMS: (verificationStatus as any).fetchPMS ?? 'pending',
+          documentAnalysis: (verificationStatus as any).documentAnalysis ?? 'pending',
+          apiVerification: (verificationStatus as any).apiVerification ?? 'pending',
+          callCenter: (verificationStatus as any).callCenter ?? 'pending',
+          saveToPMS: (verificationStatus as any).saveToPMS ?? 'pending'
+        });
       }
 
       // Create a 'Waiting' API transaction for the new patient
@@ -884,9 +937,17 @@ export async function registerRoutes(
 
       await db.insert(transactions).values(waitingApiTransaction);
 
+      // HIPAA Audit: Log patient creation
+      auditLog('PHI_CREATE', {
+        patientId: newPatient.id,
+        action: 'create_patient',
+        resourceType: 'Patient',
+      }, req);
+
       res.json({ success: true, patient: newPatient });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create patient" });
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'create_patient', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to create patient. Please try again." });
     }
   });
 
@@ -1149,11 +1210,14 @@ export async function registerRoutes(
         patients: createdPatients
       });
     } catch (error: any) {
-      console.error("Failed to fetch PMS data:", error);
+      // HIPAA Security: Log error internally but don't expose details to client
+      auditLog('ERROR', {
+        action: 'fetch_pms_data',
+        success: false,
+        errorMessage: error.message,
+      }, req);
       res.status(500).json({
-        error: "Failed to fetch PMS data",
-        details: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        error: "Failed to fetch PMS data. Please try again or contact support.",
       });
     }
   });
@@ -1163,7 +1227,23 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       const userId = (req.session as any)?.userId;
-      const updates = req.body;
+
+      // HIPAA Security: Validate and sanitize all input data
+      const validation = validateUpdatePatient(req.body);
+      if (!validation.success) {
+        auditLog('ERROR', {
+          action: 'update_patient_validation_failed',
+          success: false,
+          details: { errors: validation.error.errors.map(e => e.message) },
+        }, req);
+        return res.status(400).json({
+          error: "Invalid patient data",
+          details: validation.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
+        });
+      }
+
+      // Sanitize the validated data
+      const updates = sanitizePatientData(validation.data);
 
       // Verify patient exists and belongs to current user
       const existingPatient = await storage.getPatientById(id);
@@ -1222,65 +1302,87 @@ export async function registerRoutes(
           if (existingInsurance) {
             // Update existing insurance
             await storage.updateInsurance(existingInsurance.id, {
-              provider: insuranceData.provider,
+              provider: insuranceData.provider ?? existingInsurance.provider,
               policyNumber: insuranceData.policyNumber === '************'
                 ? existingInsurance.policyNumber // Keep existing encrypted value
                 : (insuranceData.policyNumber ? encrypt(insuranceData.policyNumber) : null),
               groupNumber: insuranceData.groupNumber === '********'
                 ? existingInsurance.groupNumber // Keep existing encrypted value
                 : (insuranceData.groupNumber ? encrypt(insuranceData.groupNumber) : null),
-              subscriberName: insuranceData.subscriberName,
+              subscriberName: insuranceData.subscriberName ?? null,
               subscriberId: insuranceData.subscriberId === '**********'
                 ? existingInsurance.subscriberId // Keep existing encrypted value
                 : (insuranceData.subscriberId ? encrypt(insuranceData.subscriberId) : null),
-              relationship: insuranceData.relationship,
-              effectiveDate: insuranceData.effectiveDate,
-              expirationDate: insuranceData.expirationDate,
-              deductible: insuranceData.coverage?.deductible || null,
-              deductibleMet: insuranceData.coverage?.deductibleMet || null,
-              maxBenefit: insuranceData.coverage?.maxBenefit || null,
-              preventiveCoverage: insuranceData.coverage?.preventiveCoverage || null,
-              basicCoverage: insuranceData.coverage?.basicCoverage || null,
-              majorCoverage: insuranceData.coverage?.majorCoverage || null
+              relationship: insuranceData.relationship ?? null,
+              effectiveDate: insuranceData.effectiveDate ?? null,
+              expirationDate: insuranceData.expirationDate ?? null,
+              deductible: insuranceData.coverage?.deductible ?? null,
+              deductibleMet: insuranceData.coverage?.deductibleMet ?? null,
+              maxBenefit: insuranceData.coverage?.maxBenefit ?? null,
+              preventiveCoverage: insuranceData.coverage?.preventiveCoverage ?? null,
+              basicCoverage: insuranceData.coverage?.basicCoverage ?? null,
+              majorCoverage: insuranceData.coverage?.majorCoverage ?? null
             });
           } else {
             // Create new insurance
             await storage.createInsurance({
               patientId: id,
-              type: insuranceData.type,
-              provider: insuranceData.provider,
+              type: insuranceData.type ?? 'Primary',
+              provider: insuranceData.provider ?? '',
               policyNumber: insuranceData.policyNumber ? encrypt(insuranceData.policyNumber) : null,
               groupNumber: insuranceData.groupNumber ? encrypt(insuranceData.groupNumber) : null,
-              subscriberName: insuranceData.subscriberName,
+              subscriberName: insuranceData.subscriberName ?? null,
               subscriberId: insuranceData.subscriberId ? encrypt(insuranceData.subscriberId) : null,
-              relationship: insuranceData.relationship,
-              effectiveDate: insuranceData.effectiveDate,
-              expirationDate: insuranceData.expirationDate,
-              deductible: insuranceData.coverage?.deductible || null,
-              deductibleMet: insuranceData.coverage?.deductibleMet || null,
-              maxBenefit: insuranceData.coverage?.maxBenefit || null,
-              preventiveCoverage: insuranceData.coverage?.preventiveCoverage || null,
-              basicCoverage: insuranceData.coverage?.basicCoverage || null,
-              majorCoverage: insuranceData.coverage?.majorCoverage || null
+              relationship: insuranceData.relationship ?? null,
+              effectiveDate: insuranceData.effectiveDate ?? null,
+              expirationDate: insuranceData.expirationDate ?? null,
+              deductible: insuranceData.coverage?.deductible ?? null,
+              deductibleMet: insuranceData.coverage?.deductibleMet ?? null,
+              maxBenefit: insuranceData.coverage?.maxBenefit ?? null,
+              preventiveCoverage: insuranceData.coverage?.preventiveCoverage ?? null,
+              basicCoverage: insuranceData.coverage?.basicCoverage ?? null,
+              majorCoverage: insuranceData.coverage?.majorCoverage ?? null
             });
           }
         }
       }
 
+      // HIPAA Audit: Log patient modification
+      auditLog('PHI_MODIFY', {
+        patientId: id,
+        action: 'update_patient',
+        resourceType: 'Patient',
+      }, req);
+
       res.json({ success: true, patient: updatedPatient });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to update patient" });
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'update_patient', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to update patient. Please try again." });
     }
   });
 
   app.get("/api/patients/:id", requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
+      const userId = (req.session as any)?.userId;
+      const userRole = (req.session as any)?.userRole;
       const patient = await storage.getPatientById(id);
 
       if (!patient) {
         return res.status(404).json({ error: "Patient not found" });
       }
+
+      // HIPAA Security: Verify patient belongs to current user (unless admin)
+      if (patient.userId !== userId && userRole !== 'admin') {
+        logSecurityViolation('Unauthorized patient access attempt', req, {
+          attemptedPatientId: id,
+          patientOwnerId: patient.userId,
+        });
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // HIPAA Audit: Log PHI access
+      logPhiAccess(id, 'read', req);
 
       // Get all related data
       const [telecoms, addresses, insurances, appointments, treatments, verificationStatus, coverageDetail] = await Promise.all([
@@ -1472,8 +1574,15 @@ export async function registerRoutes(
       // Verify patient belongs to current user
       const userId = (req.session as any)?.userId;
       if (patient.userId !== userId) {
+        logSecurityViolation('Unauthorized decrypt attempt', req, {
+          attemptedPatientId: id,
+          field,
+        });
         return res.status(403).json({ error: "Access denied" });
       }
+
+      // HIPAA Audit: Log sensitive data decryption (required for compliance)
+      logPhiDecrypt(id, field, req);
 
       // Decrypt the requested field
       let decryptedValue = null;
@@ -1750,7 +1859,13 @@ export async function registerRoutes(
 
         res.json({ success: true, extractedData, confidence });
       } catch (error) {
-        res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to process insurance card' });
+        // HIPAA Security: Don't expose error details
+        auditLog('ERROR', {
+          action: 'process_insurance_card',
+          success: false,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        }, req);
+        res.status(500).json({ error: 'Failed to process insurance card. Please try again.' });
       }
     }
   );
@@ -2112,10 +2227,9 @@ export async function registerRoutes(
 
       res.json({ success: true, transaction });
     } catch (error: any) {
-      res.status(500).json({
-        error: "Failed to create transaction",
-        details: error.message
-      });
+      // HIPAA Security: Log error internally but don't expose details
+      auditLog('ERROR', { action: 'create_transaction', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to create transaction. Please try again." });
     }
   });
 
@@ -2276,10 +2390,9 @@ export async function registerRoutes(
 
       res.json({ success: true, transaction: updatedTransaction });
     } catch (error: any) {
-      res.status(500).json({
-        error: "Failed to update transaction",
-        details: error.message
-      });
+      // HIPAA Security: Log error internally but don't expose details
+      auditLog('ERROR', { action: 'update_transaction', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to update transaction. Please try again." });
     }
   });
 
@@ -2547,10 +2660,9 @@ export async function registerRoutes(
         });
       }
     } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      // HIPAA Security: Log error internally but don't expose details
+      auditLog('ERROR', { action: 'check_eligibility', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ success: false, error: "Failed to check eligibility. Please try again." });
     }
   });
 
@@ -2678,10 +2790,9 @@ export async function registerRoutes(
         message: "Coverage by code data saved successfully"
       });
     } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      // HIPAA Security: Log error internally but don't expose details
+      auditLog('ERROR', { action: 'save_coverage_by_code', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ success: false, error: "Failed to save coverage data. Please try again." });
     }
   });
 
@@ -2761,10 +2872,9 @@ export async function registerRoutes(
         data
       });
     } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      // HIPAA Security: Log error internally but don't expose details
+      auditLog('ERROR', { action: 'get_coverage_by_code', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ success: false, error: "Failed to fetch coverage data. Please try again." });
     }
   });
 
@@ -2775,7 +2885,8 @@ export async function registerRoutes(
       const transactions = await db.select().from(ifCallTransactionList).orderBy(ifCallTransactionList.createdAt);
       res.json(transactions);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      auditLog('ERROR', { action: 'admin_get_transactions', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to fetch transactions." });
     }
   });
 
@@ -2783,16 +2894,21 @@ export async function registerRoutes(
   app.get("/api/admin/interface/coverage-codes", requireAuth, requireAdmin, async (req, res) => {
     try {
       const { transactionId } = req.query;
-      let query = db.select().from(ifCallCoverageCodeList);
+      let coverageCodes;
 
       if (transactionId && typeof transactionId === 'string') {
-        query = query.where(eq(ifCallCoverageCodeList.ifCallTransactionId, transactionId));
+        coverageCodes = await db.select().from(ifCallCoverageCodeList)
+          .where(eq(ifCallCoverageCodeList.ifCallTransactionId, transactionId))
+          .orderBy(ifCallCoverageCodeList.createdAt);
+      } else {
+        coverageCodes = await db.select().from(ifCallCoverageCodeList)
+          .orderBy(ifCallCoverageCodeList.createdAt);
       }
 
-      const coverageCodes = await query.orderBy(ifCallCoverageCodeList.createdAt);
       res.json(coverageCodes);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      auditLog('ERROR', { action: 'admin_get_coverage_codes', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to fetch coverage codes." });
     }
   });
 
@@ -2800,16 +2916,21 @@ export async function registerRoutes(
   app.get("/api/admin/interface/messages", requireAuth, requireAdmin, async (req, res) => {
     try {
       const { transactionId } = req.query;
-      let query = db.select().from(ifCallMessageList);
+      let messages;
 
       if (transactionId && typeof transactionId === 'string') {
-        query = query.where(eq(ifCallMessageList.ifCallTransactionId, transactionId));
+        messages = await db.select().from(ifCallMessageList)
+          .where(eq(ifCallMessageList.ifCallTransactionId, transactionId))
+          .orderBy(ifCallMessageList.createdAt);
+      } else {
+        messages = await db.select().from(ifCallMessageList)
+          .orderBy(ifCallMessageList.createdAt);
       }
 
-      const messages = await query.orderBy(ifCallMessageList.createdAt);
       res.json(messages);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      auditLog('ERROR', { action: 'admin_get_messages', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to fetch messages." });
     }
   });
 
@@ -2818,9 +2939,11 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       await db.delete(ifCallTransactionList).where(eq(ifCallTransactionList.id, id));
+      auditLog('ADMIN_ACTION', { action: 'delete_interface_transaction', details: { transactionId: id } }, req);
       res.json({ success: true });
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      auditLog('ERROR', { action: 'admin_delete_transaction', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to delete transaction." });
     }
   });
 
@@ -2829,9 +2952,11 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       await db.delete(ifCallCoverageCodeList).where(eq(ifCallCoverageCodeList.id, id));
+      auditLog('ADMIN_ACTION', { action: 'delete_interface_coverage', details: { coverageId: id } }, req);
       res.json({ success: true });
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      auditLog('ERROR', { action: 'admin_delete_coverage', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to delete coverage code." });
     }
   });
 
@@ -2840,9 +2965,11 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       await db.delete(ifCallMessageList).where(eq(ifCallMessageList.id, id));
+      auditLog('ADMIN_ACTION', { action: 'delete_interface_message', details: { messageId: id } }, req);
       res.json({ success: true });
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      auditLog('ERROR', { action: 'admin_delete_message', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to delete message." });
     }
   });
 

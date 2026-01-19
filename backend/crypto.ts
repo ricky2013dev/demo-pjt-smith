@@ -8,9 +8,25 @@ const TAG_LENGTH = 16;
 const KEY_LENGTH = 32;
 const ITERATIONS = 100000;
 
-// Get encryption key from environment or generate a secure one
+// Get encryption key from environment - REQUIRED for HIPAA compliance
 // In production, this should be stored securely (e.g., AWS KMS, HashiCorp Vault)
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your-secure-encryption-key-change-in-production-must-be-32-chars!!';
+function getEncryptionKey(): string {
+  const key = process.env.ENCRYPTION_KEY;
+
+  // HIPAA Security: Encryption key is required - fail fast if not configured
+  if (!key) {
+    throw new Error('ENCRYPTION_KEY environment variable is required for HIPAA compliance. Please configure a secure 32+ character encryption key.');
+  }
+
+  // Validate key strength
+  if (key.length < 32) {
+    throw new Error('ENCRYPTION_KEY must be at least 32 characters for adequate security.');
+  }
+
+  return key;
+}
+
+const ENCRYPTION_KEY: string = getEncryptionKey();
 
 /**
  * Derives a key from the master key using PBKDF2

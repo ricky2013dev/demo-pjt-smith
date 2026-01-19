@@ -1,10 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_AVAILITY_CLIENT_ID: string;
-  readonly VITE_AVAILITY_CLIENT_SECRET: string;
-  readonly VITE_AVAILITY_API_TOKEN_URL: string;
-  readonly VITE_AVAILITY_API_BASE_URL: string;
+  // HIPAA Security: Client secrets must NEVER be exposed to frontend
+  // All API authentication should go through the backend proxy
   readonly VITE_BACKEND_URL: string;
 }
 
