@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Patient } from '@/types/patient';
 import { VERIFICATION_STATUS_LABELS } from '@/constants/verificationStatus';
+import { DayPicker } from 'react-day-picker';
+import { format, subMonths, addMonths, isWithinInterval, parseISO } from 'date-fns';
+import * as Popover from '@radix-ui/react-popover';
+import 'react-day-picker/style.css';
 
 interface PatientGuideProps {
   totalPatients?: number;
@@ -13,76 +17,55 @@ interface PatientGuideProps {
   onAddNewPatient?: () => void;
   patients?: Patient[];
   onSelectPatient?: (patientId: string) => void;
+  showAddButton?: boolean;
 }
 
 const PatientGuide: React.FC<PatientGuideProps> = ({
   totalPatients: _totalPatients = 0,
   verificationStats: _verificationStats = { verified: 0, inProgress: 0, pending: 0, notStarted: 0 },
-  onAddNewPatient: _onAddNewPatient,
+  onAddNewPatient,
   patients = [],
-  onSelectPatient
+  onSelectPatient,
+  showAddButton = false
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: subMonths(new Date(), 3),
+    to: addMonths(new Date(), 3)
+  });
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-  // Get upcoming appointments from all patients
-  const getUpcomingAppointments = () => {
-    // Get start of today (00:00:00)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const allAppointments: Array<{ patient: Patient, appointment: any }> = [];
-
-    patients.forEach(patient => {
-      if (patient.appointments) {
-        patient.appointments.forEach(apt => {
-          const aptDate = new Date(apt.date);
-          aptDate.setHours(0, 0, 0, 0);
-          // Show appointments from today onwards
-          if (aptDate >= today && apt.status === 'scheduled') {
-            allAppointments.push({ patient, appointment: apt });
-          }
-        });
-      }
-    });
-
-    // Sort by date (earliest first)
-    allAppointments.sort((a, b) => {
-      const dateA = new Date(a.appointment.date);
-      const dateB = new Date(b.appointment.date);
-      return dateA.getTime() - dateB.getTime();
-    });
-
-    return allAppointments.slice(0, 8); // Show up to 8 upcoming appointments
+  // Highlight matching text in search results
+  const highlightMatch = (text: string, query: string): React.ReactNode => {
+    if (!query.trim()) return text;
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <span key={index} className="bg-yellow-200 dark:bg-yellow-500/40 text-yellow-900 dark:text-yellow-100 rounded px-0.5">
+          {part}
+        </span>
+      ) : part
+    );
   };
 
-  // Get past appointments from all patients
-  const getPastAppointments = () => {
-    // Get start of today (00:00:00)
+  // Format relative date display
+  const formatRelativeDate = (dateStr: string): string => {
+    const date = parseISO(dateStr);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const aptDate = new Date(date);
+    aptDate.setHours(0, 0, 0, 0);
 
-    const allAppointments: Array<{ patient: Patient, appointment: any }> = [];
+    const diffDays = Math.round((aptDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-    patients.forEach(patient => {
-      if (patient.appointments) {
-        patient.appointments.forEach(apt => {
-          const aptDate = new Date(apt.date);
-          aptDate.setHours(0, 0, 0, 0);
-          // Show appointments from yesterday and before (before today)
-          if (aptDate < today) {
-            allAppointments.push({ patient, appointment: apt });
-          }
-        });
-      }
-    });
-
-    // Sort by date (most recent first)
-    allAppointments.sort((a, b) => {
-      const dateA = new Date(a.appointment.date);
-      const dateB = new Date(b.appointment.date);
-      return dateB.getTime() - dateA.getTime();
-    });
-
-    return allAppointments.slice(0, 8); // Show up to 8 past appointments
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+    if (diffDays === -1) return 'Yesterday';
+    if (diffDays > 0 && diffDays <= 7) return `In ${diffDays} days`;
+    if (diffDays < 0 && diffDays >= -7) return `${Math.abs(diffDays)} days ago`;
+    return '';
   };
 
   const getPatientName = (patient: Patient) => {
@@ -90,21 +73,80 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
     return `${given} ${patient.name.family}`.trim();
   };
 
-  const formatAppointmentDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const isToday = date.toDateString() === today.toDateString();
-    const isTomorrow = date.toDateString() === tomorrow.toDateString();
-
-    if (isToday) return 'Today';
-    if (isTomorrow) return 'Tomorrow';
-
-    // Format as "Mon, Jan 15"
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const getPatientPhone = (patient: Patient): string => {
+    const phone = patient.telecom?.find(t => t.system === 'phone');
+    return phone?.value || '';
   };
+
+  const getPatientEmail = (patient: Patient): string => {
+    const email = patient.telecom?.find(t => t.system === 'email');
+    return email?.value || '';
+  };
+
+  // Check which field matches the search query
+  const getSearchMatchField = (patient: Patient, query: string): 'name' | 'phone' | 'email' | null => {
+    if (!query.trim()) return null;
+    const q = query.toLowerCase();
+    if (getPatientName(patient).toLowerCase().includes(q)) return 'name';
+    if (getPatientPhone(patient).toLowerCase().includes(q)) return 'phone';
+    if (getPatientEmail(patient).toLowerCase().includes(q)) return 'email';
+    return null;
+  };
+
+  // Unified filtered appointments (includes patients without appointments)
+  const filteredAppointments = useMemo(() => {
+    const allAppointments: Array<{ patient: Patient, appointment: any | null }> = [];
+
+    patients.forEach(patient => {
+      if (patient.appointments && patient.appointments.length > 0) {
+        patient.appointments.forEach(apt => {
+          allAppointments.push({ patient, appointment: apt });
+        });
+      } else {
+        // Include patients without appointments
+        allAppointments.push({ patient, appointment: null });
+      }
+    });
+
+    let filtered = allAppointments;
+
+    // Date range filter (patients without appointments pass through)
+    if (dateRange.from || dateRange.to) {
+      filtered = filtered.filter(item => {
+        // Patients without appointments are always shown
+        if (!item.appointment) return true;
+
+        const aptDate = parseISO(item.appointment.date);
+        if (dateRange.from && dateRange.to) {
+          return isWithinInterval(aptDate, { start: dateRange.from, end: dateRange.to });
+        }
+        if (dateRange.from) return aptDate >= dateRange.from;
+        if (dateRange.to) return aptDate <= dateRange.to;
+        return true;
+      });
+    }
+
+    // Search filter (by name, phone, or email)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(item => {
+        const name = getPatientName(item.patient).toLowerCase();
+        const phone = getPatientPhone(item.patient).toLowerCase();
+        const email = getPatientEmail(item.patient).toLowerCase();
+        return name.includes(query) || phone.includes(query) || email.includes(query);
+      });
+    }
+
+    // Sort by date ascending (patients without appointments go to the end)
+    filtered.sort((a, b) => {
+      if (!a.appointment && !b.appointment) return 0;
+      if (!a.appointment) return 1;
+      if (!b.appointment) return -1;
+      return parseISO(a.appointment.date).getTime() - parseISO(b.appointment.date).getTime();
+    });
+
+    return filtered;
+  }, [patients, dateRange, searchQuery]);
 
   const getVerificationStatus = (patient: Patient) => {
     if (!patient.verificationStatus) {
@@ -149,11 +191,6 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
     return { label: VERIFICATION_STATUS_LABELS.NOT_STARTED, color: 'text-slate-600 dark:text-slate-400', percentage: 0 };
   };
 
-  const upcomingAppointments = getUpcomingAppointments();
-  const pastAppointments = getPastAppointments();
-
-
-
   return (
     <section className="flex flex-1 flex-col bg-slate-50 dark:bg-slate-950 w-full overflow-y-auto font-sans">
       <div className="p-6 max-w-[1600px] mx-auto w-full space-y-6">
@@ -168,137 +205,191 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
           </p>
         </div>
 
-        {/* Bottom Section: Appointments */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Filter Bar */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          {/* Search Input */}
+          <div className="relative w-full sm:w-[54rem]">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+            <input
+              type="text"
+              placeholder="Search by name, phone, or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
 
-          {/* Upcoming Appointments */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-[700px]">
-            <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                  <span className="material-symbols-outlined text-xl text-blue-600 dark:text-blue-400">event</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white">Upcoming Patient Appointment</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{upcomingAppointments.length} scheduled</p>
-                </div>
-              </div>
-            </div>
+          {/* Date Range Picker and Results Count */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-slate-500 dark:text-slate-400">
+              {filteredAppointments.filter(a => a.appointment).length} appointment{filteredAppointments.filter(a => a.appointment).length !== 1 ? 's' : ''}
+              {filteredAppointments.filter(a => !a.appointment).length > 0 && (
+                <span className="ml-1">
+                  · {filteredAppointments.filter(a => !a.appointment).length} without
+                </span>
+              )}
+            </span>
 
-            <div className="flex-1 overflow-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Patient</th>
-                    <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {upcomingAppointments.length > 0 ? (
-                    upcomingAppointments.map((item: any, index: number) => {
-                      const status = getVerificationStatus(item.patient);
-                      return (
-                        <tr key={index} onClick={() => onSelectPatient?.(item.patient.id)} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="text-sm font-medium text-slate-900 dark:text-white">{formatAppointmentDate(item.appointment.date)}</div>
-                            <div className="text-xs text-slate-500">{item.appointment.time}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm font-medium text-slate-900 dark:text-white">{getPatientName(item.patient)}</div>
-                            <div className="text-xs text-slate-500">Dr. {item.appointment.provider}</div>
-                          </td>
-                          <td className="px-6 py-4">
+            <Popover.Root open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+              <Popover.Trigger asChild>
+                <button className="flex items-center gap-3 px-6 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  <span className="material-symbols-outlined text-2xl">date_range</span>
+                  <span className="text-base font-medium">
+                    {dateRange.from && dateRange.to
+                      ? `${format(dateRange.from, 'MMM d, yyyy')} - ${format(dateRange.to, 'MMM d, yyyy')}`
+                      : 'Select date range'}
+                  </span>
+                </button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  className="z-50 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg p-4"
+                  sideOffset={8}
+                  align="end"
+                >
+                  <div className="flex gap-2 mb-4">
+                    <button
+                      onClick={() => {
+                        setDateRange({
+                          from: subMonths(new Date(), 3),
+                          to: addMonths(new Date(), 3)
+                        });
+                      }}
+                      className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                    >
+                      Default (-3/+3 months)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDateRange({ from: undefined, to: undefined });
+                      }}
+                      className="px-3 py-1.5 text-xs font-medium rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <DayPicker
+                    mode="range"
+                    selected={dateRange}
+                    onSelect={(range) => setDateRange(range || { from: undefined, to: undefined })}
+                    numberOfMonths={2}
+                    className="!font-sans"
+                  />
+                  <Popover.Arrow className="fill-white dark:fill-slate-900" />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+
+            {showAddButton && onAddNewPatient && (
+              <button
+                onClick={onAddNewPatient}
+                className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <span className="material-symbols-outlined text-xl">add</span>
+                <span>New Patient</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Unified Appointments Table */}
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-[700px]">
+          <div className="flex-1 overflow-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
+                <tr>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Appointment Date</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Time</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Patient</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Verification Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {filteredAppointments.length > 0 ? (
+                  filteredAppointments.map((item, index) => {
+                    const status = getVerificationStatus(item.patient);
+                    const relativeDate = item.appointment ? formatRelativeDate(item.appointment.date) : '';
+                    return (
+                      <tr key={index} onClick={() => onSelectPatient?.(item.patient.id)} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
+                        <td className="px-6 py-4">
+                          {item.appointment ? (
+                            <>
+                              <div className="text-sm font-medium text-slate-900 dark:text-white">
+                                {format(parseISO(item.appointment.date), 'EEE, MMM d, yyyy')}
+                              </div>
+                              {relativeDate && (
+                                <div className="text-xs text-slate-500 dark:text-slate-400">{relativeDate}</div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="text-sm text-slate-400 dark:text-slate-500 italic">No appointment</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {item.appointment ? (
+                            <div className="text-sm font-medium text-slate-900 dark:text-white">{item.appointment.time}</div>
+                          ) : (
+                            <div className="text-sm text-slate-400 dark:text-slate-500">—</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-slate-900 dark:text-white">
+                            {highlightMatch(getPatientName(item.patient), searchQuery)}
+                          </div>
+                          {(() => {
+                            const matchField = getSearchMatchField(item.patient, searchQuery);
+                            if (matchField === 'phone') {
+                              return (
+                                <div className="text-xs text-slate-500 dark:text-slate-400">
+                                  {highlightMatch(getPatientPhone(item.patient), searchQuery)}
+                                </div>
+                              );
+                            }
+                            if (matchField === 'email') {
+                              return (
+                                <div className="text-xs text-slate-500 dark:text-slate-400">
+                                  {highlightMatch(getPatientEmail(item.patient), searchQuery)}
+                                </div>
+                              );
+                            }
+                            return item.appointment ? (
+                              <div className="text-xs text-slate-500">Dr. {item.appointment.provider}</div>
+                            ) : null;
+                          })()}
+                        </td>
+                        <td className="px-6 py-4">
+                          {item.appointment ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                               {item.appointment.type}
                             </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full w-20 overflow-hidden">
-                                <div className={`h-full rounded-full ${status.percentage === 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${status.percentage}%` }}></div>
-                              </div>
-                              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{status.percentage}%</span>
+                          ) : (
+                            <span className="text-sm text-slate-400 dark:text-slate-500">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full w-20 overflow-hidden">
+                              <div className={`h-full rounded-full ${status.percentage === 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${status.percentage}%` }}></div>
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-12 text-center text-slate-500">No upcoming appointments found</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Past Appointments */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-[700px]">
-            <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
-                  <span className="material-symbols-outlined text-xl text-slate-600 dark:text-slate-400">history</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white">Past Appointments Appointment</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{pastAppointments.length} completed</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
+                            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{status.percentage}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
                   <tr>
-                    <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Patient</th>
-                    <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                      {searchQuery.trim() || dateRange.from || dateRange.to
+                        ? 'No appointments match your filters'
+                        : 'No appointments found'}
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {pastAppointments.length > 0 ? (
-                    pastAppointments.map((item, index) => {
-                      const status = getVerificationStatus(item.patient);
-                      return (
-                        <tr key={index} onClick={() => onSelectPatient?.(item.patient.id)} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="text-sm font-medium text-slate-900 dark:text-white">{new Date(item.appointment.date).toLocaleDateString()}</div>
-                            <div className="text-xs text-slate-500">{item.appointment.time}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm font-medium text-slate-900 dark:text-white">{getPatientName(item.patient)}</div>
-                            <div className="text-xs text-slate-500">Dr. {item.appointment.provider}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                              {item.appointment.type}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full w-20 overflow-hidden">
-                                <div className={`h-full rounded-full ${status.percentage === 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${status.percentage}%` }}></div>
-                              </div>
-                              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{status.percentage}%</span>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-12 text-center text-slate-500">No past appointments found</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                )}
+              </tbody>
+            </table>
           </div>
-
         </div>
       </div>
     </section>
