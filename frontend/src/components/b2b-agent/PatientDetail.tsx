@@ -11,6 +11,7 @@ import {
   INSURANCE_SUB_TAB_TYPES,
   INSURANCE_SUB_TAB_LABELS,
 } from '@/types/patient';
+import { PhoneInput, SSNInput, EmailInput } from '@/components/inputs';
 import SmithAICenter from "./SmithAICenter";
 import VerificationForm from "./VerificationForm";
 import CoverageVerificationResults from "./CoverageVerificationResults";
@@ -521,7 +522,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </button>
 
             {/* Request Insurance Fax - Hidden when Data Mode is ON */}
-            {(
+            {/* {(
               <button
                 onClick={() => {
                   // Call the global openFaxModal function exposed by SmartAITransactionHistory
@@ -537,7 +538,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 <span className="material-symbols-outlined text-base">description</span>
                 Fax Document
               </button>
-            )}
+            )} */}
 
 
             {/* Step  Start AI Call */}
@@ -808,13 +809,10 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                     SSN#
                   </label>
                   {isEditing ? (
-                    <input
-                      type="text"
+                    <SSNInput
                       value={editedSSN}
-                      onChange={(e) => setEditedSSN(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                      placeholder="XXX-XX-XXXX"
-                      maxLength={11}
+                      onChange={setEditedSSN}
+                      id="edit-patient-ssn"
                     />
                   ) : (
                     <SensitiveDataField
@@ -936,12 +934,10 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                     Phone
                   </label>
                   {isEditing ? (
-                    <input
-                      type="tel"
+                    <PhoneInput
                       value={editedPhone}
-                      onChange={(e) => setEditedPhone(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                      placeholder="(555) 555-5555"
+                      onChange={setEditedPhone}
+                      id="edit-patient-phone"
                     />
                   ) : (
                     <SensitiveDataField
@@ -958,12 +954,11 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                     Email
                   </label>
                   {isEditing ? (
-                    <input
-                      type="email"
+                    <EmailInput
                       value={editedEmail}
-                      onChange={(e) => setEditedEmail(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                      placeholder="email@example.com"
+                      onChange={setEditedEmail}
+                      id="edit-patient-email"
+                      validateOnBlur
                     />
                   ) : (
                     <SensitiveDataField

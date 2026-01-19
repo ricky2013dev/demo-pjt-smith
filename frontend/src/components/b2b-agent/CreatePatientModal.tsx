@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PhoneInput, SSNInput, EmailInput } from '@/components/inputs';
 
 // Tab types for the create patient form
 const CREATE_PATIENT_TAB_TYPES = {
@@ -269,39 +270,28 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
                     />
                   </div>
 
-                  <div>
-                    <label className={labelClassName}>
-                      SSN <span className="text-xs text-orange-600">(HIPAA Protected)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.ssn}
-                      onChange={(e) => handleChange('ssn', e.target.value)}
-                      className={inputClassName}
-                      placeholder="XXX-XX-XXXX"
-                      maxLength={11}
-                    />
-                  </div>
+                  <SSNInput
+                    value={formData.ssn}
+                    onChange={(value) => handleChange('ssn', value)}
+                    label="SSN"
+                    id="create-patient-ssn"
+                    showToggle={false}
+                  />
 
-                  <div>
-                    <label className={labelClassName}>Phone</label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleChange('phone', e.target.value)}
-                      className={inputClassName}
-                      placeholder="(555) 123-4567"
-                    />
-                  </div>
+                  <PhoneInput
+                    value={formData.phone}
+                    onChange={(value) => handleChange('phone', value)}
+                    label="Phone"
+                    id="create-patient-phone"
+                  />
 
                   <div className="col-span-2">
-                    <label className={labelClassName}>Email</label>
-                    <input
-                      type="email"
+                    <EmailInput
                       value={formData.email}
-                      onChange={(e) => handleChange('email', e.target.value)}
-                      className={inputClassName}
-                      placeholder="patient@example.com"
+                      onChange={(value) => handleChange('email', value)}
+                      label="Email"
+                      id="create-patient-email"
+                      validateOnBlur
                     />
                   </div>
                 </div>
