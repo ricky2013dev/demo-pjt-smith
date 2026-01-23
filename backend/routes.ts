@@ -23,6 +23,7 @@ import multer from "multer";
 import { processInsuranceCard } from "./ocr";
 import { auditLog, logPhiAccess, logPhiDecrypt, logAuth, logSecurityViolation } from "./audit";
 import { validateCreatePatient, validateUpdatePatient, validateLogin, sanitizePatientData } from "./validation";
+import { log } from "console";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -110,6 +111,21 @@ export async function registerRoutes(
       (req.session as any).userRole = user.role;
       (req.session as any).userEmail = user.email;
 
+      // Fetch provider info if user has a provider assigned
+      let providerInfo = null;
+      if (user.providerId) {
+        const provider = await storage.getProviderById(user.providerId);
+        if (provider) {
+          providerInfo = {
+            id: provider.id,
+            name: provider.name,
+            npiNumber: provider.npiNumber
+          };
+          // Store provider NPI in session as requested
+          (req.session as any).npiNumber = provider.npiNumber;
+        }
+      }
+
       // HIPAA Audit: Log successful login
       logAuth('AUTH_LOGIN_SUCCESS', email, true, req);
 
@@ -118,7 +134,10 @@ export async function registerRoutes(
         user: {
           id: user.id,
           email: user.email,
-          role: user.role
+          role: user.role,
+          stediEnabled: user.stediEnabled,
+          providerId: user.providerId,
+          provider: providerInfo
         }
       });
     } catch (error: any) {
@@ -210,13 +229,28 @@ export async function registerRoutes(
         return res.status(401).json({ error: "User not found" });
       }
 
+      let providerInfo = null;
+      if (user.providerId) {
+        const provider = await storage.getProviderById(user.providerId);
+        if (provider) {
+          providerInfo = {
+            id: provider.id,
+            name: provider.name,
+            npiNumber: provider.npiNumber
+          };
+        }
+      }
+
       res.json({
         user: {
           id: user.id,
           email: user.email,
           role: user.role,
           username: user.username,
-          dataSource: user.dataSource
+          dataSource: user.dataSource,
+          stediEnabled: user.stediEnabled,
+          providerId: user.providerId,
+          provider: providerInfo
         }
       });
     } catch (error) {
@@ -232,6 +266,145 @@ export async function registerRoutes(
     }
     next();
   };
+
+  // Get all payers
+  app.get("/api/payers", async (_req, res) => {
+    try {
+      const payers = await storage.getAllPayers();
+      res.json(payers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch payers" });
+    }
+  });
+
+  // Create Payer (Admin only)
+  app.post("/api/payers", requireAdmin, async (req, res) => {
+    try {
+      const { name, payerId, faxNumber, phoneNumber } = req.body;
+      if (!name || !payerId) {
+        return res.status(400).json({ error: "Name and Payer ID are required" });
+      }
+
+      const payer = await storage.createPayer({
+        name,
+        payerId,
+        faxNumber,
+        phoneNumber
+      });
+      res.json(payer);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create payer" });
+    }
+  });
+
+  // Update Payer (Admin only)
+  app.put("/api/payers/:id", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, payerId, faxNumber, phoneNumber } = req.body;
+
+      const payer = await storage.updatePayer(id, {
+        name,
+        payerId,
+        faxNumber,
+        phoneNumber
+      });
+
+      if (!payer) {
+        return res.status(404).json({ error: "Payer not found" });
+      }
+      res.json(payer);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update payer" });
+    }
+  });
+
+  // Delete Payer (Admin only)
+  app.delete("/api/payers/:id", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deletePayer(id);
+      if (!success) {
+        return res.status(404).json({ error: "Payer not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete payer" });
+    }
+  });
+
+  // Provider management routes
+  app.get("/api/providers", async (_req, res) => {
+    try {
+      const providers = await storage.getAllProviders();
+      res.json(providers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch providers" });
+    }
+  });
+
+  app.post("/api/providers", requireAdmin, async (req, res) => {
+    try {
+      const { name, npiNumber, faxNumber, phoneNumber, address, taxNumber } = req.body;
+      if (!name || !npiNumber) {
+        return res.status(400).json({ error: "Name and NPI Number are required" });
+      }
+
+      const provider = await storage.createProvider({
+        name,
+        npiNumber,
+        faxNumber,
+        phoneNumber,
+        address,
+        taxNumber
+      });
+      res.json(provider);
+    } catch (error: any) {
+      if (error.code === '23505') { // Unique violation
+        return res.status(400).json({ error: "NPI Number already exists" });
+      }
+      res.status(500).json({ error: "Failed to create provider" });
+    }
+  });
+
+  app.put("/api/providers/:id", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, npiNumber, faxNumber, phoneNumber, address, taxNumber } = req.body;
+
+      const provider = await storage.updateProvider(id, {
+        name,
+        npiNumber,
+        faxNumber,
+        phoneNumber,
+        address,
+        taxNumber
+      });
+
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+      res.json(provider);
+    } catch (error: any) {
+      if (error.code === '23505') {
+        return res.status(400).json({ error: "NPI Number already exists" });
+      }
+      res.status(500).json({ error: "Failed to update provider" });
+    }
+  });
+
+  app.delete("/api/providers/:id", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteProvider(id);
+      if (!success) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete provider" });
+    }
+  });
 
   // User management routes (admin only)
   /**
@@ -274,8 +447,20 @@ export async function registerRoutes(
   app.get("/api/users", requireAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      // Don't send passwords to the client
-      const safeUsers = users.map(({ password, ...user }) => user);
+      const providers = await storage.getAllProviders();
+
+      // Create a map for quick lookup
+      const providerMap = new Map(providers.map(p => [p.id, p]));
+
+      // Don't send passwords to the client and add provider details
+      const safeUsers = users.map(({ password, ...user }) => {
+        const provider = user.providerId ? providerMap.get(user.providerId) : null;
+        return {
+          ...user,
+          providerName: provider?.name || null,
+          npiNumber: provider?.npiNumber || null
+        };
+      });
       res.json({ success: true, users: safeUsers });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch users" });
@@ -350,7 +535,7 @@ export async function registerRoutes(
    */
   app.post("/api/users", requireAdmin, async (req, res) => {
     try {
-      const { email, username, password, role, dataSource } = req.body;
+      const { email, username, password, role, dataSource, providerId } = req.body;
 
       if (!email || !username || !password || !role) {
         return res.status(400).json({ error: "Email, username, password, and role are required" });
@@ -374,7 +559,8 @@ export async function registerRoutes(
         username,
         password: hashedPassword,
         role,
-        dataSource: dataSource || null
+        dataSource: dataSource || null,
+        providerId: providerId || null
       });
 
       const { password: _, ...safeUser } = user;
@@ -387,7 +573,7 @@ export async function registerRoutes(
   app.put("/api/users/:id", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const { email, username, role, dataSource } = req.body;
+      const { email, username, role, dataSource, stediEnabled, providerId } = req.body;
 
       // Check if trying to update to existing email
       if (email) {
@@ -410,6 +596,8 @@ export async function registerRoutes(
       if (username) updates.username = username;
       if (role) updates.role = role;
       if (dataSource !== undefined) updates.dataSource = dataSource;
+      if (stediEnabled !== undefined) updates.stediEnabled = stediEnabled;
+      if (providerId !== undefined) updates.providerId = providerId;
 
       const user = await storage.updateUser(id, updates);
       if (!user) {
@@ -463,6 +651,33 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to update password" });
+    }
+  });
+
+  // Toggle Stedi API for current user
+  app.put("/api/user/stedi-toggle", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const { stediEnabled } = req.body;
+      if (typeof stediEnabled !== 'boolean') {
+        return res.status(400).json({ error: "stediEnabled must be a boolean" });
+      }
+
+      const user = await storage.updateUser(userId, { stediEnabled });
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({
+        success: true,
+        stediEnabled: user.stediEnabled
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update Stedi setting" });
     }
   });
 
@@ -695,6 +910,7 @@ export async function registerRoutes(
 
       res.json({ success: true, patients: patientsWithData });
     } catch (error) {
+      console.error("Error fetching patients:", error);
       res.status(500).json({ error: "Failed to fetch patients" });
     }
   });
@@ -852,11 +1068,12 @@ export async function registerRoutes(
       }
 
       if (addresses && Array.isArray(addresses)) {
-        // Transform addresses from client format (line: string[]) to DB format (line1, line2)
+        // Transform addresses from client format to DB format
+        // Supports both line1/line2 format and line array format
         await Promise.all(addresses.map(a => storage.createPatientAddress({
           patientId: newPatient.id,
-          line1: a.line?.[0] ?? null,
-          line2: a.line?.[1] ?? null,
+          line1: a.line1 ?? a.line?.[0] ?? null,
+          line2: a.line2 ?? a.line?.[1] ?? null,
           city: a.city ?? null,
           state: a.state ?? null,
           postalCode: a.postalCode ?? null
@@ -870,6 +1087,7 @@ export async function registerRoutes(
           patientId: newPatient.id,
           type: i.type ?? 'Primary',
           provider: i.provider ?? '',
+          payerId: i.payerId ?? null,
           policyNumber: i.policyNumber ? encrypt(i.policyNumber) : null,
           groupNumber: i.groupNumber ? encrypt(i.groupNumber) : null,
           subscriberName: i.subscriberName ?? null,
@@ -1134,6 +1352,7 @@ export async function registerRoutes(
             patientId: newPatient.id,
             type: i.type,
             provider: i.provider,
+            payerId: (i as any).payerId ?? null,
             policyNumber: encrypt(i.policyNumber),
             groupNumber: encrypt(i.groupNumber),
             subscriberName: i.subscriberName,
@@ -1303,6 +1522,7 @@ export async function registerRoutes(
             // Update existing insurance
             await storage.updateInsurance(existingInsurance.id, {
               provider: insuranceData.provider ?? existingInsurance.provider,
+              payerId: insuranceData.payerId ?? existingInsurance.payerId,
               policyNumber: insuranceData.policyNumber === '************'
                 ? existingInsurance.policyNumber // Keep existing encrypted value
                 : (insuranceData.policyNumber ? encrypt(insuranceData.policyNumber) : null),
@@ -1329,6 +1549,7 @@ export async function registerRoutes(
               patientId: id,
               type: insuranceData.type ?? 'Primary',
               provider: insuranceData.provider ?? '',
+              payerId: insuranceData.payerId ?? null,
               policyNumber: insuranceData.policyNumber ? encrypt(insuranceData.policyNumber) : null,
               groupNumber: insuranceData.groupNumber ? encrypt(insuranceData.groupNumber) : null,
               subscriberName: insuranceData.subscriberName ?? null,
@@ -1841,6 +2062,7 @@ export async function registerRoutes(
             patientId: id,
             type: 'Primary',
             provider: extractedData.provider,
+            payerId: null,
             policyNumber: extractedData.policyNumber ? encrypt(extractedData.policyNumber) : null,
             groupNumber: extractedData.groupNumber ? encrypt(extractedData.groupNumber) : null,
             subscriberId: extractedData.subscriberId ? encrypt(extractedData.subscriberId) : null,
@@ -2301,8 +2523,8 @@ export async function registerRoutes(
 
       // Auto-create CALL transaction when API transaction is updated to SUCCESS
       if (existingTransaction.type === 'API' &&
-          txnData.status === 'SUCCESS' &&
-          existingTransaction.status !== 'SUCCESS') {
+        txnData.status === 'SUCCESS' &&
+        existingTransaction.status !== 'SUCCESS') {
 
         // Generate new request ID for CALL transaction
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
@@ -2595,7 +2817,16 @@ export async function registerRoutes(
    */
   app.post("/api/stedi/dental-benefits", async (req, res) => {
     try {
-      const { subscriber, provider } = req.body;
+      let { subscriber, provider } = req.body;
+
+      // Use NPI from session if available (Provider Management requirement)
+      const sessionNpi = (req.session as any).npiNumber;
+      if (sessionNpi) {
+        provider = {
+          ...provider,
+          npi: sessionNpi
+        };
+      }
 
       if (!subscriber || !provider) {
         return res.status(400).json({
@@ -2663,6 +2894,77 @@ export async function registerRoutes(
       // HIPAA Security: Log error internally but don't expose details
       auditLog('ERROR', { action: 'check_eligibility', success: false, errorMessage: error.message }, req);
       res.status(500).json({ success: false, error: "Failed to check eligibility. Please try again." });
+    }
+  });
+
+  // Raw Stedi Eligibility API endpoint for testing
+  /**
+   * @openapi
+   * /api/stedi/raw-eligibility:
+   *   post:
+   *     tags:
+   *       - Stedi Integration
+   *     summary: Raw Stedi Eligibility API test
+   *     description: Call Stedi Eligibility API directly with custom request body for testing purposes
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             description: Raw request body to send to Stedi API
+   *     responses:
+   *       200:
+   *         description: Raw response from Stedi API
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *       500:
+   *         description: Error calling Stedi API
+   */
+  app.post("/api/stedi/raw-eligibility", async (req, res) => {
+    try {
+      if (!STEDI_API_KEY) {
+        return res.status(500).json({
+          success: false,
+          error: "STEDI_API_KEY is not configured on the server"
+        });
+      }
+
+      const requestBody = req.body;
+      auditLog('INFO', { action: 'raw_stedi_api_call', requestBody: JSON.stringify(requestBody).substring(0, 200) }, req);
+
+      const response = await axios.post(
+        `${STEDI_BASE_URL}/change/medicalnetwork/eligibility/v3`,
+        requestBody,
+        {
+          headers: {
+            Authorization: STEDI_API_KEY,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+      console.log('Stedi API response:', response);
+      auditLog('INFO', { action: 'raw_stedi_api_call', success: true }, req);
+
+      res.json(response.data);
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'raw_stedi_api_call', success: false, errorMessage: error.message }, req);
+
+      // Return the actual error response from Stedi if available
+      if (error.response) {
+        return res.status(error.response.status).json({
+          success: false,
+          error: error.response.data?.error || error.message,
+          stediResponse: error.response.data
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        error: error.message || "Failed to call Stedi API"
+      });
     }
   });
 

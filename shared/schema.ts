@@ -10,6 +10,8 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   role: text("role").notNull().default("user"),
   dataSource: text("data_source"),
+  stediEnabled: boolean("stedi_enabled").notNull().default(false),
+  providerId: varchar("provider_id").references(() => providers.id),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -18,6 +20,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   role: true,
   dataSource: true,
+  stediEnabled: true,
+  providerId: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -62,6 +66,7 @@ export const insurances = pgTable("insurances", {
   patientId: varchar("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
   type: text("type").notNull(), // 'Primary' | 'Secondary'
   provider: text("provider").notNull(),
+  payerId: text("payer_id"), // Stedi API payer ID for verification
   policyNumber: text("policy_number"), // Encrypted - HIPAA sensitive
   groupNumber: text("group_number"), // Encrypted - HIPAA sensitive
   subscriberName: text("subscriber_name"),
@@ -245,6 +250,15 @@ export const ifCallCoverageCodeList = pgTable("if_call_coverage_code_list", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Payers list
+export const payers = pgTable("payers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  payerId: text("payer_id").notNull().unique(),
+  faxNumber: text("fax_number"),
+  phoneNumber: text("phone_number"),
+});
+
 // Interface for call messages
 export const ifCallMessageList = pgTable("if_call_message_list", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -273,6 +287,21 @@ export const insertCoverageByCodeSchema = createInsertSchema(coverageByCode);
 export const insertIfCallTransactionListSchema = createInsertSchema(ifCallTransactionList);
 export const insertIfCallCoverageCodeListSchema = createInsertSchema(ifCallCoverageCodeList);
 export const insertIfCallMessageListSchema = createInsertSchema(ifCallMessageList);
+export const insertPayerSchema = createInsertSchema(payers);
+
+// Providers table
+export const providers = pgTable("providers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  npiNumber: text("npi_number").notNull().unique(),
+  faxNumber: text("fax_number"),
+  phoneNumber: text("phone_number"),
+  address: text("address"),
+  taxNumber: text("tax_number"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertProviderSchema = createInsertSchema(providers);
 
 // Export types
 export type Patient = typeof patients.$inferSelect;
@@ -288,6 +317,8 @@ export type VerificationStatus = typeof verificationStatuses.$inferSelect;
 export type AiCallHistory = typeof aiCallHistory.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type CallCommunication = typeof callCommunications.$inferSelect;
+export type Payer = typeof payers.$inferSelect;
+export type Provider = typeof providers.$inferSelect;
 
 export type InsertCoverageDetail = z.infer<typeof insertCoverageDetailsSchema>;
 export type InsertProcedure = z.infer<typeof insertProcedureSchema>;
@@ -300,3 +331,5 @@ export type IfCallCoverageCodeList = typeof ifCallCoverageCodeList.$inferSelect;
 export type InsertIfCallCoverageCodeList = z.infer<typeof insertIfCallCoverageCodeListSchema>;
 export type IfCallMessageList = typeof ifCallMessageList.$inferSelect;
 export type InsertIfCallMessageList = z.infer<typeof insertIfCallMessageListSchema>;
+export type InsertPayer = z.infer<typeof insertPayerSchema>;
+export type InsertProvider = z.infer<typeof insertProviderSchema>;

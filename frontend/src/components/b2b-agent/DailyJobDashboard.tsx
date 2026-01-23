@@ -214,9 +214,18 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
     return 'bg-slate-300 dark:bg-slate-600';
   };
 
+  // Capitalize first letter of each word, lowercase the rest
+  const capitalizeWord = (word: string): string => {
+    if (!word) return '';
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  };
+
   const getPatientName = (patient: Patient) => {
-    const given = patient.name.given.join(' ');
-    return `${given} ${patient.name.family}`.trim();
+    const given = patient.name.given
+      .map(name => name.split(' ').map(capitalizeWord).join(' '))
+      .join(' ');
+    const family = capitalizeWord(patient.name.family);
+    return `${given} ${family}`.trim();
   };
 
   const getJobStatus = (job: PatientJob) => {
@@ -632,7 +641,7 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Duration</th>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Type</th>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Status</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Insurance Provider</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Insurance(Payer)</th>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Insurance Rep</th>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Score</th>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Run By</th>

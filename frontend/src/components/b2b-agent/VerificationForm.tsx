@@ -1,11 +1,18 @@
 import React, { useRef, useState } from "react";
 import { Patient } from '@/types/patient';
+import { InsuranceProviderSelect } from '@/components/inputs';
 import verificationData from "@mockupdata/verificationData.json";
 // import availityService from "../services/availityService"; // Not currently used
 
 interface VerificationFormProps {
   patient: Patient;
 }
+
+// Capitalize first letter of each word, lowercase the rest
+const capitalizeWord = (word: string): string => {
+  if (!word) return '';
+  return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+};
 
 const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
   const formRef = useRef<HTMLDivElement>(null);
@@ -22,6 +29,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
     subscriberDOB: '',
     subscriberID: '',
     insuranceCompany: '',
+    payerId: '',
     insurerType: { primary: true, secondary: false },
     insuranceAddress: '',
     insurancePhone: '',
@@ -97,7 +105,7 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
   const [formData] = useState(isNewPatient ? emptyFormData : verificationData);
   const [showPatientSSN, setShowPatientSSN] = useState(false);
   const [showSubscriberSSN, setShowSubscriberSSN] = useState(false);
-  const [collapsedSections, setCollapsedSections] = useState<{[key: string]: boolean}>({
+  const [collapsedSections, setCollapsedSections] = useState<{ [key: string]: boolean }>({
     patient: false,
     subscriber: false,
     insurance: false,
@@ -225,8 +233,11 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
   // };
 
   const getFullName = () => {
-    const given = patient.name.given.join(" ");
-    return `${given} ${patient.name.family}`.trim();
+    const given = patient.name.given
+      .map(name => name.split(' ').map(capitalizeWord).join(' '))
+      .join(' ');
+    const family = capitalizeWord(patient.name.family);
+    return `${given} ${family}`.trim();
   };
 
   const maskSSN = (_ssn: string) => {
@@ -960,158 +971,158 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
               </h4>
             </button>
             {!collapsedSections.patient && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Patient Name
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.patientName}
-                    onChange={(e) => handleFieldChange('patientName', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{getFullName()}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Patient SSN
-                </label>
-                <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Patient Name
+                  </label>
                   {isEditing ? (
                     <input
                       type="text"
-                      className="w-full px-3 py-2 pr-10 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                      value={editedFormData.patientSSN}
-                      onChange={(e) => handleFieldChange('patientSSN', e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.patientName}
+                      onChange={(e) => handleFieldChange('patientName', e.target.value)}
                     />
                   ) : (
-                    <>
-                      <p className="w-full px-3 py-2 pr-10 text-slate-900 dark:text-white">
-                        {showPatientSSN ? formData.patientSSN : maskSSN(formData.patientSSN)}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setShowPatientSSN(!showPatientSSN)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                      >
-                        <span className="material-symbols-outlined text-lg">
-                          {showPatientSSN ? 'visibility_off' : 'visibility'}
-                        </span>
-                      </button>
-                    </>
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{getFullName()}</p>
                   )}
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Patient DOB
-                </label>
-                {isEditing ? (
-                  <input
-                    type="date"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.patientDOB}
-                    onChange={(e) => handleFieldChange('patientDOB', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{patient.birthDate}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Relationship to Subscriber
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.relationshipToSubscriber}
-                    onChange={(e) => handleFieldChange('relationshipToSubscriber', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.relationshipToSubscriber}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Subscriber Name
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.subscriberName}
-                    onChange={(e) => handleFieldChange('subscriberName', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.subscriberName}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Subscriber SSN
-                </label>
-                <div className="relative">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Patient SSN
+                  </label>
+                  <div className="relative">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 pr-10 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                        value={editedFormData.patientSSN}
+                        onChange={(e) => handleFieldChange('patientSSN', e.target.value)}
+                      />
+                    ) : (
+                      <>
+                        <p className="w-full px-3 py-2 pr-10 text-slate-900 dark:text-white">
+                          {showPatientSSN ? formData.patientSSN : maskSSN(formData.patientSSN)}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowPatientSSN(!showPatientSSN)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        >
+                          <span className="material-symbols-outlined text-lg">
+                            {showPatientSSN ? 'visibility_off' : 'visibility'}
+                          </span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Patient DOB
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.patientDOB}
+                      onChange={(e) => handleFieldChange('patientDOB', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{patient.birthDate}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Relationship to Subscriber
+                  </label>
                   {isEditing ? (
                     <input
                       type="text"
-                      className="w-full px-3 py-2 pr-10 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                      value={editedFormData.subscriberSSN}
-                      onChange={(e) => handleFieldChange('subscriberSSN', e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.relationshipToSubscriber}
+                      onChange={(e) => handleFieldChange('relationshipToSubscriber', e.target.value)}
                     />
                   ) : (
-                    <>
-                      <p className="w-full px-3 py-2 pr-10 text-slate-900 dark:text-white">
-                        {showSubscriberSSN ? formData.subscriberSSN : maskSSN(formData.subscriberSSN)}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setShowSubscriberSSN(!showSubscriberSSN)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                      >
-                        <span className="material-symbols-outlined text-lg">
-                          {showSubscriberSSN ? 'visibility_off' : 'visibility'}
-                        </span>
-                      </button>
-                    </>
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.relationshipToSubscriber}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Subscriber Name
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.subscriberName}
+                      onChange={(e) => handleFieldChange('subscriberName', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.subscriberName}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Subscriber SSN
+                  </label>
+                  <div className="relative">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 pr-10 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                        value={editedFormData.subscriberSSN}
+                        onChange={(e) => handleFieldChange('subscriberSSN', e.target.value)}
+                      />
+                    ) : (
+                      <>
+                        <p className="w-full px-3 py-2 pr-10 text-slate-900 dark:text-white">
+                          {showSubscriberSSN ? formData.subscriberSSN : maskSSN(formData.subscriberSSN)}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowSubscriberSSN(!showSubscriberSSN)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        >
+                          <span className="material-symbols-outlined text-lg">
+                            {showSubscriberSSN ? 'visibility_off' : 'visibility'}
+                          </span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Subscriber DOB
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.subscriberDOB}
+                      onChange={(e) => handleFieldChange('subscriberDOB', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.subscriberDOB}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Subscriber ID Number
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.subscriberID}
+                      onChange={(e) => handleFieldChange('subscriberID', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.subscriberID}</p>
                   )}
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Subscriber DOB
-                </label>
-                {isEditing ? (
-                  <input
-                    type="date"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.subscriberDOB}
-                    onChange={(e) => handleFieldChange('subscriberDOB', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.subscriberDOB}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Subscriber ID Number
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.subscriberID}
-                    onChange={(e) => handleFieldChange('subscriberID', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.subscriberID}</p>
-                )}
-              </div>
-            </div>
             )}
           </div>
 
@@ -1130,229 +1141,231 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
               </h4>
             </button>
             {!collapsedSections.insurance && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Insurance Company
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.insuranceCompany}
-                    onChange={(e) => handleFieldChange('insuranceCompany', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.insuranceCompany}</p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Insurance Company
+                  </label>
+                  {isEditing ? (
+                    <InsuranceProviderSelect
+                      value={editedFormData.payerId || ''}
+                      onChange={(payerId, payerName) => {
+                        handleFieldChange('payerId', payerId);
+                        handleFieldChange('insuranceCompany', payerName);
+                      }}
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.insuranceCompany}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Insurer Type
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={editedFormData.insurerType.primary}
+                          onChange={(e) => handleFieldChange('insurerType', { ...editedFormData.insurerType, primary: e.target.checked })}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Primary</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={editedFormData.insurerType.secondary}
+                          onChange={(e) => handleFieldChange('insurerType', { ...editedFormData.insurerType, secondary: e.target.checked })}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Secondary</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">
+                      {[formData.insurerType.primary && 'Primary', formData.insurerType.secondary && 'Secondary'].filter(Boolean).join(', ') || 'None'}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Address
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.insuranceAddress}
+                      onChange={(e) => handleFieldChange('insuranceAddress', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.insuranceAddress}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Phone
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.insurancePhone}
+                      onChange={(e) => handleFieldChange('insurancePhone', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.insurancePhone}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Employer
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.employer}
+                      onChange={(e) => handleFieldChange('employer', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.employer}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Group Number
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.groupNumber}
+                      onChange={(e) => handleFieldChange('groupNumber', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.groupNumber}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Effective Date
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.effectiveDate}
+                      onChange={(e) => handleFieldChange('effectiveDate', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.effectiveDate}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Renewal Month
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.renewalMonth}
+                      onChange={(e) => handleFieldChange('renewalMonth', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.renewalMonth}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Yearly Max
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.yearlyMax}
+                      onChange={(e) => handleFieldChange('yearlyMax', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.yearlyMax}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Deductible Per Individual
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.deductiblePerIndividual}
+                      onChange={(e) => handleFieldChange('deductiblePerIndividual', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.deductiblePerIndividual}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Deductible Per Family
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.deductiblePerFamily}
+                      onChange={(e) => handleFieldChange('deductiblePerFamily', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.deductiblePerFamily}</p>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Deductible Applies To
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={editedFormData.deductibleAppliesTo.preventative}
+                          onChange={(e) => handleFieldChange('deductibleAppliesTo', { ...editedFormData.deductibleAppliesTo, preventative: e.target.checked })}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Preventative</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={editedFormData.deductibleAppliesTo.basic}
+                          onChange={(e) => handleFieldChange('deductibleAppliesTo', { ...editedFormData.deductibleAppliesTo, basic: e.target.checked })}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Basic</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={editedFormData.deductibleAppliesTo.major}
+                          onChange={(e) => handleFieldChange('deductibleAppliesTo', { ...editedFormData.deductibleAppliesTo, major: e.target.checked })}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Major</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">
+                      {[formData.deductibleAppliesTo.preventative && 'Preventative', formData.deductibleAppliesTo.basic && 'Basic', formData.deductibleAppliesTo.major && 'Major'].filter(Boolean).join(', ') || 'None'}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Insurer Type
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="rounded"
-                        checked={editedFormData.insurerType.primary}
-                        onChange={(e) => handleFieldChange('insurerType', { ...editedFormData.insurerType, primary: e.target.checked })}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Primary</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="rounded"
-                        checked={editedFormData.insurerType.secondary}
-                        onChange={(e) => handleFieldChange('insurerType', { ...editedFormData.insurerType, secondary: e.target.checked })}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Secondary</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">
-                    {[formData.insurerType.primary && 'Primary', formData.insurerType.secondary && 'Secondary'].filter(Boolean).join(', ') || 'None'}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Address
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.insuranceAddress}
-                    onChange={(e) => handleFieldChange('insuranceAddress', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.insuranceAddress}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Phone
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.insurancePhone}
-                    onChange={(e) => handleFieldChange('insurancePhone', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.insurancePhone}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Employer
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.employer}
-                    onChange={(e) => handleFieldChange('employer', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.employer}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Group Number
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.groupNumber}
-                    onChange={(e) => handleFieldChange('groupNumber', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.groupNumber}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Effective Date
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.effectiveDate}
-                    onChange={(e) => handleFieldChange('effectiveDate', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.effectiveDate}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Renewal Month
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.renewalMonth}
-                    onChange={(e) => handleFieldChange('renewalMonth', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.renewalMonth}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Yearly Max
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.yearlyMax}
-                    onChange={(e) => handleFieldChange('yearlyMax', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.yearlyMax}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Deductible Per Individual
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.deductiblePerIndividual}
-                    onChange={(e) => handleFieldChange('deductiblePerIndividual', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.deductiblePerIndividual}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Deductible Per Family
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.deductiblePerFamily}
-                    onChange={(e) => handleFieldChange('deductiblePerFamily', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.deductiblePerFamily}</p>
-                )}
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Deductible Applies To
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="rounded"
-                        checked={editedFormData.deductibleAppliesTo.preventative}
-                        onChange={(e) => handleFieldChange('deductibleAppliesTo', { ...editedFormData.deductibleAppliesTo, preventative: e.target.checked })}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Preventative</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="rounded"
-                        checked={editedFormData.deductibleAppliesTo.basic}
-                        onChange={(e) => handleFieldChange('deductibleAppliesTo', { ...editedFormData.deductibleAppliesTo, basic: e.target.checked })}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Basic</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="rounded"
-                        checked={editedFormData.deductibleAppliesTo.major}
-                        onChange={(e) => handleFieldChange('deductibleAppliesTo', { ...editedFormData.deductibleAppliesTo, major: e.target.checked })}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Major</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">
-                    {[formData.deductibleAppliesTo.preventative && 'Preventative', formData.deductibleAppliesTo.basic && 'Basic', formData.deductibleAppliesTo.major && 'Major'].filter(Boolean).join(', ') || 'None'}
-                  </p>
-                )}
-              </div>
-            </div>
             )}
           </div>
 
@@ -1371,335 +1384,335 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
               </h4>
             </button>
             {!collapsedSections.preventative && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Covered at (%)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.preventativeCoveredAt}
-                    onChange={(e) => handleFieldChange('preventativeCoveredAt', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.preventativeCoveredAt}%</p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Covered at (%)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.preventativeCoveredAt}
+                      onChange={(e) => handleFieldChange('preventativeCoveredAt', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.preventativeCoveredAt}%</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Waiting Period?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="preventativeWaiting"
+                          checked={editedFormData.preventativeWaitingPeriod === true}
+                          onChange={() => handleFieldChange('preventativeWaitingPeriod', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="preventativeWaiting"
+                          checked={editedFormData.preventativeWaitingPeriod === false}
+                          onChange={() => handleFieldChange('preventativeWaitingPeriod', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.preventativeWaitingPeriod ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Effective Date
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.preventativeEffectiveDate}
+                      onChange={(e) => handleFieldChange('preventativeEffectiveDate', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.preventativeEffectiveDate}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Bitewing Frequency
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.bitewingFrequency}
+                      onChange={(e) => handleFieldChange('bitewingFrequency', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.bitewingFrequency}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Prophylaxis/Exam Frequency
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.prophylaxisExamFrequency}
+                      onChange={(e) => handleFieldChange('prophylaxisExamFrequency', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.prophylaxisExamFrequency}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Last FMS
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.lastFMS}
+                      onChange={(e) => handleFieldChange('lastFMS', e.target.value)}
+                      placeholder="MM/DD/YYYY"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.lastFMS}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Eligible for FMS Now?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="fmsNow"
+                          checked={editedFormData.eligibleForFMSNow === true}
+                          onChange={() => handleFieldChange('eligibleForFMSNow', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="fmsNow"
+                          checked={editedFormData.eligibleForFMSNow === false}
+                          onChange={() => handleFieldChange('eligibleForFMSNow', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.eligibleForFMSNow ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Eligible for FMS Every (Years)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.eligibleForFMSEvery}
+                      onChange={(e) => handleFieldChange('eligibleForFMSEvery', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.eligibleForFMSEvery}</p>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Fluoride Varnish (D1203/D1204/D1206) Frequency
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.fluorideVarnishFrequency}
+                      onChange={(e) => handleFieldChange('fluorideVarnishFrequency', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.fluorideVarnishFrequency}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Age Limit on Fluoride?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="fluorideAge"
+                          checked={editedFormData.fluorideAgeLimitExists === true}
+                          onChange={() => handleFieldChange('fluorideAgeLimitExists', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="fluorideAge"
+                          checked={editedFormData.fluorideAgeLimitExists === false}
+                          onChange={() => handleFieldChange('fluorideAgeLimitExists', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.fluorideAgeLimitExists ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, at what age?
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.fluorideAgeLimit}
+                      onChange={(e) => handleFieldChange('fluorideAgeLimit', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.fluorideAgeLimit}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Sealant (D1351) Coverage?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="sealant"
+                          checked={editedFormData.sealantCoverage === true}
+                          onChange={() => handleFieldChange('sealantCoverage', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="sealant"
+                          checked={editedFormData.sealantCoverage === false}
+                          onChange={() => handleFieldChange('sealantCoverage', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.sealantCoverage ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Sealant Teeth Covered
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={editedFormData.sealantTeethCovered.molars}
+                          onChange={(e) => handleFieldChange('sealantTeethCovered', { ...editedFormData.sealantTeethCovered, molars: e.target.checked })}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Molars</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={editedFormData.sealantTeethCovered.premolars}
+                          onChange={(e) => handleFieldChange('sealantTeethCovered', { ...editedFormData.sealantTeethCovered, premolars: e.target.checked })}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Premolars</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">
+                      {[formData.sealantTeethCovered.molars && 'Molars', formData.sealantTeethCovered.premolars && 'Premolars'].filter(Boolean).join(', ') || 'None'}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Age Limit on Sealants?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="sealantAge"
+                          checked={editedFormData.sealantAgeLimitExists === true}
+                          onChange={() => handleFieldChange('sealantAgeLimitExists', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="sealantAge"
+                          checked={editedFormData.sealantAgeLimitExists === false}
+                          onChange={() => handleFieldChange('sealantAgeLimitExists', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.sealantAgeLimitExists ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, at what age?
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.sealantAgeLimit}
+                      onChange={(e) => handleFieldChange('sealantAgeLimit', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.sealantAgeLimit}</p>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Replacement on Sealant
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.sealantReplacement}
+                      onChange={(e) => handleFieldChange('sealantReplacement', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.sealantReplacement}</p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Waiting Period?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="preventativeWaiting"
-                        checked={editedFormData.preventativeWaitingPeriod === true}
-                        onChange={() => handleFieldChange('preventativeWaitingPeriod', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="preventativeWaiting"
-                        checked={editedFormData.preventativeWaitingPeriod === false}
-                        onChange={() => handleFieldChange('preventativeWaitingPeriod', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.preventativeWaitingPeriod ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Effective Date
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.preventativeEffectiveDate}
-                    onChange={(e) => handleFieldChange('preventativeEffectiveDate', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.preventativeEffectiveDate}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Bitewing Frequency
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.bitewingFrequency}
-                    onChange={(e) => handleFieldChange('bitewingFrequency', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.bitewingFrequency}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Prophylaxis/Exam Frequency
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.prophylaxisExamFrequency}
-                    onChange={(e) => handleFieldChange('prophylaxisExamFrequency', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.prophylaxisExamFrequency}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Last FMS
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.lastFMS}
-                    onChange={(e) => handleFieldChange('lastFMS', e.target.value)}
-                    placeholder="MM/DD/YYYY"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.lastFMS}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Eligible for FMS Now?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="fmsNow"
-                        checked={editedFormData.eligibleForFMSNow === true}
-                        onChange={() => handleFieldChange('eligibleForFMSNow', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="fmsNow"
-                        checked={editedFormData.eligibleForFMSNow === false}
-                        onChange={() => handleFieldChange('eligibleForFMSNow', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.eligibleForFMSNow ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Eligible for FMS Every (Years)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.eligibleForFMSEvery}
-                    onChange={(e) => handleFieldChange('eligibleForFMSEvery', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.eligibleForFMSEvery}</p>
-                )}
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Fluoride Varnish (D1203/D1204/D1206) Frequency
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.fluorideVarnishFrequency}
-                    onChange={(e) => handleFieldChange('fluorideVarnishFrequency', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.fluorideVarnishFrequency}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Age Limit on Fluoride?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="fluorideAge"
-                        checked={editedFormData.fluorideAgeLimitExists === true}
-                        onChange={() => handleFieldChange('fluorideAgeLimitExists', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="fluorideAge"
-                        checked={editedFormData.fluorideAgeLimitExists === false}
-                        onChange={() => handleFieldChange('fluorideAgeLimitExists', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.fluorideAgeLimitExists ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, at what age?
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.fluorideAgeLimit}
-                    onChange={(e) => handleFieldChange('fluorideAgeLimit', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.fluorideAgeLimit}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Sealant (D1351) Coverage?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="sealant"
-                        checked={editedFormData.sealantCoverage === true}
-                        onChange={() => handleFieldChange('sealantCoverage', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="sealant"
-                        checked={editedFormData.sealantCoverage === false}
-                        onChange={() => handleFieldChange('sealantCoverage', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.sealantCoverage ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Sealant Teeth Covered
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="rounded"
-                        checked={editedFormData.sealantTeethCovered.molars}
-                        onChange={(e) => handleFieldChange('sealantTeethCovered', { ...editedFormData.sealantTeethCovered, molars: e.target.checked })}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Molars</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="rounded"
-                        checked={editedFormData.sealantTeethCovered.premolars}
-                        onChange={(e) => handleFieldChange('sealantTeethCovered', { ...editedFormData.sealantTeethCovered, premolars: e.target.checked })}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Premolars</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">
-                    {[formData.sealantTeethCovered.molars && 'Molars', formData.sealantTeethCovered.premolars && 'Premolars'].filter(Boolean).join(', ') || 'None'}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Age Limit on Sealants?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="sealantAge"
-                        checked={editedFormData.sealantAgeLimitExists === true}
-                        onChange={() => handleFieldChange('sealantAgeLimitExists', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="sealantAge"
-                        checked={editedFormData.sealantAgeLimitExists === false}
-                        onChange={() => handleFieldChange('sealantAgeLimitExists', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.sealantAgeLimitExists ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, at what age?
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.sealantAgeLimit}
-                    onChange={(e) => handleFieldChange('sealantAgeLimit', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.sealantAgeLimit}</p>
-                )}
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Replacement on Sealant
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.sealantReplacement}
-                    onChange={(e) => handleFieldChange('sealantReplacement', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.sealantReplacement}</p>
-                )}
-              </div>
-            </div>
             )}
           </div>
 
@@ -1718,83 +1731,83 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
               </h4>
             </button>
             {!collapsedSections.basic && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Covered at (%)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.basicCoveredAt}
-                    onChange={(e) => handleFieldChange('basicCoveredAt', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.basicCoveredAt}%</p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Covered at (%)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.basicCoveredAt}
+                      onChange={(e) => handleFieldChange('basicCoveredAt', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.basicCoveredAt}%</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Waiting Period?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="basicWaiting"
+                          checked={editedFormData.basicWaitingPeriod === true}
+                          onChange={() => handleFieldChange('basicWaitingPeriod', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="basicWaiting"
+                          checked={editedFormData.basicWaitingPeriod === false}
+                          onChange={() => handleFieldChange('basicWaitingPeriod', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.basicWaitingPeriod ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Effective Date
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.basicEffectiveDate}
+                      onChange={(e) => handleFieldChange('basicEffectiveDate', e.target.value)}
+                      placeholder="MM/DD/YYYY"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.basicEffectiveDate}</p>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Includes
+                  </label>
+                  {isEditing ? (
+                    <textarea
+                      rows={2}
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.basicIncludes}
+                      onChange={(e) => handleFieldChange('basicIncludes', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.basicIncludes}</p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Waiting Period?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="basicWaiting"
-                        checked={editedFormData.basicWaitingPeriod === true}
-                        onChange={() => handleFieldChange('basicWaitingPeriod', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="basicWaiting"
-                        checked={editedFormData.basicWaitingPeriod === false}
-                        onChange={() => handleFieldChange('basicWaitingPeriod', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.basicWaitingPeriod ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Effective Date
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.basicEffectiveDate}
-                    onChange={(e) => handleFieldChange('basicEffectiveDate', e.target.value)}
-                    placeholder="MM/DD/YYYY"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.basicEffectiveDate}</p>
-                )}
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Includes
-                </label>
-                {isEditing ? (
-                  <textarea
-                    rows={2}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.basicIncludes}
-                    onChange={(e) => handleFieldChange('basicIncludes', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.basicIncludes}</p>
-                )}
-              </div>
-            </div>
             )}
           </div>
 
@@ -1813,83 +1826,83 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
               </h4>
             </button>
             {!collapsedSections.major && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Covered at (%)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.majorCoveredAt}
-                    onChange={(e) => handleFieldChange('majorCoveredAt', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.majorCoveredAt}%</p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Covered at (%)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.majorCoveredAt}
+                      onChange={(e) => handleFieldChange('majorCoveredAt', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.majorCoveredAt}%</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Waiting Period?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="majorWaiting"
+                          checked={editedFormData.majorWaitingPeriod === true}
+                          onChange={() => handleFieldChange('majorWaitingPeriod', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="majorWaiting"
+                          checked={editedFormData.majorWaitingPeriod === false}
+                          onChange={() => handleFieldChange('majorWaitingPeriod', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.majorWaitingPeriod ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Effective Date
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.majorEffectiveDate}
+                      onChange={(e) => handleFieldChange('majorEffectiveDate', e.target.value)}
+                      placeholder="MM/DD/YYYY"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.majorEffectiveDate}</p>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Includes
+                  </label>
+                  {isEditing ? (
+                    <textarea
+                      rows={2}
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.majorIncludes}
+                      onChange={(e) => handleFieldChange('majorIncludes', e.target.value)}
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.majorIncludes}</p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Waiting Period?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="majorWaiting"
-                        checked={editedFormData.majorWaitingPeriod === true}
-                        onChange={() => handleFieldChange('majorWaitingPeriod', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="majorWaiting"
-                        checked={editedFormData.majorWaitingPeriod === false}
-                        onChange={() => handleFieldChange('majorWaitingPeriod', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.majorWaitingPeriod ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Effective Date
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.majorEffectiveDate}
-                    onChange={(e) => handleFieldChange('majorEffectiveDate', e.target.value)}
-                    placeholder="MM/DD/YYYY"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.majorEffectiveDate}</p>
-                )}
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Includes
-                </label>
-                {isEditing ? (
-                  <textarea
-                    rows={2}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.majorIncludes}
-                    onChange={(e) => handleFieldChange('majorIncludes', e.target.value)}
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.majorIncludes}</p>
-                )}
-              </div>
-            </div>
             )}
           </div>
 
@@ -1908,233 +1921,233 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
               </h4>
             </button>
             {!collapsedSections.periodontal && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  History of SRP (D4341/D4342)?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="srpHistory"
-                        checked={editedFormData.srpHistory === true}
-                        onChange={() => handleFieldChange('srpHistory', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="srpHistory"
-                        checked={editedFormData.srpHistory === false}
-                        onChange={() => handleFieldChange('srpHistory', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpHistory ? 'Yes' : 'No'}</p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    History of SRP (D4341/D4342)?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="srpHistory"
+                          checked={editedFormData.srpHistory === true}
+                          onChange={() => handleFieldChange('srpHistory', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="srpHistory"
+                          checked={editedFormData.srpHistory === false}
+                          onChange={() => handleFieldChange('srpHistory', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpHistory ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, when?
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.srpHistoryDate}
+                      onChange={(e) => handleFieldChange('srpHistoryDate', e.target.value)}
+                      placeholder="MM/DD/YYYY"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpHistoryDate}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    SRP Covered?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="srpCovered"
+                          checked={editedFormData.srpCovered === true}
+                          onChange={() => handleFieldChange('srpCovered', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="srpCovered"
+                          checked={editedFormData.srpCovered === false}
+                          onChange={() => handleFieldChange('srpCovered', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpCovered ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    SRP Frequency
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.srpFrequency}
+                      onChange={(e) => handleFieldChange('srpFrequency', e.target.value)}
+                      placeholder="Frequency"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpFrequency}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    SRP All Quadrants Same Visit?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="srpQuadrants"
+                          checked={editedFormData.srpAllQuadrantsSameVisit === true}
+                          onChange={() => handleFieldChange('srpAllQuadrantsSameVisit', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="srpQuadrants"
+                          checked={editedFormData.srpAllQuadrantsSameVisit === false}
+                          onChange={() => handleFieldChange('srpAllQuadrantsSameVisit', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpAllQuadrantsSameVisit ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If not, waiting period?
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.srpWaitingPeriod}
+                      onChange={(e) => handleFieldChange('srpWaitingPeriod', e.target.value)}
+                      placeholder="Waiting period"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpWaitingPeriod}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Adult Prophylaxis & Isolated SRP Same Visit?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="prophylaxisSRP"
+                          checked={editedFormData.adultProphylaxisWithSRP === true}
+                          onChange={() => handleFieldChange('adultProphylaxisWithSRP', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="prophylaxisSRP"
+                          checked={editedFormData.adultProphylaxisWithSRP === false}
+                          onChange={() => handleFieldChange('adultProphylaxisWithSRP', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.adultProphylaxisWithSRP ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If not, waiting period?
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.adultProphylaxisWaitingPeriod}
+                      onChange={(e) => handleFieldChange('adultProphylaxisWaitingPeriod', e.target.value)}
+                      placeholder="Waiting period"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.adultProphylaxisWaitingPeriod}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Periodontal Maintenance (D4910) Covered?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="perioMaintenance"
+                          checked={editedFormData.periodontalMaintenanceCovered === true}
+                          onChange={() => handleFieldChange('periodontalMaintenanceCovered', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="perioMaintenance"
+                          checked={editedFormData.periodontalMaintenanceCovered === false}
+                          onChange={() => handleFieldChange('periodontalMaintenanceCovered', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.periodontalMaintenanceCovered ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Frequency
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.periodontalMaintenanceFrequency}
+                      onChange={(e) => handleFieldChange('periodontalMaintenanceFrequency', e.target.value)}
+                      placeholder="Frequency"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.periodontalMaintenanceFrequency}</p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, when?
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.srpHistoryDate}
-                    onChange={(e) => handleFieldChange('srpHistoryDate', e.target.value)}
-                    placeholder="MM/DD/YYYY"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpHistoryDate}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  SRP Covered?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="srpCovered"
-                        checked={editedFormData.srpCovered === true}
-                        onChange={() => handleFieldChange('srpCovered', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="srpCovered"
-                        checked={editedFormData.srpCovered === false}
-                        onChange={() => handleFieldChange('srpCovered', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpCovered ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  SRP Frequency
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.srpFrequency}
-                    onChange={(e) => handleFieldChange('srpFrequency', e.target.value)}
-                    placeholder="Frequency"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpFrequency}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  SRP All Quadrants Same Visit?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="srpQuadrants"
-                        checked={editedFormData.srpAllQuadrantsSameVisit === true}
-                        onChange={() => handleFieldChange('srpAllQuadrantsSameVisit', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="srpQuadrants"
-                        checked={editedFormData.srpAllQuadrantsSameVisit === false}
-                        onChange={() => handleFieldChange('srpAllQuadrantsSameVisit', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpAllQuadrantsSameVisit ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If not, waiting period?
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.srpWaitingPeriod}
-                    onChange={(e) => handleFieldChange('srpWaitingPeriod', e.target.value)}
-                    placeholder="Waiting period"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.srpWaitingPeriod}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Adult Prophylaxis & Isolated SRP Same Visit?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="prophylaxisSRP"
-                        checked={editedFormData.adultProphylaxisWithSRP === true}
-                        onChange={() => handleFieldChange('adultProphylaxisWithSRP', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="prophylaxisSRP"
-                        checked={editedFormData.adultProphylaxisWithSRP === false}
-                        onChange={() => handleFieldChange('adultProphylaxisWithSRP', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.adultProphylaxisWithSRP ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If not, waiting period?
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.adultProphylaxisWaitingPeriod}
-                    onChange={(e) => handleFieldChange('adultProphylaxisWaitingPeriod', e.target.value)}
-                    placeholder="Waiting period"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.adultProphylaxisWaitingPeriod}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Periodontal Maintenance (D4910) Covered?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="perioMaintenance"
-                        checked={editedFormData.periodontalMaintenanceCovered === true}
-                        onChange={() => handleFieldChange('periodontalMaintenanceCovered', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="perioMaintenance"
-                        checked={editedFormData.periodontalMaintenanceCovered === false}
-                        onChange={() => handleFieldChange('periodontalMaintenanceCovered', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.periodontalMaintenanceCovered ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Frequency
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.periodontalMaintenanceFrequency}
-                    onChange={(e) => handleFieldChange('periodontalMaintenanceFrequency', e.target.value)}
-                    placeholder="Frequency"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.periodontalMaintenanceFrequency}</p>
-                )}
-              </div>
-            </div>
             )}
           </div>
 
@@ -2153,262 +2166,262 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
               </h4>
             </button>
             {!collapsedSections.implant && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Endosteal Implants (D6012) Covered?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="endosteal"
-                        checked={editedFormData.endostealImplantsCovered === true}
-                        onChange={() => handleFieldChange('endostealImplantsCovered', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="endosteal"
-                        checked={editedFormData.endostealImplantsCovered === false}
-                        onChange={() => handleFieldChange('endostealImplantsCovered', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.endostealImplantsCovered ? 'Yes' : 'No'}</p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Endosteal Implants (D6012) Covered?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="endosteal"
+                          checked={editedFormData.endostealImplantsCovered === true}
+                          onChange={() => handleFieldChange('endostealImplantsCovered', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="endosteal"
+                          checked={editedFormData.endostealImplantsCovered === false}
+                          onChange={() => handleFieldChange('endostealImplantsCovered', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.endostealImplantsCovered ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, covered at (%)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.endostealImplantsCoveredAt}
+                      onChange={(e) => handleFieldChange('endostealImplantsCoveredAt', e.target.value)}
+                      placeholder="%"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.endostealImplantsCoveredAt}%</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Bone Replacement Grafts (D7953) Covered?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="boneGrafts"
+                          checked={editedFormData.boneReplacementGraftsCovered === true}
+                          onChange={() => handleFieldChange('boneReplacementGraftsCovered', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="boneGrafts"
+                          checked={editedFormData.boneReplacementGraftsCovered === false}
+                          onChange={() => handleFieldChange('boneReplacementGraftsCovered', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.boneReplacementGraftsCovered ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, covered at (%)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.boneReplacementGraftsCoveredAt}
+                      onChange={(e) => handleFieldChange('boneReplacementGraftsCoveredAt', e.target.value)}
+                      placeholder="%"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.boneReplacementGraftsCoveredAt}%</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Guided-Tissue Regeneration (D4266/D4267) Covered?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="guidedTissue"
+                          checked={editedFormData.guidedTissueRegenerationCovered === true}
+                          onChange={() => handleFieldChange('guidedTissueRegenerationCovered', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="guidedTissue"
+                          checked={editedFormData.guidedTissueRegenerationCovered === false}
+                          onChange={() => handleFieldChange('guidedTissueRegenerationCovered', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.guidedTissueRegenerationCovered ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, covered at (%)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.guidedTissueRegenerationCoveredAt}
+                      onChange={(e) => handleFieldChange('guidedTissueRegenerationCoveredAt', e.target.value)}
+                      placeholder="%"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.guidedTissueRegenerationCoveredAt}%</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Implant Abutments (D6056/D6057) Covered?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="abutments"
+                          checked={editedFormData.implantAbutmentsCovered === true}
+                          onChange={() => handleFieldChange('implantAbutmentsCovered', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="abutments"
+                          checked={editedFormData.implantAbutmentsCovered === false}
+                          onChange={() => handleFieldChange('implantAbutmentsCovered', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.implantAbutmentsCovered ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, covered at (%)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.implantAbutmentsCoveredAt}
+                      onChange={(e) => handleFieldChange('implantAbutmentsCoveredAt', e.target.value)}
+                      placeholder="%"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.implantAbutmentsCoveredAt}%</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Implant Crowns (D6065/D6066/D6067) Covered?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="implantCrowns"
+                          checked={editedFormData.implantCrownsCovered === true}
+                          onChange={() => handleFieldChange('implantCrownsCovered', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="implantCrowns"
+                          checked={editedFormData.implantCrownsCovered === false}
+                          onChange={() => handleFieldChange('implantCrownsCovered', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.implantCrownsCovered ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, covered at (%)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.implantCrownsCoveredAt}
+                      onChange={(e) => handleFieldChange('implantCrownsCoveredAt', e.target.value)}
+                      placeholder="%"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.implantCrownsCoveredAt}%</p>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Pre-determination Required Prior to Implant Surgery?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="preDetermination"
+                          checked={editedFormData.implantPreDeterminationRequired === true}
+                          onChange={() => handleFieldChange('implantPreDeterminationRequired', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="preDetermination"
+                          checked={editedFormData.implantPreDeterminationRequired === false}
+                          onChange={() => handleFieldChange('implantPreDeterminationRequired', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.implantPreDeterminationRequired ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, covered at (%)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.endostealImplantsCoveredAt}
-                    onChange={(e) => handleFieldChange('endostealImplantsCoveredAt', e.target.value)}
-                    placeholder="%"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.endostealImplantsCoveredAt}%</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Bone Replacement Grafts (D7953) Covered?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="boneGrafts"
-                        checked={editedFormData.boneReplacementGraftsCovered === true}
-                        onChange={() => handleFieldChange('boneReplacementGraftsCovered', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="boneGrafts"
-                        checked={editedFormData.boneReplacementGraftsCovered === false}
-                        onChange={() => handleFieldChange('boneReplacementGraftsCovered', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.boneReplacementGraftsCovered ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, covered at (%)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.boneReplacementGraftsCoveredAt}
-                    onChange={(e) => handleFieldChange('boneReplacementGraftsCoveredAt', e.target.value)}
-                    placeholder="%"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.boneReplacementGraftsCoveredAt}%</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Guided-Tissue Regeneration (D4266/D4267) Covered?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="guidedTissue"
-                        checked={editedFormData.guidedTissueRegenerationCovered === true}
-                        onChange={() => handleFieldChange('guidedTissueRegenerationCovered', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="guidedTissue"
-                        checked={editedFormData.guidedTissueRegenerationCovered === false}
-                        onChange={() => handleFieldChange('guidedTissueRegenerationCovered', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.guidedTissueRegenerationCovered ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, covered at (%)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.guidedTissueRegenerationCoveredAt}
-                    onChange={(e) => handleFieldChange('guidedTissueRegenerationCoveredAt', e.target.value)}
-                    placeholder="%"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.guidedTissueRegenerationCoveredAt}%</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Implant Abutments (D6056/D6057) Covered?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="abutments"
-                        checked={editedFormData.implantAbutmentsCovered === true}
-                        onChange={() => handleFieldChange('implantAbutmentsCovered', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="abutments"
-                        checked={editedFormData.implantAbutmentsCovered === false}
-                        onChange={() => handleFieldChange('implantAbutmentsCovered', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.implantAbutmentsCovered ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, covered at (%)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.implantAbutmentsCoveredAt}
-                    onChange={(e) => handleFieldChange('implantAbutmentsCoveredAt', e.target.value)}
-                    placeholder="%"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.implantAbutmentsCoveredAt}%</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Implant Crowns (D6065/D6066/D6067) Covered?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="implantCrowns"
-                        checked={editedFormData.implantCrownsCovered === true}
-                        onChange={() => handleFieldChange('implantCrownsCovered', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="implantCrowns"
-                        checked={editedFormData.implantCrownsCovered === false}
-                        onChange={() => handleFieldChange('implantCrownsCovered', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.implantCrownsCovered ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, covered at (%)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.implantCrownsCoveredAt}
-                    onChange={(e) => handleFieldChange('implantCrownsCoveredAt', e.target.value)}
-                    placeholder="%"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.implantCrownsCoveredAt}%</p>
-                )}
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Pre-determination Required Prior to Implant Surgery?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="preDetermination"
-                        checked={editedFormData.implantPreDeterminationRequired === true}
-                        onChange={() => handleFieldChange('implantPreDeterminationRequired', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="preDetermination"
-                        checked={editedFormData.implantPreDeterminationRequired === false}
-                        onChange={() => handleFieldChange('implantPreDeterminationRequired', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.implantPreDeterminationRequired ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-            </div>
             )}
           </div>
 
@@ -2427,143 +2440,143 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
               </h4>
             </button>
             {!collapsedSections.orthodontic && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Orthodontics Covered?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="orthodontics"
-                        checked={editedFormData.orthodonticsCovered === true}
-                        onChange={() => handleFieldChange('orthodonticsCovered', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="orthodontics"
-                        checked={editedFormData.orthodonticsCovered === false}
-                        onChange={() => handleFieldChange('orthodonticsCovered', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsCovered ? 'Yes' : 'No'}</p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Orthodontics Covered?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="orthodontics"
+                          checked={editedFormData.orthodonticsCovered === true}
+                          onChange={() => handleFieldChange('orthodonticsCovered', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="orthodontics"
+                          checked={editedFormData.orthodonticsCovered === false}
+                          onChange={() => handleFieldChange('orthodonticsCovered', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsCovered ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, covered at (%)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.orthodonticsCoveredAt}
+                      onChange={(e) => handleFieldChange('orthodonticsCoveredAt', e.target.value)}
+                      placeholder="%"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsCoveredAt}%</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Age Limit on Orthodontic Coverage?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="orthodonticsAge"
+                          checked={editedFormData.orthodonticsAgeLimitExists === true}
+                          onChange={() => handleFieldChange('orthodonticsAgeLimitExists', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="orthodonticsAge"
+                          checked={editedFormData.orthodonticsAgeLimitExists === false}
+                          onChange={() => handleFieldChange('orthodonticsAgeLimitExists', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsAgeLimitExists ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, at what age?
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.orthodonticsAgeLimit}
+                      onChange={(e) => handleFieldChange('orthodonticsAgeLimit', e.target.value)}
+                      placeholder="Age"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsAgeLimit}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Lifetime Maximum?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="orthodonticsLifetime"
+                          checked={editedFormData.orthodonticsLifetimeMaxExists === true}
+                          onChange={() => handleFieldChange('orthodonticsLifetimeMaxExists', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="orthodonticsLifetime"
+                          checked={editedFormData.orthodonticsLifetimeMaxExists === false}
+                          onChange={() => handleFieldChange('orthodonticsLifetimeMaxExists', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsLifetimeMaxExists ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, lifetime maximum ($)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.orthodonticsLifetimeMax}
+                      onChange={(e) => handleFieldChange('orthodonticsLifetimeMax', e.target.value)}
+                      placeholder="$"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsLifetimeMax}</p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, covered at (%)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.orthodonticsCoveredAt}
-                    onChange={(e) => handleFieldChange('orthodonticsCoveredAt', e.target.value)}
-                    placeholder="%"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsCoveredAt}%</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Age Limit on Orthodontic Coverage?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="orthodonticsAge"
-                        checked={editedFormData.orthodonticsAgeLimitExists === true}
-                        onChange={() => handleFieldChange('orthodonticsAgeLimitExists', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="orthodonticsAge"
-                        checked={editedFormData.orthodonticsAgeLimitExists === false}
-                        onChange={() => handleFieldChange('orthodonticsAgeLimitExists', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsAgeLimitExists ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, at what age?
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.orthodonticsAgeLimit}
-                    onChange={(e) => handleFieldChange('orthodonticsAgeLimit', e.target.value)}
-                    placeholder="Age"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsAgeLimit}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Lifetime Maximum?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="orthodonticsLifetime"
-                        checked={editedFormData.orthodonticsLifetimeMaxExists === true}
-                        onChange={() => handleFieldChange('orthodonticsLifetimeMaxExists', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="orthodonticsLifetime"
-                        checked={editedFormData.orthodonticsLifetimeMaxExists === false}
-                        onChange={() => handleFieldChange('orthodonticsLifetimeMaxExists', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsLifetimeMaxExists ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, lifetime maximum ($)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.orthodonticsLifetimeMax}
-                    onChange={(e) => handleFieldChange('orthodonticsLifetimeMax', e.target.value)}
-                    placeholder="$"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.orthodonticsLifetimeMax}</p>
-                )}
-              </div>
-            </div>
             )}
           </div>
 
@@ -2582,159 +2595,159 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
               </h4>
             </button>
             {!collapsedSections.miscellaneous && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Nightguards (D9940) Covered?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="nightguards"
-                        checked={editedFormData.nightguardsCovered === true}
-                        onChange={() => handleFieldChange('nightguardsCovered', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="nightguards"
-                        checked={editedFormData.nightguardsCovered === false}
-                        onChange={() => handleFieldChange('nightguardsCovered', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.nightguardsCovered ? 'Yes' : 'No'}</p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Nightguards (D9940) Covered?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="nightguards"
+                          checked={editedFormData.nightguardsCovered === true}
+                          onChange={() => handleFieldChange('nightguardsCovered', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="nightguards"
+                          checked={editedFormData.nightguardsCovered === false}
+                          onChange={() => handleFieldChange('nightguardsCovered', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.nightguardsCovered ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, covered at (%)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.nightguardsCoveredAt}
+                      onChange={(e) => handleFieldChange('nightguardsCoveredAt', e.target.value)}
+                      placeholder="%"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.nightguardsCoveredAt}%</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Nitrous Oxide (D9230) Covered?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="nitrousOxide"
+                          checked={editedFormData.nitrousOxideCovered === true}
+                          onChange={() => handleFieldChange('nitrousOxideCovered', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="nitrousOxide"
+                          checked={editedFormData.nitrousOxideCovered === false}
+                          onChange={() => handleFieldChange('nitrousOxideCovered', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.nitrousOxideCovered ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    If yes, covered at (%)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.nitrousOxideCoveredAt}
+                      onChange={(e) => handleFieldChange('nitrousOxideCoveredAt', e.target.value)}
+                      placeholder="%"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.nitrousOxideCoveredAt}%</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Replacement on Crowns and Bridges (Years)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.crownsAndBridgesReplacement}
+                      onChange={(e) => handleFieldChange('crownsAndBridgesReplacement', e.target.value)}
+                      placeholder="Years"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.crownsAndBridgesReplacement} years</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Replacement on Complete and Partial Dentures (Years)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.denturesReplacement}
+                      onChange={(e) => handleFieldChange('denturesReplacement', e.target.value)}
+                      placeholder="Years"
+                    />
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.denturesReplacement} years</p>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Prior Extractions Covered (Missing Tooth Clause)?
+                  </label>
+                  {isEditing ? (
+                    <div className="flex gap-4 items-center h-10">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="missingTooth"
+                          checked={editedFormData.missingToothClauseCovered === true}
+                          onChange={() => handleFieldChange('missingToothClauseCovered', true)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="missingTooth"
+                          checked={editedFormData.missingToothClauseCovered === false}
+                          onChange={() => handleFieldChange('missingToothClauseCovered', false)}
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.missingToothClauseCovered ? 'Yes' : 'No'}</p>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, covered at (%)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.nightguardsCoveredAt}
-                    onChange={(e) => handleFieldChange('nightguardsCoveredAt', e.target.value)}
-                    placeholder="%"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.nightguardsCoveredAt}%</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Nitrous Oxide (D9230) Covered?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="nitrousOxide"
-                        checked={editedFormData.nitrousOxideCovered === true}
-                        onChange={() => handleFieldChange('nitrousOxideCovered', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="nitrousOxide"
-                        checked={editedFormData.nitrousOxideCovered === false}
-                        onChange={() => handleFieldChange('nitrousOxideCovered', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.nitrousOxideCovered ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  If yes, covered at (%)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.nitrousOxideCoveredAt}
-                    onChange={(e) => handleFieldChange('nitrousOxideCoveredAt', e.target.value)}
-                    placeholder="%"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.nitrousOxideCoveredAt}%</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Replacement on Crowns and Bridges (Years)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.crownsAndBridgesReplacement}
-                    onChange={(e) => handleFieldChange('crownsAndBridgesReplacement', e.target.value)}
-                    placeholder="Years"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.crownsAndBridgesReplacement} years</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Replacement on Complete and Partial Dentures (Years)
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={editedFormData.denturesReplacement}
-                    onChange={(e) => handleFieldChange('denturesReplacement', e.target.value)}
-                    placeholder="Years"
-                  />
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.denturesReplacement} years</p>
-                )}
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Prior Extractions Covered (Missing Tooth Clause)?
-                </label>
-                {isEditing ? (
-                  <div className="flex gap-4 items-center h-10">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="missingTooth"
-                        checked={editedFormData.missingToothClauseCovered === true}
-                        onChange={() => handleFieldChange('missingToothClauseCovered', true)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="missingTooth"
-                        checked={editedFormData.missingToothClauseCovered === false}
-                        onChange={() => handleFieldChange('missingToothClauseCovered', false)}
-                      />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">No</span>
-                    </label>
-                  </div>
-                ) : (
-                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.missingToothClauseCovered ? 'Yes' : 'No'}</p>
-                )}
-              </div>
-            </div>
             )}
           </div>
 
@@ -2753,19 +2766,19 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
               </span>
             </button>
             {!collapsedSections.notes && (
-            <div className="p-4">
-              {isEditing ? (
-                <textarea
-                  rows={6}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                  value={editedFormData.additionalNotes}
-                  onChange={(e) => handleFieldChange('additionalNotes', e.target.value)}
-                  placeholder="Add any additional notes or information..."
-                />
-              ) : (
-                <p className="w-full px-3 py-2 text-slate-900 dark:text-white whitespace-pre-wrap">{formData.additionalNotes}</p>
-              )}
-            </div>
+              <div className="p-4">
+                {isEditing ? (
+                  <textarea
+                    rows={6}
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    value={editedFormData.additionalNotes}
+                    onChange={(e) => handleFieldChange('additionalNotes', e.target.value)}
+                    placeholder="Add any additional notes or information..."
+                  />
+                ) : (
+                  <p className="w-full px-3 py-2 text-slate-900 dark:text-white whitespace-pre-wrap">{formData.additionalNotes}</p>
+                )}
+              </div>
             )}
           </div>
         </div>

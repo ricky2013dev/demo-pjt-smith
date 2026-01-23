@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PhoneInput, SSNInput, EmailInput } from '@/components/inputs';
+import { PhoneInput, SSNInput, EmailInput, InsuranceProviderSelect } from '@/components/inputs';
 
 // Tab types for the create patient form
 const CREATE_PATIENT_TAB_TYPES = {
@@ -38,6 +38,7 @@ interface CreatePatientFormData {
   // Insurance
   insuranceType: 'Primary' | 'Secondary' | '';
   insuranceProvider: string;
+  payerId: string;
   policyNumber: string;
   groupNumber: string;
   subscriberName: string;
@@ -57,9 +58,27 @@ interface CreatePatientModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (formData: CreatePatientFormData) => Promise<void>;
+  currentUser?: { name: string; username: string; email: string } | null;
 }
 
-const initialFormData: CreatePatientFormData = {
+const getDefaultAppointmentDate = (): string => {
+  const date = new Date();
+  // Add 7 days
+  date.setDate(date.getDate() + 7);
+
+  // If it's Saturday (6) or Sunday (0), move to Monday
+  const dayOfWeek = date.getDay();
+  if (dayOfWeek === 6) {
+    date.setDate(date.getDate() + 2); // Saturday -> Monday
+  } else if (dayOfWeek === 0) {
+    date.setDate(date.getDate() + 1); // Sunday -> Monday
+  }
+
+  // Format as YYYY-MM-DD
+  return date.toISOString().split('T')[0];
+};
+
+const getInitialFormData = (userName?: string): CreatePatientFormData => ({
   givenName: '',
   familyName: '',
   gender: '',
@@ -74,6 +93,7 @@ const initialFormData: CreatePatientFormData = {
   postalCode: '',
   insuranceType: '',
   insuranceProvider: '',
+  payerId: '',
   policyNumber: '',
   groupNumber: '',
   subscriberName: '',
@@ -81,19 +101,20 @@ const initialFormData: CreatePatientFormData = {
   relationship: '',
   effectiveDate: '',
   expirationDate: '',
-  appointmentDate: '',
-  appointmentTime: '',
-  appointmentType: '',
-  appointmentProvider: '',
-};
+  appointmentDate: getDefaultAppointmentDate(),
+  appointmentTime: '10:00',
+  appointmentType: 'Consultation',
+  appointmentProvider: userName || 'Dr. Smith',
+});
 
 const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  currentUser,
 }) => {
   const [activeTab, setActiveTab] = useState<CreatePatientTabType>(CREATE_PATIENT_TAB_TYPES.BASIC);
-  const [formData, setFormData] = useState<CreatePatientFormData>(initialFormData);
+  const [formData, setFormData] = useState<CreatePatientFormData>(getInitialFormData(currentUser?.username || currentUser?.name));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
@@ -149,7 +170,7 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
     setIsSubmitting(true);
     try {
       await onSubmit(formData);
-      setFormData(initialFormData);
+      setFormData(getInitialFormData(currentUser?.username || currentUser?.name));
       setActiveTab(CREATE_PATIENT_TAB_TYPES.BASIC);
     } finally {
       setIsSubmitting(false);
@@ -157,10 +178,42 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
   };
 
   const handleClose = () => {
-    setFormData(initialFormData);
+    setFormData(getInitialFormData(currentUser?.username || currentUser?.name));
     setActiveTab(CREATE_PATIENT_TAB_TYPES.BASIC);
     setValidationErrors({});
     onClose();
+  };
+
+  const fillDummyData = () => {
+    setFormData({
+      ...formData,
+      givenName: "Jordan",
+      familyName: "Doe",
+      gender: "male",
+      birthDate: "2015-09-20",
+      ssn: "123-45-6789",
+      phone: "212-233-2234",
+      email: "jordan.doe@example.com",
+      addressLine1: "11305 Ocean Rd",
+      addressLine2: "",
+      city: "Frisco",
+      state: "TX",
+      postalCode: "75035",
+      insuranceType: "Primary",
+      insuranceProvider: "Cigna Dental",
+      payerId: "CIGNA",
+      policyNumber: "POL-123456789",
+      groupNumber: "GRP-12345",
+      subscriberName: "Jordan Doe",
+      subscriberId: "CIGNAJTUxNm",
+      relationship: "Self",
+      effectiveDate: "2024-01-01",
+      expirationDate: "2024-12-31",
+      appointmentDate: getDefaultAppointmentDate(),
+      appointmentTime: "10:00",
+      appointmentType: "Consultation",
+      appointmentProvider: "Dr. Smith"
+    });
   };
 
   const inputClassName = "w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none text-sm";
@@ -173,12 +226,21 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Patient</h2>
-          <button
-            onClick={handleClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-          >
-            <span className="material-symbols-outlined">close</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fillDummyData}
+              className="text-slate-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors mr-2"
+              title="Fill Dummy Data"
+            >
+              <span className="material-symbols-outlined">smart_toy</span>
+            </button>
+            <button
+              onClick={handleClose}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -189,11 +251,10 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
-                  activeTab === tab
-                    ? "text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
-                }`}
+                className={`shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${activeTab === tab
+                  ? "text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                  }`}
               >
                 {CREATE_PATIENT_TAB_LABELS[tab]}
                 {hasTabErrors(tab) && (
@@ -379,13 +440,14 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
                   </div>
 
                   <div>
-                    <label className={labelClassName}>Insurance Provider</label>
-                    <input
-                      type="text"
-                      value={formData.insuranceProvider}
-                      onChange={(e) => handleChange('insuranceProvider', e.target.value)}
+                    <InsuranceProviderSelect
+                      label="Insurance(Payer)"
+                      value={formData.payerId}
+                      onChange={(payerId, payerName) => {
+                        handleChange('payerId', payerId);
+                        handleChange('insuranceProvider', payerName);
+                      }}
                       className={inputClassName}
-                      placeholder="Delta Dental"
                     />
                   </div>
 

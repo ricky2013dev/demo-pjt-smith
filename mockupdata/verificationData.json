@@ -8,6 +8,7 @@
   "subscriberDOB": "01/15/1975",
   "subscriberID": "SUB123456789",
   "insuranceCompany": "Blue Cross Blue Shield",
+  "payerId": "",
   "insurerType": {
     "primary": true,
     "secondary": false

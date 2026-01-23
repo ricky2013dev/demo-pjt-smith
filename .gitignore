@@ -6,5 +6,5 @@ vite.config.ts.*
 *.tar.gz
 .env*
 .replit*
-.todo.md
-todo.md.git
+todo
+logs

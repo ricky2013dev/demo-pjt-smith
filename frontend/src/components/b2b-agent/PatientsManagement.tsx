@@ -6,13 +6,15 @@ import CreatePatientModal from './CreatePatientModal';
 import patientsDataMockup from '@mockupdata/patients.json';
 import type { Patient as PatientType } from '@/types/patient';
 import { useToast } from '@/hooks/use-toast';
+import { useStediApi } from '@/context/StediApiContext';
 
 const mockupPatients = Array.isArray(patientsDataMockup) ? patientsDataMockup : (patientsDataMockup as any).default || [];
 
 const PatientsManagement: React.FC = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [patients, setPatients] = useState<PatientType[]>(mockupPatients);
+  const { syncWithUser } = useStediApi();
+  const [patients, setPatients] = useState<PatientType[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [useDatabase, setUseDatabase] = useState(false);
@@ -25,10 +27,17 @@ const PatientsManagement: React.FC = () => {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch('/api/auth/verify');
+      const response = await fetch('/api/auth/verify', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setCurrentUser(data.user);
+
+        // Sync Stedi API state with user setting
+        if (data.user.stediEnabled !== undefined) {
+          syncWithUser(data.user.stediEnabled);
+        }
 
         // If user has dataSource, use database
         if (data.user.dataSource) {
@@ -56,7 +65,9 @@ const PatientsManagement: React.FC = () => {
   const fetchPatientsFromDatabase = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/patients');
+      const response = await fetch('/api/patients', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         // Server already sends data in the correct format with proper transformations
@@ -83,6 +94,7 @@ const PatientsManagement: React.FC = () => {
     postalCode: string;
     insuranceType: 'Primary' | 'Secondary' | '';
     insuranceProvider: string;
+    payerId: string;
     policyNumber: string;
     groupNumber: string;
     subscriberName: string;
@@ -101,6 +113,7 @@ const PatientsManagement: React.FC = () => {
       const response = await fetch('/api/patients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           patient: {
             givenName: formData.givenName,
@@ -124,6 +137,7 @@ const PatientsManagement: React.FC = () => {
           insurances: formData.insuranceProvider ? [{
             type: formData.insuranceType || 'Primary',
             provider: formData.insuranceProvider,
+            payerId: formData.payerId,
             policyNumber: formData.policyNumber,
             groupNumber: formData.groupNumber,
             subscriberName: formData.subscriberName,
@@ -228,7 +242,7 @@ const PatientsManagement: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       navigate('/');
     } catch (error) {
     }
@@ -244,7 +258,8 @@ const PatientsManagement: React.FC = () => {
       setIsFetchingPMS(true);
       const response = await fetch('/api/patients/fetch-pms', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -291,7 +306,8 @@ const PatientsManagement: React.FC = () => {
           name: currentUser.username,
           email: currentUser.email,
           username: currentUser.username,
-          dataSource: currentUser.dataSource
+          dataSource: currentUser.dataSource,
+          stediEnabled: currentUser.stediEnabled
         } : null}
         onLogout={handleLogout}
       />
@@ -314,7 +330,7 @@ const PatientsManagement: React.FC = () => {
               ) : (
                 <>
                   <span className="material-symbols-outlined text-base">cloud_download</span>
-                  <span>Fetch PMS</span>
+                  <span>PMS</span>
                 </>
               )}
             </button>
@@ -328,6 +344,7 @@ const PatientsManagement: React.FC = () => {
           onSelectPatient={handleSelectPatient}
           showAddButton={useDatabase}
           onAddNewPatient={() => setShowCreateModal(true)}
+          currentUser={currentUser}
         />
       </main>
 
@@ -336,6 +353,7 @@ const PatientsManagement: React.FC = () => {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreatePatient}
+        currentUser={currentUser}
       />
     </div>
   );

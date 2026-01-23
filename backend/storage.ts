@@ -35,7 +35,13 @@ import {
   type InsertCoverageDetail,
   type InsertProcedure,
   type CoverageByCode,
-  type InsertCoverageByCode
+  type InsertCoverageByCode,
+  payers,
+  type Payer,
+  type InsertPayer,
+  providers,
+  type Provider,
+  type InsertProvider
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -103,6 +109,21 @@ export interface IStorage {
   // Coverage by code methods
   saveCoverageByCode(patientId: string, userId: string, coverageData: any[]): Promise<void>;
   getCoverageByCodeForPatient(patientId: string, userId: string): Promise<CoverageByCode[]>;
+
+  // Payer methods
+  getAllPayers(): Promise<Payer[]>;
+  seedPayers(payersList: InsertPayer[]): Promise<void>;
+  createPayer(payer: InsertPayer): Promise<Payer>;
+  updatePayer(id: string, updates: Partial<Payer>): Promise<Payer | undefined>;
+  deletePayer(id: string): Promise<boolean>;
+
+  // Provider methods
+  getAllProviders(): Promise<Provider[]>;
+  getProviderById(id: string): Promise<Provider | undefined>;
+  createProvider(provider: InsertProvider): Promise<Provider>;
+  updateProvider(id: string, updates: Partial<Provider>): Promise<Provider | undefined>;
+  deleteProvider(id: string): Promise<boolean>;
+  seedProviders(providersList: InsertProvider[]): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -356,6 +377,65 @@ export class DatabaseStorage implements IStorage {
 
   async getCoverageByCodeForPatient(patientId: string, userId: string): Promise<CoverageByCode[]> {
     return await db.select().from(coverageByCode).where(eq(coverageByCode.patientId, patientId));
+  }
+
+  // Payer methods
+  async getAllPayers(): Promise<Payer[]> {
+    return await db.select().from(payers);
+  }
+
+  async seedPayers(payersList: InsertPayer[]): Promise<void> {
+    const existingPayers = await this.getAllPayers();
+    if (existingPayers.length === 0 && payersList.length > 0) {
+      await db.insert(payers).values(payersList);
+    }
+  }
+
+  async createPayer(payer: InsertPayer): Promise<Payer> {
+    const [newPayer] = await db.insert(payers).values(payer).returning();
+    return newPayer;
+  }
+
+  async updatePayer(id: string, updates: Partial<Payer>): Promise<Payer | undefined> {
+    const [payer] = await db.update(payers).set(updates).where(eq(payers.id, id)).returning();
+    return payer;
+  }
+
+  async deletePayer(id: string): Promise<boolean> {
+    const result = await db.delete(payers).where(eq(payers.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Provider methods
+  async getAllProviders(): Promise<Provider[]> {
+    return await db.select().from(providers);
+  }
+
+  async getProviderById(id: string): Promise<Provider | undefined> {
+    const [provider] = await db.select().from(providers).where(eq(providers.id, id));
+    return provider;
+  }
+
+  async createProvider(provider: InsertProvider): Promise<Provider> {
+    const [newProvider] = await db.insert(providers).values(provider).returning();
+    return newProvider;
+  }
+
+  async updateProvider(id: string, updates: Partial<Provider>): Promise<Provider | undefined> {
+    const [provider] = await db.update(providers).set(updates).where(eq(providers.id, id)).returning();
+    return provider;
+  }
+
+  async deleteProvider(id: string): Promise<boolean> {
+    const result = await db.delete(providers).where(eq(providers.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async seedProviders(providersList: InsertProvider[]): Promise<void> {
+    const existingProviders = await this.getAllProviders();
+    if (existingProviders.length === 0 && providersList.length > 0) {
+      await db.insert(providers).values(providersList);
+    }
   }
 }
 

@@ -41,6 +41,7 @@ export interface Address {
 
 export interface Insurance {
   type: 'Primary' | 'Secondary';
+  payerId?: string;
   provider: string;
   policyNumber: string;
   groupNumber: string;
@@ -239,7 +240,7 @@ export type InsuranceSubTabType = typeof INSURANCE_SUB_TAB_TYPES[keyof typeof IN
 
 // Insurance sub-tab labels for display
 export const INSURANCE_SUB_TAB_LABELS: Record<InsuranceSubTabType, string> = {
-  
+
   [INSURANCE_SUB_TAB_TYPES.COVERAGE_DETAILS]: 'Coverage By Code View',
   [INSURANCE_SUB_TAB_TYPES.VERIFICATION_FORM]: 'Coverage By Form View',
 };

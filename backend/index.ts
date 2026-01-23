@@ -37,7 +37,7 @@ app.use((req, res, next) => {
   // Referrer Policy - don't leak PHI in referrer headers
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   // Content Security Policy
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https:;");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://ui-avatars.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https:;");
   // Strict Transport Security (HTTPS enforcement)
   if (process.env.NODE_ENV === "production") {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
@@ -65,34 +65,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rate limiting for brute force protection (HIPAA Security)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const RATE_LIMIT_MAX = 100; // requests per window
 
-app.use((req, res, next) => {
-  // Only rate limit API endpoints
-  if (!req.path.startsWith('/api')) {
-    return next();
-  }
-
-  const clientId = req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
-  const now = Date.now();
-  const clientData = rateLimitMap.get(clientId);
-
-  if (!clientData || now > clientData.resetTime) {
-    rateLimitMap.set(clientId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return next();
-  }
-
-  if (clientData.count >= RATE_LIMIT_MAX) {
-    auditLog('RATE_LIMIT_EXCEEDED', { clientId, path: req.path });
-    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
-  }
-
-  clientData.count++;
-  next();
-});
 
 declare module "http" {
   interface IncomingMessage {
@@ -117,7 +90,9 @@ app.use(
     secret: SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
     resave: false,
     saveUninitialized: false,
-    name: '__Host-session', // Security: Use __Host- prefix for additional cookie security
+    // Security: Use __Host- prefix in production for additional cookie security
+    // Note: __Host- prefix requires HTTPS, so use different name in development
+    name: process.env.NODE_ENV === "production" ? '__Host-session' : 'session',
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
@@ -175,7 +150,12 @@ app.use((req, res, next) => {
   next();
 });
 
+import { seedPayers } from "./seed-payers";
+import { seedProviders } from "./seed-providers";
+
 (async () => {
+  await seedPayers();
+  await seedProviders();
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

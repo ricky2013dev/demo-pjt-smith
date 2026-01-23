@@ -23,7 +23,8 @@ export type AuditEventType =
   | 'SECURITY_VIOLATION'   // Security policy violation
   | 'ADMIN_ACTION'         // Administrative action
   | 'API_ACCESS'           // External API accessed
-  | 'ERROR';               // System error
+  | 'ERROR'                // System error
+  | 'INFO';                // General information
 
 export interface AuditLogEntry {
   timestamp: string;

@@ -50,9 +50,18 @@ const PatientList: React.FC<PatientListProps> = ({
     }
   };
 
+  // Capitalize first letter of each word, lowercase the rest
+  const capitalizeWord = (word: string): string => {
+    if (!word) return '';
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  };
+
   const getFullName = (patient: Patient) => {
-    const given = patient.name.given.join(' ');
-    return `${given} ${patient.name.family}`.trim();
+    const given = patient.name.given
+      .map(name => name.split(' ').map(capitalizeWord).join(' '))
+      .join(' ');
+    const family = capitalizeWord(patient.name.family);
+    return `${given} ${family}`.trim();
   };
 
   const getInitials = (patient: Patient) => {
@@ -228,7 +237,7 @@ const PatientList: React.FC<PatientListProps> = ({
             title="Back to Scheduled Jobs"
           >
             <span className="material-symbols-outlined text-sm">arrow_back</span>
-            Back to Schedule
+            Back to Home
           </button>
         )}
 
@@ -337,7 +346,7 @@ const PatientList: React.FC<PatientListProps> = ({
           </button>
           <button
             onClick={() => handleSort('status')}
-            className="w-16 flex items-center gap-1 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide hover:text-slate-900 dark:hover:text-white transition-colors text-left"
+            className="flex items-center gap-1 text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide hover:text-slate-900 dark:hover:text-white transition-colors text-left"
           >
             Status
             {sortField === 'status' && (
@@ -438,27 +447,12 @@ const PatientList: React.FC<PatientListProps> = ({
                   )}
                 </div>
 
-                {/* Column 4: Verification Status */}
-                <div className="w-16 shrink-0">
-                  <div className="flex flex-col gap-1">
-                    {/* Percentage */}
-                    <div className={`text-[9px] font-semibold text-center ${verificationStatus.color}`}>
-                      {verificationStatus.percentage}%
-                    </div>
-                    {/* Progress Bar */}
-                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
-                      <div
-                        className={`h-1.5 rounded-full transition-all ${
-                          verificationStatus.percentage === 100
-                            ? 'w-full bg-status-green'
-                            : verificationStatus.percentage > 0
-                            ? 'bg-blue-500'
-                            : 'bg-slate-300 dark:bg-slate-600'
-                        }`}
-                        style={verificationStatus.percentage === 100 ? {} : { width: `${verificationStatus.percentage}%` }}
-                      />
-                    </div>
+                {/* Column 4: Verification Status - Progress bar */}
+                <div className="shrink-0 flex items-center gap-1.5">
+                  <div className="w-14 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${verificationStatus.percentage === 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${verificationStatus.percentage}%` }}></div>
                   </div>
+                  <span className="text-[9px] font-medium text-slate-500 dark:text-slate-400 w-6">{verificationStatus.percentage}%</span>
                 </div>
               </div>
             </div>

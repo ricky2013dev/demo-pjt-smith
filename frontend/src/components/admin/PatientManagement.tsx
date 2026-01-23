@@ -60,7 +60,9 @@ const PatientManagement: React.FC = () => {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch('/api/auth/verify');
+      const response = await fetch('/api/auth/verify', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setCurrentUser(data.user);
@@ -73,7 +75,9 @@ const PatientManagement: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/users');
+      const response = await fetch('/api/users', {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
@@ -93,7 +97,9 @@ const PatientManagement: React.FC = () => {
       const usersToFetch = selectedUserId === 'all' ? users : users.filter(u => u.id === selectedUserId);
 
       const patientPromises = usersToFetch.map(async (user) => {
-        const response = await fetch(`/api/admin/users/${user.id}/patients`);
+        const response = await fetch(`/api/admin/users/${user.id}/patients`, {
+          credentials: 'include'
+        });
         if (!response.ok) {
           throw new Error(`Failed to fetch patients for ${user.username}`);
         }
@@ -122,7 +128,8 @@ const PatientManagement: React.FC = () => {
 
     try {
       const response = await fetch(`/api/patients/${patientId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -139,7 +146,7 @@ const PatientManagement: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       window.location.href = '/';
     } catch (error) {
       console.error('Failed to logout');

@@ -302,7 +302,7 @@ const HomePage: React.FC = () => {
 
                        <div className="text-3xl font-bold text-slate-400 dark:text-slate-600 mt-[-2rem]"> 
                            
-                             <span className="material-symbols-outlined"> Keyboard_Double_Arrow_Right</span>
+                             <span className="material-symbols-outlined">keyboard_double_arrow_right</span>
                         </div>
                <div className="flex flex-col items-center gap-2">
                             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-500/20 flex items-center justify-center text-white">

@@ -140,6 +140,21 @@ interface CoverageVerificationResultsProps {
 type Step = 'step1' | 'step2' | 'step3' | 'idle';
 type StepStatus = 'pending' | 'in_progress' | 'completed';
 
+// Capitalize first letter of each word, lowercase the rest
+const capitalizeWord = (word: string): string => {
+  if (!word) return '';
+  return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+};
+
+const formatPatientName = (patient: Patient | undefined): string => {
+  if (!patient?.name?.given?.[0]) return 'Unknown Patient';
+  const given = patient.name.given
+    .map(name => name.split(' ').map(capitalizeWord).join(' '))
+    .join(' ');
+  const family = capitalizeWord(patient.name.family || '');
+  return `${given} ${family}`.trim();
+};
+
 const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = ({
   isOpen,
   onClose,
@@ -273,7 +288,9 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const response = await fetch('/api/auth/verify');
+        const response = await fetch('/api/auth/verify', {
+          credentials: 'include'
+        });
         if (response.ok) {
           const data = await response.json();
           setCurrentUser(data.user);
@@ -314,9 +331,7 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
         insuranceProvider = insurance.payorName || insurance.carrier || 'Unknown Provider';
       }
 
-      const patientName = patient.name?.given?.[0]
-        ? `${patient.name.given[0]} ${patient.name.family || ''}`.trim()
-        : 'Unknown Patient';
+      const patientName = formatPatientName(patient);
 
       const transactionData = {
         requestId: `REQ-${startTime.toISOString().split('T')[0]}-${startTime.toTimeString().slice(0, 5).replace(':', '')}`,
@@ -412,6 +427,7 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           coverageData: API_VERIFICATION_DATA,
           dataMode,
@@ -489,8 +505,8 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
           const insurance = (patient as any).insurance[0];
           const subscriber: Subscriber = {
             memberId: insurance.subscriberId || "0000000000",
-            firstName: patient.name.given[0] || "John",
-            lastName: patient.name.family || "Doe",
+            firstName: capitalizeWord(patient.name.given[0] || "John"),
+            lastName: capitalizeWord(patient.name.family || "Doe"),
             dateOfBirth: patient.birthDate || "05/21/1987"
           };
 

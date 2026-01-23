@@ -5,12 +5,14 @@ import PatientDetail from './PatientDetail';
 import Header from '@/components/Header';
 import { Patient, FilterType, TabType, TAB_TYPES } from '@/types/patient';
 import patientsDataMockup from '@mockupdata/patients.json';
+import { useStediApi } from '@/context/StediApiContext';
 
 const mockupPatients = Array.isArray(patientsDataMockup) ? patientsDataMockup : (patientsDataMockup as any).default || [];
 
 const PatientDetailPage: React.FC = () => {
   const [location, navigate] = useLocation();
-  const [patients, setPatients] = useState<Patient[]>(mockupPatients);
+  const { syncWithUser } = useStediApi();
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [useDatabase, setUseDatabase] = useState(false);
@@ -25,10 +27,17 @@ const PatientDetailPage: React.FC = () => {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch('/api/auth/verify');
+      const response = await fetch('/api/auth/verify', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setCurrentUser(data.user);
+
+        // Sync Stedi API state with user setting
+        if (data.user.stediEnabled !== undefined) {
+          syncWithUser(data.user.stediEnabled);
+        }
 
         // If user has dataSource, use database
         if (data.user.dataSource) {
@@ -57,7 +66,9 @@ const PatientDetailPage: React.FC = () => {
   const fetchPatientsFromDatabase = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/patients');
+      const response = await fetch('/api/patients', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         // Server already sends data in the correct format with proper transformations
@@ -141,7 +152,7 @@ const PatientDetailPage: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       setSelectedPatientId(null);
       setSearchQuery('');
       setActiveFilters([]);
@@ -169,6 +180,7 @@ const PatientDetailPage: React.FC = () => {
       const response = await fetch(`/api/patients/${updatedPatient.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(updatedPatient)
       });
 
@@ -205,7 +217,8 @@ const PatientDetailPage: React.FC = () => {
           name: currentUser.username,
           email: currentUser.email,
           username: currentUser.username,
-          dataSource: currentUser.dataSource
+          dataSource: currentUser.dataSource,
+          stediEnabled: currentUser.stediEnabled
         } : null}
         onLogout={handleLogout}
       />

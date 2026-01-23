@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Patient } from '@/types/patient';
 import { VERIFICATION_STATUS_LABELS } from '@/constants/verificationStatus';
 import { DayPicker } from 'react-day-picker';
 import { format, subMonths, addMonths, isWithinInterval, parseISO } from 'date-fns';
 import * as Popover from '@radix-ui/react-popover';
 import 'react-day-picker/style.css';
+import { deriveVerificationStatusFromTransactions, type Transaction, type VerificationStatus } from '@/utils/transactionStatus';
+import VerificationStepper from '@/components/VerificationStepper';
 
 interface PatientGuideProps {
   totalPatients?: number;
@@ -18,6 +20,7 @@ interface PatientGuideProps {
   patients?: Patient[];
   onSelectPatient?: (patientId: string) => void;
   showAddButton?: boolean;
+  currentUser?: { dataSource?: string } | null;
 }
 
 const PatientGuide: React.FC<PatientGuideProps> = ({
@@ -26,14 +29,77 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
   onAddNewPatient,
   patients = [],
   onSelectPatient,
-  showAddButton = false
+  showAddButton = false,
+  currentUser = null
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'not_started' | 'in_progress' | 'completed'>('all');
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: subMonths(new Date(), 3),
     to: addMonths(new Date(), 3)
   });
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  // Fetch transactions when in Data Mode
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (!currentUser?.dataSource) {
+        setTransactions([]);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/transactions', {
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.transactions) {
+            setTransactions(data.transactions);
+          }
+        }
+      } catch (error) {
+        // Silent error
+      }
+    };
+
+    fetchTransactions();
+  }, [currentUser?.dataSource]);
+
+  // Derive verification status for each patient based on transactions (Data Mode)
+  const patientVerificationStatusMap = useMemo(() => {
+    const statusMap: Record<string, VerificationStatus> = {};
+
+    if (currentUser?.dataSource && transactions.length > 0) {
+      // Group transactions by patient ID
+      const transactionsByPatient: Record<string, Transaction[]> = {};
+      for (const txn of transactions) {
+        if (!transactionsByPatient[txn.patientId]) {
+          transactionsByPatient[txn.patientId] = [];
+        }
+        transactionsByPatient[txn.patientId].push(txn);
+      }
+
+      // Derive status for each patient
+      for (const patientId of Object.keys(transactionsByPatient)) {
+        statusMap[patientId] = deriveVerificationStatusFromTransactions(transactionsByPatient[patientId]);
+      }
+    }
+
+    return statusMap;
+  }, [currentUser?.dataSource, transactions]);
+
+  // Get effective verification status for a patient
+  const getEffectiveVerificationStatus = (patient: Patient): VerificationStatus | undefined => {
+    // If in Data Mode and we have derived status from transactions, use that
+    if (currentUser?.dataSource && patientVerificationStatusMap[patient.id]) {
+      return patientVerificationStatusMap[patient.id];
+    }
+    // Otherwise fall back to patient's verification status
+    return patient.verificationStatus;
+  };
 
   // Highlight matching text in search results
   const highlightMatch = (text: string, query: string): React.ReactNode => {
@@ -68,9 +134,18 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
     return '';
   };
 
+  // Capitalize first letter of each word, lowercase the rest
+  const capitalizeWord = (word: string): string => {
+    if (!word) return '';
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  };
+
   const getPatientName = (patient: Patient) => {
-    const given = patient.name.given.join(' ');
-    return `${given} ${patient.name.family}`.trim();
+    const given = patient.name.given
+      .map(name => name.split(' ').map(capitalizeWord).join(' '))
+      .join(' ');
+    const family = capitalizeWord(patient.name.family);
+    return `${given} ${family}`.trim();
   };
 
   const getPatientPhone = (patient: Patient): string => {
@@ -137,6 +212,29 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
       });
     }
 
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(item => {
+        const status = getEffectiveVerificationStatus(item.patient);
+        if (statusFilter === 'not_started') {
+          if (!status) return true;
+          const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = status;
+          return fetchPMS === 'pending' && documentAnalysis === 'pending' && apiVerification === 'pending' && callCenter === 'pending' && saveToPMS === 'pending';
+        }
+        if (statusFilter === 'completed') {
+          return status?.saveToPMS === 'completed';
+        }
+        if (statusFilter === 'in_progress') {
+          if (!status) return false;
+          const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = status;
+          const isNotStarted = fetchPMS === 'pending' && documentAnalysis === 'pending' && apiVerification === 'pending' && callCenter === 'pending' && saveToPMS === 'pending';
+          const isCompleted = saveToPMS === 'completed';
+          return !isNotStarted && !isCompleted;
+        }
+        return true;
+      });
+    }
+
     // Sort by date ascending (patients without appointments go to the end)
     filtered.sort((a, b) => {
       if (!a.appointment && !b.appointment) return 0;
@@ -146,14 +244,15 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
     });
 
     return filtered;
-  }, [patients, dateRange, searchQuery]);
+  }, [patients, dateRange, searchQuery, statusFilter, patientVerificationStatusMap, currentUser?.dataSource]);
 
   const getVerificationStatus = (patient: Patient) => {
-    if (!patient.verificationStatus) {
+    const effectiveStatus = getEffectiveVerificationStatus(patient);
+    if (!effectiveStatus) {
       return { label: VERIFICATION_STATUS_LABELS.NOT_STARTED, color: 'text-slate-600 dark:text-slate-400', percentage: 0 };
     }
 
-    const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = patient.verificationStatus;
+    const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = effectiveStatus;
 
     // Fully verified
     if (saveToPMS === 'completed') {
@@ -207,16 +306,30 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
 
         {/* Filter Bar */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          {/* Search Input */}
-          <div className="relative w-full sm:w-[54rem]">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
-            <input
-              type="text"
-              placeholder="Search by name, phone, or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          {/* Search Input and Status Filter */}
+          <div className="flex items-center gap-3">
+            <div className="relative w-96">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'not_started' | 'in_progress' | 'completed')}
+              className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Status</option>
+              <option value="not_started">Not Started</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
           </div>
 
           {/* Date Range Picker and Results Count */}
@@ -271,7 +384,7 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
                   <DayPicker
                     mode="range"
                     selected={dateRange}
-                    onSelect={(range) => setDateRange(range || { from: undefined, to: undefined })}
+                    onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
                     numberOfMonths={2}
                     className="!font-sans"
                   />
@@ -368,12 +481,10 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full w-20 overflow-hidden">
-                              <div className={`h-full rounded-full ${status.percentage === 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${status.percentage}%` }}></div>
-                            </div>
-                            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{status.percentage}%</span>
-                          </div>
+                          <VerificationStepper
+                            status={getEffectiveVerificationStatus(item.patient)}
+                            layout="table"
+                          />
                         </td>
                       </tr>
                     );

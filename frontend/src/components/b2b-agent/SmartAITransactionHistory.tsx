@@ -781,7 +781,7 @@ Important Notes
             <div className="col-span-1 text-center">Duration</div>
             <div className="col-span-1 text-center">Type</div>
             <div className="col-span-1 text-center">Status</div>
-            <div className="col-span-2">Insurance Provider</div>
+            <div className="col-span-2">Insurance(Payer)</div>
             <div className="col-span-2">Insurance Rep</div>
             <div className="col-span-1 text-center">Score</div>
             <div className="col-span-2">Run By</div>

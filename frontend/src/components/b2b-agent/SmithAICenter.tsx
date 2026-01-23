@@ -7,6 +7,20 @@ interface SmithAICenterProps {
   onClose: () => void;
 }
 
+// Capitalize first letter of each word, lowercase the rest
+const capitalizeWord = (word: string): string => {
+  if (!word) return '';
+  return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+};
+
+const formatPatientName = (patient: Patient): string => {
+  const given = patient.name.given
+    .map(name => name.split(' ').map(capitalizeWord).join(' '))
+    .join(' ');
+  const family = capitalizeWord(patient.name.family);
+  return `${given} ${family}`.trim();
+};
+
 interface ConversationMessage {
   speaker: 'AI Agent' | 'Insurance Rep' | 'System';
   text: string;
@@ -20,7 +34,7 @@ const SmithAICenter: React.FC<SmithAICenterProps> = ({ patient, onClose }) => {
   const [messages, setMessages] = useState<ConversationMessage[]>([
     {
       speaker: 'System',
-      text: `Hello! I'm Smith AI Assistant. I'm ready to help with insurance verification for ${patient.name.given.join(' ')} ${patient.name.family}. Start Call when you're ready.`,
+      text: `Hello! I'm Smith AI Assistant. I'm ready to help with insurance verification for ${formatPatientName(patient)}. Start Call when you're ready.`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -131,8 +145,7 @@ const SmithAICenter: React.FC<SmithAICenterProps> = ({ patient, onClose }) => {
   }, [messages, currentTypingMessage]);
 
   const getFullName = () => {
-    const given = patient.name.given.join(' ');
-    return `${given} ${patient.name.family}`.trim();
+    return formatPatientName(patient);
   };
 
   const getPhone = () => {

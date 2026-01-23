@@ -47,9 +47,11 @@ const telecomSchema = z.object({
   value: z.string().max(255),
 });
 
-// Address schema
+// Address schema - supports both line1/line2 format and line array format
 const addressSchema = z.object({
   line: z.array(z.string().max(255)).optional(),
+  line1: z.string().max(255).optional().nullable(),
+  line2: z.string().max(255).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
   state: z.string().max(50).optional().nullable(),
   postalCode: z.string().max(20).optional().nullable(),
@@ -58,21 +60,22 @@ const addressSchema = z.object({
 // Insurance schema
 const insuranceSchema = z.object({
   type: z.enum(['Primary', 'Secondary']).optional(),
-  provider: z.string().max(255).optional(),
-  policyNumber: z.string().max(100).optional(),
-  groupNumber: z.string().max(100).optional(),
-  subscriberName: z.string().max(255).optional(),
-  subscriberId: z.string().max(100).optional(),
-  relationship: z.string().max(50).optional(),
+  provider: z.string().max(255).optional().nullable(),
+  payerId: z.string().max(50).optional().nullable(),
+  policyNumber: z.string().max(100).optional().nullable(),
+  groupNumber: z.string().max(100).optional().nullable(),
+  subscriberName: z.string().max(255).optional().nullable(),
+  subscriberId: z.string().max(100).optional().nullable(),
+  relationship: z.string().max(50).optional().nullable(),
   effectiveDate: z.string().max(20).optional().nullable(),
   expirationDate: z.string().max(20).optional().nullable(),
   coverage: z.object({
-    deductible: z.string().max(50).optional(),
-    deductibleMet: z.string().max(50).optional(),
-    maxBenefit: z.string().max(50).optional(),
-    preventiveCoverage: z.string().max(50).optional(),
-    basicCoverage: z.string().max(50).optional(),
-    majorCoverage: z.string().max(50).optional(),
+    deductible: z.string().max(50).optional().nullable(),
+    deductibleMet: z.string().max(50).optional().nullable(),
+    maxBenefit: z.string().max(50).optional().nullable(),
+    preventiveCoverage: z.string().max(50).optional().nullable(),
+    basicCoverage: z.string().max(50).optional().nullable(),
+    majorCoverage: z.string().max(50).optional().nullable(),
   }).optional(),
 });
 
@@ -83,14 +86,23 @@ export const createPatientSchema = z.object({
     name: patientNameSchema,
     givenName: z.string().max(200).optional(),
     familyName: z.string().max(100).optional(),
-    gender: z.enum(['male', 'female', 'other', 'unknown']).optional(),
-    birthDate: z.string().max(20).optional().refine(
-      (val) => !val || dateRegex.test(val),
-      { message: 'Birth date must be in YYYY-MM-DD format' }
+    gender: z.preprocess(
+      (val) => (val === '' ? undefined : val),
+      z.enum(['male', 'female', 'other', 'unknown']).optional()
     ),
-    ssn: z.string().max(20).optional().refine(
-      (val) => !val || ssnRegex.test(val.replace(/\s/g, '')),
-      { message: 'SSN must be in XXX-XX-XXXX or XXXXXXXXX format' }
+    birthDate: z.preprocess(
+      (val) => (val === '' ? undefined : val),
+      z.string().max(20).optional().refine(
+        (val) => !val || dateRegex.test(val),
+        { message: 'Birth date must be in YYYY-MM-DD format' }
+      )
+    ),
+    ssn: z.preprocess(
+      (val) => (val === '' ? undefined : val),
+      z.string().max(20).optional().refine(
+        (val) => !val || ssnRegex.test(val.replace(/\s/g, '')),
+        { message: 'SSN must be in XXX-XX-XXXX or XXXXXXXXX format' }
+      )
     ),
   }),
   telecoms: z.array(telecomSchema).optional(),
@@ -118,6 +130,11 @@ export const createPatientSchema = z.object({
     status: z.string().max(50).optional(),
     method: z.string().max(50).optional(),
     lastUpdated: z.string().max(50).optional(),
+    fetchPMS: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
+    documentAnalysis: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
+    apiVerification: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
+    callCenter: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
+    saveToPMS: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
   }).optional(),
 });
 
@@ -125,14 +142,23 @@ export const createPatientSchema = z.object({
 export const updatePatientSchema = z.object({
   active: z.boolean().optional(),
   name: patientNameSchema,
-  gender: z.enum(['male', 'female', 'other', 'unknown']).optional(),
-  birthDate: z.string().max(20).optional().refine(
-    (val) => !val || val === '****-**-**' || dateRegex.test(val),
-    { message: 'Birth date must be in YYYY-MM-DD format' }
+  gender: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.enum(['male', 'female', 'other', 'unknown']).optional()
   ),
-  ssn: z.string().max(20).optional().refine(
-    (val) => !val || val === '***-**-****' || val === 'XXX-XX-XXXX' || ssnRegex.test(val.replace(/\s/g, '')),
-    { message: 'SSN must be in XXX-XX-XXXX or XXXXXXXXX format' }
+  birthDate: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.string().max(20).optional().refine(
+      (val) => !val || val === '****-**-**' || dateRegex.test(val),
+      { message: 'Birth date must be in YYYY-MM-DD format' }
+    )
+  ),
+  ssn: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.string().max(20).optional().refine(
+      (val) => !val || val === '***-**-****' || val === 'XXX-XX-XXXX' || ssnRegex.test(val.replace(/\s/g, '')),
+      { message: 'SSN must be in XXX-XX-XXXX or XXXXXXXXX format' }
+    )
   ),
   insurance: z.array(insuranceSchema).optional(),
   telecoms: z.array(telecomSchema).optional(),

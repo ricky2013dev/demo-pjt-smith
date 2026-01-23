@@ -63,6 +63,7 @@
     "framer-motion": "^11.13.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.453.0",
+    "material-symbols": "^0.40.2",
     "memorystore": "^1.6.7",
     "mermaid": "^11.12.2",
     "multer": "^2.0.2",

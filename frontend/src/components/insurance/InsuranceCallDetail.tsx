@@ -82,7 +82,9 @@ const InsuranceCallDetail: React.FC = () => {
   useEffect(() => {
     const fetchCallRecords = async () => {
       try {
-        const response = await fetch('/api/transactions');
+        const response = await fetch('/api/transactions', {
+          credentials: 'include'
+        });
         const data = await response.json();
 
         if (data.success && Array.isArray(data.transactions)) {
@@ -121,7 +123,9 @@ const InsuranceCallDetail: React.FC = () => {
 
       try {
         // Fetch transaction basic info
-        const transResponse = await fetch(`/api/transactions/${selectedCallId}`);
+        const transResponse = await fetch(`/api/transactions/${selectedCallId}`, {
+          credentials: 'include'
+        });
         const transData = await transResponse.json();
 
         if (transData.success && transData.transaction) {
@@ -129,7 +133,9 @@ const InsuranceCallDetail: React.FC = () => {
           const dateObj = new Date(parseInt(t.startTime));
 
           // Fetch communications
-          const commResponse = await fetch(`/api/transactions/${selectedCallId}/communications`);
+          const commResponse = await fetch(`/api/transactions/${selectedCallId}/communications`, {
+            credentials: 'include'
+          });
           const commData = await commResponse.json();
           const conversationLog = commData.success ? commData.communications.map((c: any) => ({
             time: new Date(parseInt(c.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -138,7 +144,9 @@ const InsuranceCallDetail: React.FC = () => {
           })) : [];
 
           // Fetch verified data
-          const verifResponse = await fetch(`/api/transactions/${selectedCallId}/verified-data`);
+          const verifResponse = await fetch(`/api/transactions/${selectedCallId}/verified-data`, {
+            credentials: 'include'
+          });
           const verifData = await verifResponse.json();
           const requestedServices = verifData.success ? verifData.verifiedData.map((v: any) => ({
             code: 'N/A', // Data verified items are strings currently, explicit structure might be needed in future

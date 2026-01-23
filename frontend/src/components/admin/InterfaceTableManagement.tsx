@@ -58,7 +58,9 @@ const InterfaceTableManagement: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch('/api/admin/interface/transactions');
+      const response = await fetch('/api/admin/interface/transactions', {
+        credentials: 'include'
+      });
       if (!response.ok) throw new Error('Failed to fetch transactions');
       const data = await response.json();
       setTransactions(data);
@@ -73,8 +75,12 @@ const InterfaceTableManagement: React.FC = () => {
     setDetailLoading(true);
     try {
       const [coverageRes, messagesRes] = await Promise.all([
-        fetch(`/api/admin/interface/coverage-codes?transactionId=${transactionId}`),
-        fetch(`/api/admin/interface/messages?transactionId=${transactionId}`)
+        fetch(`/api/admin/interface/coverage-codes?transactionId=${transactionId}`, {
+          credentials: 'include'
+        }),
+        fetch(`/api/admin/interface/messages?transactionId=${transactionId}`, {
+          credentials: 'include'
+        })
       ]);
 
       if (!coverageRes.ok || !messagesRes.ok) {
@@ -111,7 +117,7 @@ const InterfaceTableManagement: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/admin/interface/transactions/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/admin/interface/transactions/${id}`, { method: 'DELETE', credentials: 'include' });
       if (!response.ok) throw new Error('Failed to delete transaction');
       fetchTransactions();
       if (expandedTxnId === id) {

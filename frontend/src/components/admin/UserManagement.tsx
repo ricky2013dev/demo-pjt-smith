@@ -7,10 +7,19 @@ interface User {
   username: string;
   role: string;
   dataSource: string | null;
+  providerId: string | null;
+  providerName?: string | null;
+  npiNumber?: string | null;
+}
+
+interface Provider {
+  id: string;
+  name: string;
 }
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -18,23 +27,35 @@ const UserManagement: React.FC = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [revealedNpis, setRevealedNpis] = useState<Record<string, boolean>>({});
+
+  const toggleNpiVisibility = (userId: string) => {
+    setRevealedNpis(prev => ({
+      ...prev,
+      [userId]: !prev[userId]
+    }));
+  };
 
   const [formData, setFormData] = useState({
     email: '',
     username: '',
     password: '',
     role: 'dental',
-    dataSource: ''
+    dataSource: '',
+    providerId: ''
   });
 
   useEffect(() => {
     fetchCurrentUser();
     fetchUsers();
+    fetchProviders();
   }, []);
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch('/api/auth/verify');
+      const response = await fetch('/api/auth/verify', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setCurrentUser(data.user);
@@ -43,10 +64,24 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  const fetchProviders = async () => {
+    try {
+      const response = await fetch('/api/providers');
+      if (response.ok) {
+        const data = await response.json();
+        setProviders(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch providers', error);
+    }
+  };
+
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/users');
+      const response = await fetch('/api/users', {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
@@ -66,9 +101,11 @@ const UserManagement: React.FC = () => {
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...formData,
-          dataSource: formData.dataSource || null
+          dataSource: formData.dataSource || null,
+          providerId: formData.providerId || null
         })
       });
 
@@ -78,7 +115,7 @@ const UserManagement: React.FC = () => {
       }
 
       setShowCreateModal(false);
-      setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '' });
+      setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '', providerId: '' });
       fetchUsers();
     } catch (err: any) {
       setError(err.message);
@@ -93,11 +130,13 @@ const UserManagement: React.FC = () => {
       const response = await fetch(`/api/users/${selectedUser.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           email: formData.email,
           username: formData.username,
           role: formData.role,
-          dataSource: formData.dataSource || null
+          dataSource: formData.dataSource || null,
+          providerId: formData.providerId || null
         })
       });
 
@@ -108,7 +147,7 @@ const UserManagement: React.FC = () => {
 
       setShowEditModal(false);
       setSelectedUser(null);
-      setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '' });
+      setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '', providerId: '' });
       fetchUsers();
     } catch (err: any) {
       setError(err.message);
@@ -120,7 +159,8 @@ const UserManagement: React.FC = () => {
 
     try {
       const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -142,6 +182,7 @@ const UserManagement: React.FC = () => {
       const response = await fetch(`/api/users/${selectedUser.id}/password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ password: formData.password })
       });
 
@@ -152,7 +193,7 @@ const UserManagement: React.FC = () => {
 
       setShowPasswordModal(false);
       setSelectedUser(null);
-      setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '' });
+      setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '', providerId: '' });
     } catch (err: any) {
       setError(err.message);
     }
@@ -165,7 +206,8 @@ const UserManagement: React.FC = () => {
       username: user.username,
       password: '',
       role: user.role,
-      dataSource: user.dataSource || ''
+      dataSource: user.dataSource || '',
+      providerId: user.providerId || ''
     });
     setShowEditModal(true);
   };
@@ -178,7 +220,7 @@ const UserManagement: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       window.location.href = '/';
     } catch (error) {
     }
@@ -197,7 +239,7 @@ const UserManagement: React.FC = () => {
       headerActions={
         <button
           onClick={() => {
-            setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '' });
+            setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '', providerId: '' });
             setShowCreateModal(true);
           }}
           className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
@@ -208,74 +250,98 @@ const UserManagement: React.FC = () => {
       }
     >
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-red-600 dark:text-red-400">error</span>
-              <p className="text-red-600 dark:text-red-400 font-medium">{error}</p>
-            </div>
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-red-600 dark:text-red-400">error</span>
+            <p className="text-red-600 dark:text-red-400 font-medium">{error}</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <span className="material-symbols-outlined animate-spin text-4xl text-slate-400">progress_activity</span>
-          </div>
-        ) : (
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Username</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data Source</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">{user.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">{user.username}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        user.role === 'admin' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                        user.role === 'dental' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <span className="material-symbols-outlined animate-spin text-4xl text-slate-400">progress_activity</span>
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Username</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Provider</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">NPI Number</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data Source</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+              {users.map((user) => (
+                <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">{user.email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">{user.username}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.role === 'admin' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                      user.role === 'dental' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
                         'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                       }`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                      {user.dataSource || <span className="text-slate-400 dark:text-slate-500 italic">mockup</span>}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => openEditModal(user)}
-                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-4"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => openPasswordModal(user)}
-                        className="text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300 mr-4"
-                      >
-                        Change Password
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                    {user.providerName || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                    {user.npiNumber ? (
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono">
+                          {revealedNpis[user.id] ? user.npiNumber : '••••••••••'}
+                        </span>
+                        <button
+                          onClick={() => toggleNpiVisibility(user.id)}
+                          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                          title={revealedNpis[user.id] ? "Hide NPI" : "Show NPI"}
+                        >
+                          <span className="material-symbols-outlined text-[18px]">
+                            {revealedNpis[user.id] ? 'visibility_off' : 'visibility'}
+                          </span>
+                        </button>
+                      </div>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                    {user.dataSource || <span className="text-slate-400 dark:text-slate-500 italic">mockup</span>}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => openEditModal(user)}
+                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-4"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => openPasswordModal(user)}
+                      className="text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300 mr-4"
+                    >
+                      Change Password
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Create User Modal */}
       {showCreateModal && (
@@ -334,6 +400,21 @@ const UserManagement: React.FC = () => {
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
                   placeholder="Leave empty for mockup data"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Provider (optional)</label>
+                <select
+                  value={formData.providerId}
+                  onChange={(e) => setFormData({ ...formData, providerId: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
+                >
+                  <option value="">Select a provider...</option>
+                  {providers.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex gap-3 pt-4">
                 <button
@@ -402,6 +483,21 @@ const UserManagement: React.FC = () => {
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
                   placeholder="Leave empty for mockup data"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Provider (optional)</label>
+                <select
+                  value={formData.providerId}
+                  onChange={(e) => setFormData({ ...formData, providerId: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
+                >
+                  <option value="">Select a provider...</option>
+                  {providers.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex gap-3 pt-4">
                 <button

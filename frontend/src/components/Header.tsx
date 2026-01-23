@@ -9,6 +9,7 @@ interface HeaderProps {
     email: string;
     username: string;
     dataSource?: string;
+    stediEnabled?: boolean;
   } | null;
   onLogout?: () => void;
   onLoginClick?: () => void;
@@ -150,33 +151,61 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
             </div>
 
 
-            {/* API Toggle Button */}
+            {/* Stedi API Menu */}
             {isRealDataOn && (
-              <button
-                onClick={toggleApi}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${isApiEnabled
-                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/60'
-                  : 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50'
-                  }`}
-                title={isApiEnabled ? 'API Enabled - Using Stedi API' : 'API Disabled - Using mock data'}
-              >
-                <span className="material-symbols-outlined text-xs">
-                  {isApiEnabled ? 'cloud_done' : 'cloud_off'}
-                </span>
-                Stedi API {isApiEnabled ? 'On' : 'Off'}
-              </button>
+              <div className="group relative">
+                {/* Main Button */}
+                <button
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${isApiEnabled
+                    ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/60'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  title="Stedi API Settings"
+                >
+                  <span className="material-symbols-outlined text-xs">
+                    {isApiEnabled ? 'cloud_done' : 'cloud_off'}
+                  </span>
+                  Stedi API {isApiEnabled ? 'On' : 'Off'}
+                  <span className="material-symbols-outlined text-xs">expand_more</span>
+                </button>
+
+                {/* Dropdown Menu */}
+                <div className="absolute top-full right-0 mt-1 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1">
+                    {/* Toggle Option */}
+                    <button
+                      onClick={toggleApi}
+                      className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        {isApiEnabled ? 'toggle_on' : 'toggle_off'}
+                      </span>
+                      {isApiEnabled ? 'Turn Off Stedi API' : 'Turn On Stedi API'}
+                    </button>
+
+                    {/* Divider */}
+                    <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
+
+                    {/* Stedi Check Option */}
+                    <button
+                      onClick={() => navigate('/admin/stedi-api-tester')}
+                      className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-sm">api</span>
+                      Stedi API Tester
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
             
             {/* User Info */}
             {currentUser && (
               <div className="text-right">
                 <div className="flex items-center">
-                  <span className="material-symbols-outlined text-md">person</span>
-            
+                  <span className={`material-symbols-outlined text-md ${isRealDataOn ? 'text-green-500' : ''}`}>person</span>
+
                   <span className="text-xs ml-1">{currentUser.name}</span>
-                  {isRealDataOn && (<span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-500 text-white shadow-sm animate-pulse">
-                    Data Mode On
-                  </span>)}
                 </div>
 
               </div>
