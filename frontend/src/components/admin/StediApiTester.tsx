@@ -331,29 +331,6 @@ const JsonViewer: React.FC<JsonViewerProps> = ({ data }) => {
 const DEFAULT_REQUEST_BODY ={
     "tradingPartnerServiceId": "62308",
     "provider": {
-        "organizationName": "Cozi",
-        "npi": "1235441221"
-    },
-    "subscriber": {
-        "firstName": "YEONG",
-        "lastName": "KIM",
-        "memberId": "U8923222602"
-    },
-    "dependents": [
-        {
-            "firstName": "YEONG",
-            "lastName": "KIM",
-            "dateOfBirth": "19710625"
-        }
-    ],
-    "encounter": {
-        "serviceTypeCodes": ["35"]
-    }
-};
-
-const DEFAULT_REQUEST_BODY_2={
-    "tradingPartnerServiceId": "62308",
-    "provider": {
         "organizationName": "Provider Name",
         "npi": "1999999984"
     },
