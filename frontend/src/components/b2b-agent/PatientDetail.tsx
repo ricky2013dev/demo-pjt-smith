@@ -235,9 +235,14 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
     return line ? `${line}, ${addr.city}, ${addr.state} ${addr.postalCode}` : `${addr.city}, ${addr.state} ${addr.postalCode}`;
   };
 
-  const calculateAge = (birthDate: string) => {
+  const calculateAge = (birthDate: string): number | null => {
+    if (!birthDate || birthDate.includes('*')) return null;
+
     const today = new Date();
     const birth = new Date(birthDate);
+
+    if (isNaN(birth.getTime())) return null;
+
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
     if (
@@ -323,7 +328,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
     }));
     setEditedInsurance(insuranceData);
 
-    setEditedAge(patient.birthDate ? calculateAge(patient.birthDate).toString() : "");
+    const calculatedAge = patient.birthDate ? calculateAge(patient.birthDate) : null;
+    setEditedAge(calculatedAge !== null ? calculatedAge.toString() : "");
   }, [patient]);
 
   // Handle save changes
@@ -357,7 +363,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   // Handle cancel editing
   const handleCancel = () => {
     setEditedBirthDate((patient as any).birthDateEncrypted ? "XX/XX/XXXX" : patient.birthDate);
-    setEditedAge(calculateAge(patient.birthDate).toString());
+    const calculatedAge = calculateAge(patient.birthDate);
+    setEditedAge(calculatedAge !== null ? calculatedAge.toString() : "");
     setEditedGender(patient.gender);
     setEditedActive(patient.active);
     setEditedPhone(getPhone());
@@ -707,7 +714,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                     />
                   ) : (
                     <p className="font-medium text-slate-800 dark:text-slate-100">
-                      {calculateAge(patient.birthDate)} years
+                      {calculateAge(patient.birthDate) !== null ? `${calculateAge(patient.birthDate)} years` : ''}
                     </p>
                   )}
                 </div>

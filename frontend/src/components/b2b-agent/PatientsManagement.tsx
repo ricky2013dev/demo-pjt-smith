@@ -315,7 +315,7 @@ const PatientsManagement: React.FC = () => {
       {/* Main Content */}
       <main className="flex flex-1 overflow-hidden relative">
         {/* Fetch PMS Button - Only show if using database */}
-        {useDatabase && (
+        {/* {useDatabase && (
           <div className="absolute top-4 right-4 z-10 flex gap-3">
             <button
               onClick={handleFetchPMS}
@@ -335,7 +335,7 @@ const PatientsManagement: React.FC = () => {
               )}
             </button>
           </div>
-        )}
+        )} */}
 
         <PatientGuide
           totalPatients={patients.length}
