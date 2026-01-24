@@ -347,10 +347,10 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
             </div>
 
             {/* Status Filter */}
-            <div className="h-11 flex-shrink-0 lg:w-72 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center px-3">
+            <div className="h-11 flex-shrink-0 lg:w-96 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center px-3">
               <DropdownMenu.Root open={isStatusDropdownOpen} onOpenChange={setIsStatusDropdownOpen}>
                 <DropdownMenu.Trigger asChild>
-                  <button className="flex items-center gap-2 w-full h-full text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 focus:outline-none transition-colors px-1">
+                  <div role="button" className="flex items-center gap-2 w-full h-full text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 focus:outline-none transition-colors px-1 cursor-pointer">
                     <div className="flex items-center gap-0.5 flex-1 overflow-hidden min-w-0 h-full">
                       {selectedStatuses.length === 0 ? (
                         <span className="text-slate-700 dark:text-slate-300 text-sm whitespace-nowrap">All Status</span>
@@ -380,7 +380,7 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
                       )}
                     </div>
                     <span className="material-symbols-outlined text-xl flex-shrink-0 text-slate-400 dark:text-slate-500">expand_more</span>
-                  </button>
+                  </div>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content

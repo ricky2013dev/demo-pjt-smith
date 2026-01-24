@@ -35,8 +35,8 @@ const PatientsManagement: React.FC = () => {
         setCurrentUser(data.user);
 
         // Sync Stedi API state with user setting
-        if (data.user.stediEnabled !== undefined) {
-          syncWithUser(data.user.stediEnabled);
+        if (data.user.stediMode !== undefined) {
+          syncWithUser(data.user.stediMode);
         }
 
         // If user has dataSource, use database
@@ -307,7 +307,7 @@ const PatientsManagement: React.FC = () => {
           email: currentUser.email,
           username: currentUser.username,
           dataSource: currentUser.dataSource,
-          stediEnabled: currentUser.stediEnabled
+          stediMode: currentUser.stediMode
         } : null}
         onLogout={handleLogout}
       />

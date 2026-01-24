@@ -1,46 +1,45 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 
+export type StediMode = 'mockup' | 'test-data' | 'real-data';
+
 interface StediApiContextType {
-  isApiEnabled: boolean;
-  toggleApi: () => Promise<void>;
-  setIsApiEnabled: (enabled: boolean) => void;
-  syncWithUser: (stediEnabled: boolean) => void;
+  stediMode: StediMode;
+  setStediMode: (mode: StediMode) => Promise<void>;
+  syncWithUser: (stediMode: StediMode) => void;
 }
 
 const StediApiContext = createContext<StediApiContextType | undefined>(undefined);
 
 export const StediApiProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isApiEnabled, setIsApiEnabled] = useState(false);
+  const [stediMode, setStediModeState] = useState<StediMode>('mockup');
 
-  const syncWithUser = useCallback((stediEnabled: boolean) => {
-    setIsApiEnabled(stediEnabled);
+  const syncWithUser = useCallback((mode: StediMode) => {
+    setStediModeState(mode || 'mockup');
   }, []);
 
-  const toggleApi = useCallback(async () => {
-    const newValue = !isApiEnabled;
-
+  const setStediMode = useCallback(async (newMode: StediMode) => {
     try {
-      const response = await fetch('/api/user/stedi-toggle', {
+      const response = await fetch('/api/user/stedi-mode', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ stediEnabled: newValue }),
+        body: JSON.stringify({ stediMode: newMode }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setIsApiEnabled(data.stediEnabled);
+        setStediModeState(data.stediMode);
       } else {
-        console.error('Failed to toggle Stedi API');
+        console.error('Failed to update Stedi mode');
       }
     } catch (error) {
-      console.error('Error toggling Stedi API:', error);
+      console.error('Error updating Stedi mode:', error);
     }
-  }, [isApiEnabled]);
+  }, []);
 
   return (
-    <StediApiContext.Provider value={{ isApiEnabled, toggleApi, setIsApiEnabled, syncWithUser }}>
+    <StediApiContext.Provider value={{ stediMode, setStediMode, syncWithUser }}>
       {children}
     </StediApiContext.Provider>
   );

@@ -10,7 +10,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   role: text("role").notNull().default("user"),
   dataSource: text("data_source"),
-  stediEnabled: boolean("stedi_enabled").notNull().default(false),
+  stediMode: text("stedi_mode").notNull().default("mockup"),
   providerId: varchar("provider_id").references(() => providers.id),
 });
 
@@ -20,7 +20,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   role: true,
   dataSource: true,
-  stediEnabled: true,
+  stediMode: true,
   providerId: true,
 });
 

@@ -135,7 +135,7 @@ export async function registerRoutes(
           id: user.id,
           email: user.email,
           role: user.role,
-          stediEnabled: user.stediEnabled,
+          stediMode: user.stediMode,
           providerId: user.providerId,
           provider: providerInfo
         }
@@ -248,7 +248,7 @@ export async function registerRoutes(
           role: user.role,
           username: user.username,
           dataSource: user.dataSource,
-          stediEnabled: user.stediEnabled,
+          stediMode: user.stediMode,
           providerId: user.providerId,
           provider: providerInfo
         }
@@ -560,6 +560,7 @@ export async function registerRoutes(
         password: hashedPassword,
         role,
         dataSource: dataSource || null,
+        stediMode: "mockup",
         providerId: providerId || null
       });
 
@@ -573,7 +574,7 @@ export async function registerRoutes(
   app.put("/api/users/:id", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const { email, username, role, dataSource, stediEnabled, providerId } = req.body;
+      const { email, username, role, dataSource, stediMode, providerId } = req.body;
 
       // Check if trying to update to existing email
       if (email) {
@@ -596,7 +597,7 @@ export async function registerRoutes(
       if (username) updates.username = username;
       if (role) updates.role = role;
       if (dataSource !== undefined) updates.dataSource = dataSource;
-      if (stediEnabled !== undefined) updates.stediEnabled = stediEnabled;
+      if (stediMode !== undefined) updates.stediMode = stediMode;
       if (providerId !== undefined) updates.providerId = providerId;
 
       const user = await storage.updateUser(id, updates);
@@ -654,27 +655,28 @@ export async function registerRoutes(
     }
   });
 
-  // Toggle Stedi API for current user
-  app.put("/api/user/stedi-toggle", async (req, res) => {
+  // Update Stedi API mode for current user
+  app.put("/api/user/stedi-mode", async (req, res) => {
     try {
       const userId = (req.session as any)?.userId;
       if (!userId) {
         return res.status(401).json({ error: "Not authenticated" });
       }
 
-      const { stediEnabled } = req.body;
-      if (typeof stediEnabled !== 'boolean') {
-        return res.status(400).json({ error: "stediEnabled must be a boolean" });
+      const { stediMode } = req.body;
+      const validModes = ['mockup', 'test-data', 'real-data'];
+      if (!validModes.includes(stediMode)) {
+        return res.status(400).json({ error: "Invalid stediMode" });
       }
 
-      const user = await storage.updateUser(userId, { stediEnabled });
+      const user = await storage.updateUser(userId, { stediMode });
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
       res.json({
         success: true,
-        stediEnabled: user.stediEnabled
+        stediMode: user.stediMode
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to update Stedi setting" });

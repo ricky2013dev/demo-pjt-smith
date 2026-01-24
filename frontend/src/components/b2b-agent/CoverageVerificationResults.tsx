@@ -3,6 +3,7 @@ import VerificationDataPanel, { VerificationDataRow } from "./VerificationDataPa
 import stediService, { Subscriber, Provider } from "@/services/stediService";
 import { Patient } from "@/types/patient";
 import { useStediApi } from "@/context/StediApiContext";
+import { decryptSensitiveData, decryptInsuranceField } from "@/services/sensitiveDataService";
 
 // Sample API verification results data - moved outside component for performance
 const API_VERIFICATION_DATA: VerificationDataRow[] = [
@@ -162,7 +163,7 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
   patient,
   onTransactionCreated
 }) => {
-  const { isApiEnabled } = useStediApi();
+  const { stediMode } = useStediApi();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState<Step>('idle');
   const [step1Status, setStep1Status] = useState<StepStatus>('pending');
@@ -308,9 +309,9 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
     }
 
     const dataMode = !!currentUser?.dataSource;
-    const stediTest = isApiEnabled;
+    const stediTest = stediMode !== 'mockup';
 
-    // Only save if data mode is on and STEDI test is on
+    // Only save if data mode is on and STEDI test is on (not mockup)
     if (!dataMode || !stediTest) {
       return;
     }
@@ -414,9 +415,9 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
     }
 
     const dataMode = !!currentUser?.dataSource;
-    const stediTest = isApiEnabled;
+    const stediTest = stediMode !== 'mockup';
 
-    // Only save if data mode is on and STEDI test is on
+    // Only save if data mode is on and STEDI test is on (not mockup)
     if (!dataMode || !stediTest) {
       return;
     }
@@ -487,41 +488,96 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
   }, [step3Status]);
 
   const startVerification = async () => {
+    console.log('CoverageVerification: startVerification invoked. Current stediMode:', stediMode);
     try {
       // Track start time
       const startTime = new Date();
       setVerificationStartTime(startTime);
 
-      // Step 1: Get API Result from Stedi
+      // Step 1: Get API Result
       setCurrentStep('step1');
       setStep1Status('in_progress');
-      await new Promise(resolve => setTimeout(resolve, 50)); // Reduced from 100ms
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       let apiResponseText = SAMPLE_API_RESPONSE;
 
-      // Call Stedi API if patient data is available
-      if (patient && (patient as any).insurance && (patient as any).insurance.length > 0) {
-        try {
+      // Logic depends on stediMode
+      if (stediMode === 'mockup') {
+        console.log('CoverageVerification: Mode is mockup, using sample response');
+        // Already set to SAMPLE_API_RESPONSE
+      } else if (stediMode === 'test-data') {
+        console.log('CoverageVerification: Mode is test-data, calling verifyStediAPI with test payload');
+        // For test-data, we don't need real subscriber/provider from patient
+        const result = await stediService.verifyStediAPI({} as any, {} as any, 'test-data');
+        if (result.success && result.data) {
+          apiResponseText = JSON.stringify(result.data, null, 2);
+        }
+      } else if (stediMode === 'real-data') {
+        console.log('CoverageVerification: Mode is real-data, validating patient info');
+
+        if (patient && (patient as any).insurance && (patient as any).insurance.length > 0) {
           const insurance = (patient as any).insurance[0];
+
+          let decryptedBirthDate = patient.birthDate || "1987-05-21";
+          let decryptedSubscriberId = insurance.subscriberId || "0000000000";
+
+          // Decrypt fields if they are masked or encrypted
+          try {
+            console.log('CoverageVerification: Decrypting sensitive fields for real-time verification...');
+
+            // Decrypt Birth Date
+            if (decryptedBirthDate.includes('*') || (patient as any).birthDateEncrypted) {
+              const result = await decryptSensitiveData(patient.id, 'birthDate');
+              if (result) {
+                decryptedBirthDate = result;
+                console.log('CoverageVerification: Decrypted Birth Date successfully');
+              }
+            }
+
+            // Decrypt Subscriber ID
+            if (decryptedSubscriberId.includes('*') || (insurance as any).subscriberIdEncrypted || (patient as any).subscriberIdEncrypted) {
+              const result = await decryptInsuranceField(patient.id, insurance.id, 'subscriberId');
+              if (result) {
+                decryptedSubscriberId = result;
+                console.log('CoverageVerification: Decrypted Subscriber ID successfully');
+              }
+            }
+          } catch (decryptError) {
+            console.error('CoverageVerification: Decryption failed, using available data:', decryptError);
+            // Continue with whatever data we have
+          }
+
           const subscriber: Subscriber = {
-            memberId: insurance.subscriberId || "0000000000",
-            firstName: capitalizeWord(patient.name.given[0] || "John"),
-            lastName: capitalizeWord(patient.name.family || "Doe"),
-            dateOfBirth: patient.birthDate || "05/21/1987"
+            memberId: decryptedSubscriberId,
+            firstName: capitalizeWord(patient.name?.given?.[0] || "John"),
+            lastName: capitalizeWord(patient.name?.family || "Doe"),
+            dateOfBirth: decryptedBirthDate.replace(/-/g, '') // Ensure format is YYYYMMDD
           };
 
           const provider: Provider = {
-            npi: "1234567890",
-            organizationName: "Smith Dental Clinic"
+            npi: currentUser?.provider?.npiNumber || "1234567890",
+            organizationName: currentUser?.provider?.name || "Smith Dental Clinic"
           };
 
-          const result = await stediService.verifyStediAPI(subscriber, provider, isApiEnabled);
+          console.log('CoverageVerification: Calling verifyStediAPI with real decrypted data:', {
+            subscriber: { ...subscriber, memberId: '***', dateOfBirth: '***' },
+            provider
+          });
+
+          const result = await stediService.verifyStediAPI(subscriber, provider, 'real-data', patient);
 
           if (result.success && result.data) {
             apiResponseText = JSON.stringify(result.data, null, 2);
+          } else if (result.error) {
+            console.error('CoverageVerification: API Error:', result.error);
+            apiResponseText = JSON.stringify({ error: result.error, stediResponse: result.stediResponse }, null, 2);
           }
-        } catch (error) {
-          // Fall back to mock response on error
+        } else {
+          console.warn('CoverageVerification: Real-data mode selected but patient insurance is missing!');
+          apiResponseText = JSON.stringify({
+            error: "Patient insurance information is missing. Cannot perform real-time verification.",
+            fallback: "Using sample data for demonstration purposes."
+          }, null, 2);
         }
       }
 
@@ -529,20 +585,22 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
       setStep1Status('completed');
 
       // Step 2: Analyze and convert to code-level
-      await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 150ms
+      await new Promise(resolve => setTimeout(resolve, 100));
       setCurrentStep('step2');
       setStep2Status('in_progress');
       await typeText(CODE_LEVEL_DATA, setStep2Text, 0);
       setStep2Status('completed');
 
       // Step 3: Display verification results in table format
-      await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 150ms
+      await new Promise(resolve => setTimeout(resolve, 100));
       setCurrentStep('step3');
       setStep3Status('in_progress');
-      await new Promise(resolve => setTimeout(resolve, 50)); // Reduced from 100ms
+      await new Promise(resolve => setTimeout(resolve, 50));
       setStep3Status('completed');
     } catch (error) {
+      console.error('CoverageVerification: Error during verification process:', error);
       setStep1Status('completed');
+      setStep1Text(JSON.stringify({ error: error instanceof Error ? error.message : "An unexpected error occurred" }, null, 2));
     }
   };
 
@@ -595,13 +653,12 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
           <div className="flex items-center justify-center">
             {/* Step 1 */}
             <div className="flex items-center gap-2 flex-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                step1Status === 'completed'
-                  ? 'bg-green-500 text-white'
-                  : step1Status === 'in_progress'
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step1Status === 'completed'
+                ? 'bg-green-500 text-white'
+                : step1Status === 'in_progress'
                   ? 'bg-blue-500 text-white animate-pulse'
                   : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
-              }`}>
+                }`}>
                 {step1Status === 'completed' ? '✓' : '1'}
               </div>
               <div className="text-sm">
@@ -610,19 +667,17 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
               </div>
             </div>
 
-            <div className={`h-0.5 flex-1 mx-2 ${
-              step1Status === 'completed' ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
-            }`}></div>
+            <div className={`h-0.5 flex-1 mx-2 ${step1Status === 'completed' ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
+              }`}></div>
 
             {/* Step 2 */}
             <div className="flex items-center gap-2 flex-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                step2Status === 'completed'
-                  ? 'bg-green-500 text-white'
-                  : step2Status === 'in_progress'
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step2Status === 'completed'
+                ? 'bg-green-500 text-white'
+                : step2Status === 'in_progress'
                   ? 'bg-blue-500 text-white animate-pulse'
                   : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
-              }`}>
+                }`}>
                 {step2Status === 'completed' ? '✓' : '2'}
               </div>
               <div className="text-sm">
@@ -631,19 +686,17 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
               </div>
             </div>
 
-            <div className={`h-0.5 flex-1 mx-2 ${
-              step2Status === 'completed' ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
-            }`}></div>
+            <div className={`h-0.5 flex-1 mx-2 ${step2Status === 'completed' ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
+              }`}></div>
 
             {/* Step 3 */}
             <div className="flex items-center gap-2 flex-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                step3Status === 'completed'
-                  ? 'bg-green-500 text-white'
-                  : step3Status === 'in_progress'
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step3Status === 'completed'
+                ? 'bg-green-500 text-white'
+                : step3Status === 'in_progress'
                   ? 'bg-blue-500 text-white animate-pulse'
                   : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
-              }`}>
+                }`}>
                 {step3Status === 'completed' ? '✓' : '3'}
               </div>
               <div className="text-sm">
