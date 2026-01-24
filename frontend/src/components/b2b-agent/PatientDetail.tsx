@@ -79,9 +79,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
     (patient as any).ssnEncrypted ? "XXX-XX-XXXX" : ((patient as any).ssn || "")
   );
   const [editedBirthDate, setEditedBirthDate] = useState(
-    (patient as any).birthDateEncrypted ? "XX/XX/XXXX" : patient.birthDate
+    (patient as any).birthDateEncrypted ? "" : (patient.birthDate || "")
   );
-  const [editedAge, setEditedAge] = useState("");
   const [editedGender, setEditedGender] = useState(patient.gender);
   const [editedActive, setEditedActive] = useState(patient.active);
   const [editedPhone, setEditedPhone] = useState("");
@@ -313,7 +312,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
     setEditedMiddleName(patient.name.given[1] || "");
     setEditedLastName(patient.name.family);
     setEditedSSN((patient as any).ssnEncrypted ? "XXX-XX-XXXX" : ((patient as any).ssn || ""));
-    setEditedBirthDate((patient as any).birthDateEncrypted ? "XX/XX/XXXX" : patient.birthDate);
+    // Initialize encrypted birth date to empty string so date picker is clean
+    setEditedBirthDate((patient as any).birthDateEncrypted ? "" : (patient.birthDate || ""));
     setEditedGender(patient.gender);
     setEditedActive(patient.active);
     setEditedPhone(getPhone());
@@ -328,14 +328,56 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
     }));
     setEditedInsurance(insuranceData);
 
-    const calculatedAge = patient.birthDate ? calculateAge(patient.birthDate) : null;
-    setEditedAge(calculatedAge !== null ? calculatedAge.toString() : "");
   }, [patient]);
+
+  // Validation state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!editedFirstName.trim()) {
+      newErrors.firstName = "First Name is required";
+    }
+    if (!editedLastName.trim()) {
+      newErrors.lastName = "Last Name is required";
+    }
+
+    if (editedBirthDate && editedBirthDate !== "" && editedBirthDate !== "XX/XX/XXXX") {
+      const birthDate = new Date(editedBirthDate);
+      const year = birthDate.getFullYear();
+      const currentYear = new Date().getFullYear();
+
+      if (isNaN(birthDate.getTime())) {
+        newErrors.birthDate = "Invalid Date";
+      } else if (year < 1900 || year > currentYear) {
+        newErrors.birthDate = "Year must be between 1900 and present";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Handle save changes
   const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     if (onSavePatient) {
       try {
+        let formattedBirthDate: string | undefined = editedBirthDate;
+
+        // Convert MM/DD/YYYY to YYYY-MM-DD
+        if (formattedBirthDate && /^\d{2}\/\d{2}\/\d{4}$/.test(formattedBirthDate)) {
+          const [month, day, year] = formattedBirthDate.split('/');
+          formattedBirthDate = `${year}-${month}-${day}`;
+        } else if (formattedBirthDate === "XX/XX/XXXX" || formattedBirthDate === "") {
+          // Send undefined if mask or empty to preserve existing encrypted value
+          formattedBirthDate = undefined;
+        }
+
         const updatedPatient: Partial<Patient> = {
           id: patient.id,
           name: {
@@ -343,7 +385,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             family: editedLastName
           },
           gender: editedGender || undefined,
-          birthDate: editedBirthDate || undefined,
+          birthDate: formattedBirthDate || undefined,
           ssn: editedSSN || undefined,
           active: editedActive,
           insurance: editedInsurance,
@@ -351,20 +393,21 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
 
         await onSavePatient(updatedPatient);
         setIsEditing(false);
+        setErrors({});
       } catch (error) {
         alert("Failed to save patient information. Please try again.");
       }
     } else {
       // Fallback for mockup mode
       setIsEditing(false);
+      setErrors({});
     }
   };
 
   // Handle cancel editing
   const handleCancel = () => {
-    setEditedBirthDate((patient as any).birthDateEncrypted ? "XX/XX/XXXX" : patient.birthDate);
-    const calculatedAge = calculateAge(patient.birthDate);
-    setEditedAge(calculatedAge !== null ? calculatedAge.toString() : "");
+    setErrors({});
+    setEditedBirthDate((patient as any).birthDateEncrypted ? "" : (patient.birthDate || ""));
     setEditedGender(patient.gender);
     setEditedActive(patient.active);
     setEditedPhone(getPhone());
@@ -600,13 +643,19 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                     First Name
                   </label>
                   {isEditing ? (
-                    <input
-                      type="text"
-                      value={editedFirstName}
-                      onChange={(e) => setEditedFirstName(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                      placeholder="First Name"
-                    />
+                    <>
+                      <input
+                        type="text"
+                        value={editedFirstName}
+                        onChange={(e) => setEditedFirstName(e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm ${errors.firstName ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
+                          }`}
+                        placeholder="First Name"
+                      />
+                      {errors.firstName && (
+                        <p className="mt-1 text-xs text-red-500">{errors.firstName}</p>
+                      )}
+                    </>
                   ) : (
                     <p className="font-medium text-slate-800 dark:text-slate-100">
                       {capitalizeWord(patient.name.given[0]) || "N/A"}
@@ -636,13 +685,19 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                     Last Name
                   </label>
                   {isEditing ? (
-                    <input
-                      type="text"
-                      value={editedLastName}
-                      onChange={(e) => setEditedLastName(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                      placeholder="Last Name"
-                    />
+                    <>
+                      <input
+                        type="text"
+                        value={editedLastName}
+                        onChange={(e) => setEditedLastName(e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm ${errors.lastName ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
+                          }`}
+                        placeholder="Last Name"
+                      />
+                      {errors.lastName && (
+                        <p className="mt-1 text-xs text-red-500">{errors.lastName}</p>
+                      )}
+                    </>
                   ) : (
                     <p className="font-medium text-slate-800 dark:text-slate-100">
                       {capitalizeWord(patient.name.family)}
@@ -674,22 +729,18 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                     Date of Birth
                   </label>
                   {isEditing ? (
-                    (patient as any).birthDateEncrypted ? (
-                      <input
-                        type="text"
-                        value={editedBirthDate}
-                        onChange={(e) => setEditedBirthDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                        placeholder="MM/DD/YYYY"
-                      />
-                    ) : (
+                    <>
                       <input
                         type="date"
                         value={editedBirthDate || ""}
                         onChange={(e) => setEditedBirthDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                        className={`w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm ${errors.birthDate ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
+                          }`}
                       />
-                    )
+                      {errors.birthDate && (
+                        <p className="mt-1 text-xs text-red-500">{errors.birthDate}</p>
+                      )}
+                    </>
                   ) : (
                     <SensitiveDataField
                       patientId={patient.id}
@@ -704,19 +755,12 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                   <label className="text-sm text-slate-500 dark:text-slate-400 mb-2 block">
                     Age
                   </label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={editedAge}
-                      onChange={(e) => setEditedAge(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                      placeholder="Age"
-                    />
-                  ) : (
-                    <p className="font-medium text-slate-800 dark:text-slate-100">
-                      {calculateAge(patient.birthDate) !== null ? `${calculateAge(patient.birthDate)} years` : ''}
-                    </p>
-                  )}
+                  <p className="font-medium text-slate-800 dark:text-slate-100">
+                    {isEditing
+                      ? (editedBirthDate && calculateAge(editedBirthDate) !== null ? `${calculateAge(editedBirthDate)} years` : '')
+                      : (calculateAge(patient.birthDate) !== null ? `${calculateAge(patient.birthDate)} years` : '')
+                    }
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm text-slate-500 dark:text-slate-400 mb-2 block">

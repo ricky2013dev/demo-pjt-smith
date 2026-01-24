@@ -4,6 +4,7 @@ import { VERIFICATION_STATUS_LABELS } from '@/constants/verificationStatus';
 import { DayPicker } from 'react-day-picker';
 import { format, subMonths, addMonths, isWithinInterval, parseISO } from 'date-fns';
 import * as Popover from '@radix-ui/react-popover';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import 'react-day-picker/style.css';
 import { deriveVerificationStatusFromTransactions, type Transaction, type VerificationStatus } from '@/utils/transactionStatus';
 import VerificationStepper from '@/components/VerificationStepper';
@@ -33,7 +34,8 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
   currentUser = null
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'not_started' | 'in_progress' | 'completed'>('all');
+  const [selectedStatuses, setSelectedStatuses] = useState<Array<'not_started' | 'in_progress' | 'completed'>>([]);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: subMonths(new Date(), 3),
     to: addMonths(new Date(), 3)
@@ -168,6 +170,27 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
     return null;
   };
 
+  // Toggle status filter selection
+  const toggleStatus = (status: 'not_started' | 'in_progress' | 'completed', checked: boolean) => {
+    if (checked) {
+      setSelectedStatuses(prev => [...prev, status]);
+    } else {
+      setSelectedStatuses(prev => prev.filter(s => s !== status));
+    }
+  };
+
+  // Get status dropdown button label
+  const getStatusDropdownLabel = (): string => {
+    if (selectedStatuses.length === 0) return 'All Status';
+    if (selectedStatuses.length === 1) {
+      const status = selectedStatuses[0];
+      if (status === 'not_started') return 'Not Started';
+      if (status === 'in_progress') return 'In Progress';
+      if (status === 'completed') return 'Completed';
+    }
+    return `${selectedStatuses.length} statuses`;
+  };
+
   // Unified filtered appointments (includes patients without appointments)
   const filteredAppointments = useMemo(() => {
     const allAppointments: Array<{ patient: Patient, appointment: any | null }> = [];
@@ -213,25 +236,28 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
     }
 
     // Status filter
-    if (statusFilter !== 'all') {
+    if (selectedStatuses.length > 0) {
       filtered = filtered.filter(item => {
         const status = getEffectiveVerificationStatus(item.patient);
-        if (statusFilter === 'not_started') {
-          if (!status) return true;
-          const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = status;
-          return fetchPMS === 'pending' && documentAnalysis === 'pending' && apiVerification === 'pending' && callCenter === 'pending' && saveToPMS === 'pending';
-        }
-        if (statusFilter === 'completed') {
-          return status?.saveToPMS === 'completed';
-        }
-        if (statusFilter === 'in_progress') {
-          if (!status) return false;
-          const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = status;
-          const isNotStarted = fetchPMS === 'pending' && documentAnalysis === 'pending' && apiVerification === 'pending' && callCenter === 'pending' && saveToPMS === 'pending';
-          const isCompleted = saveToPMS === 'completed';
-          return !isNotStarted && !isCompleted;
-        }
-        return true;
+
+        return selectedStatuses.some(selectedStatus => {
+          if (selectedStatus === 'not_started') {
+            if (!status) return true;
+            const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = status;
+            return fetchPMS === 'pending' && documentAnalysis === 'pending' && apiVerification === 'pending' && callCenter === 'pending' && saveToPMS === 'pending';
+          }
+          if (selectedStatus === 'completed') {
+            return status?.saveToPMS === 'completed';
+          }
+          if (selectedStatus === 'in_progress') {
+            if (!status) return false;
+            const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = status;
+            const isNotStarted = fetchPMS === 'pending' && documentAnalysis === 'pending' && apiVerification === 'pending' && callCenter === 'pending' && saveToPMS === 'pending';
+            const isCompleted = saveToPMS === 'completed';
+            return !isNotStarted && !isCompleted;
+          }
+          return false;
+        });
       });
     }
 
@@ -244,7 +270,7 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
     });
 
     return filtered;
-  }, [patients, dateRange, searchQuery, statusFilter, patientVerificationStatusMap, currentUser?.dataSource]);
+  }, [patients, dateRange, searchQuery, selectedStatuses, patientVerificationStatusMap, currentUser?.dataSource]);
 
   const getVerificationStatus = (patient: Patient) => {
     const effectiveStatus = getEffectiveVerificationStatus(patient);
@@ -305,52 +331,120 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
         </div>
 
         {/* Filter Bar */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          {/* Search Input and Status Filter */}
-          <div className="flex items-center gap-3">
-            <div className="relative w-96">
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
+          {/* Left: Search and Status Filter */}
+          <div className="flex gap-3 flex-1 lg:flex-initial">
+            {/* Search Input */}
+            <div className="relative flex-1 lg:w-72">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full h-11 pl-10 pr-4 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'not_started' | 'in_progress' | 'completed')}
-              className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="not_started">Not Started</option>
-              <option value="in_progress">In Progress</option>
-              <option value="completed">Completed</option>
-            </select>
+            <div className="h-11 flex-shrink-0 lg:w-72 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center px-3">
+              <DropdownMenu.Root open={isStatusDropdownOpen} onOpenChange={setIsStatusDropdownOpen}>
+                <DropdownMenu.Trigger asChild>
+                  <button className="flex items-center gap-2 w-full h-full text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 focus:outline-none transition-colors px-1">
+                    <div className="flex items-center gap-0.5 flex-1 overflow-hidden min-w-0 h-full">
+                      {selectedStatuses.length === 0 ? (
+                        <span className="text-slate-700 dark:text-slate-300 text-sm whitespace-nowrap">All Status</span>
+                      ) : (
+                        selectedStatuses.map(status => (
+                          <span
+                            key={status}
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex-shrink-0 whitespace-nowrap"
+                          >
+                            {status === 'not_started' && 'Not Started'}
+                            {status === 'in_progress' && 'In Progress'}
+                            {status === 'completed' && 'Completed'}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleStatus(status, false);
+                              }}
+                              className="hover:opacity-60 active:opacity-40 transition-opacity flex-shrink-0"
+                              style={{ pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '14px', height: '14px', marginLeft: '-4px' }}
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: '10px', lineHeight: '1' }}>close</span>
+                            </button>
+                          </span>
+                        ))
+                      )}
+                    </div>
+                    <span className="material-symbols-outlined text-xl flex-shrink-0 text-slate-400 dark:text-slate-500">expand_more</span>
+                  </button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content
+                    className="z-50 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-lg p-2 min-w-[200px]"
+                    sideOffset={8}
+                    align="start"
+                  >
+                    <DropdownMenu.CheckboxItem
+                      checked={selectedStatuses.includes('not_started')}
+                      onCheckedChange={(checked) => toggleStatus('not_started', checked)}
+                      className="px-3 py-2 text-sm text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        {selectedStatuses.includes('not_started') ? 'check_box' : 'check_box_outline_blank'}
+                      </span>
+                      <span>Not Started</span>
+                    </DropdownMenu.CheckboxItem>
+
+                    <DropdownMenu.CheckboxItem
+                      checked={selectedStatuses.includes('in_progress')}
+                      onCheckedChange={(checked) => toggleStatus('in_progress', checked)}
+                      className="px-3 py-2 text-sm text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        {selectedStatuses.includes('in_progress') ? 'check_box' : 'check_box_outline_blank'}
+                      </span>
+                      <span>In Progress</span>
+                    </DropdownMenu.CheckboxItem>
+
+                    <DropdownMenu.CheckboxItem
+                      checked={selectedStatuses.includes('completed')}
+                      onCheckedChange={(checked) => toggleStatus('completed', checked)}
+                      className="px-3 py-2 text-sm text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        {selectedStatuses.includes('completed') ? 'check_box' : 'check_box_outline_blank'}
+                      </span>
+                      <span>Completed</span>
+                    </DropdownMenu.CheckboxItem>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+            </div>
           </div>
 
-          {/* Date Range Picker and Results Count */}
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-500 dark:text-slate-400">
+          {/* Right: Results Counter, Date Range, and New Patient Button */}
+          <div className="flex gap-3 items-center justify-between lg:justify-end flex-wrap lg:flex-nowrap">
+            <span className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
               {filteredAppointments.filter(a => a.appointment).length} appointment{filteredAppointments.filter(a => a.appointment).length !== 1 ? 's' : ''}
               {filteredAppointments.filter(a => !a.appointment).length > 0 && (
-                <span className="ml-1">
-                  · {filteredAppointments.filter(a => !a.appointment).length} without
+                <span className="hidden sm:inline">
+                  {' '}· {filteredAppointments.filter(a => !a.appointment).length} without
                 </span>
               )}
             </span>
 
             <Popover.Root open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
               <Popover.Trigger asChild>
-                <button className="flex items-center gap-3 px-6 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                  <span className="material-symbols-outlined text-2xl">date_range</span>
-                  <span className="text-base font-medium">
+                <button className="h-11 flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap">
+                  <span className="material-symbols-outlined text-xl">date_range</span>
+                  <span className="text-sm font-medium hidden sm:inline">
                     {dateRange.from && dateRange.to
-                      ? `${format(dateRange.from, 'MMM d, yyyy')} - ${format(dateRange.to, 'MMM d, yyyy')}`
-                      : 'Select date range'}
+                      ? `${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d')}`
+                      : 'Date range'}
                   </span>
                 </button>
               </Popover.Trigger>
@@ -396,10 +490,10 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
             {showAddButton && onAddNewPatient && (
               <button
                 onClick={onAddNewPatient}
-                className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg font-medium transition-colors"
+                className="h-11 flex items-center gap-2 px-5 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg font-medium transition-colors whitespace-nowrap"
               >
                 <span className="material-symbols-outlined text-xl">add</span>
-                <span>New Patient</span>
+                <span className="hidden sm:inline">New Patient</span>
               </button>
             )}
           </div>

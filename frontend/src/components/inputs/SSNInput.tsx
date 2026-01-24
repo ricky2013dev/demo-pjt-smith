@@ -50,6 +50,10 @@ const SSNInput: React.FC<SSNInputProps> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Determine if the input should be shown based on manual toggle OR focus state
+  const effectiveIsVisible = isVisible || isFocused;
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,44 +68,47 @@ const SSNInput: React.FC<SSNInputProps> = ({
       onChange(formattedValue);
 
       requestAnimationFrame(() => {
-        if (inputRef.current && isVisible) {
-          const previousDigitsBeforeCursor = getDigitsOnly(previousValue.slice(0, cursorPosition)).length;
-          const newDigitsBeforeCursor = getDigitsOnly(newRawValue.slice(0, cursorPosition)).length;
+        if (inputRef.current) {
+          // If visible or focused, we are editing raw values, so cursor logic applies
+          if (effectiveIsVisible) {
+            const previousDigitsBeforeCursor = getDigitsOnly(previousValue.slice(0, cursorPosition)).length;
+            const newDigitsBeforeCursor = getDigitsOnly(newRawValue.slice(0, cursorPosition)).length;
 
-          let newCursorPosition = cursorPosition;
+            let newCursorPosition = cursorPosition;
 
-          if (newDigitsBeforeCursor > previousDigitsBeforeCursor) {
-            let digitCount = 0;
-            for (let i = 0; i < formattedValue.length; i++) {
-              if (/\d/.test(formattedValue[i])) {
-                digitCount++;
+            if (newDigitsBeforeCursor > previousDigitsBeforeCursor) {
+              let digitCount = 0;
+              for (let i = 0; i < formattedValue.length; i++) {
+                if (/\d/.test(formattedValue[i])) {
+                  digitCount++;
+                }
+                if (digitCount === newDigitsBeforeCursor) {
+                  newCursorPosition = i + 1;
+                  break;
+                }
               }
-              if (digitCount === newDigitsBeforeCursor) {
-                newCursorPosition = i + 1;
-                break;
+            } else if (newDigitsBeforeCursor < previousDigitsBeforeCursor) {
+              let digitCount = 0;
+              for (let i = 0; i < formattedValue.length; i++) {
+                if (/\d/.test(formattedValue[i])) {
+                  digitCount++;
+                }
+                if (digitCount === newDigitsBeforeCursor) {
+                  newCursorPosition = i + 1;
+                  break;
+                }
+              }
+              if (newDigitsBeforeCursor === 0) {
+                newCursorPosition = 0;
               }
             }
-          } else if (newDigitsBeforeCursor < previousDigitsBeforeCursor) {
-            let digitCount = 0;
-            for (let i = 0; i < formattedValue.length; i++) {
-              if (/\d/.test(formattedValue[i])) {
-                digitCount++;
-              }
-              if (digitCount === newDigitsBeforeCursor) {
-                newCursorPosition = i + 1;
-                break;
-              }
-            }
-            if (newDigitsBeforeCursor === 0) {
-              newCursorPosition = 0;
-            }
+
+            inputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
           }
-
-          inputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
         }
       });
     },
-    [value, onChange, isVisible]
+    [value, onChange, effectiveIsVisible]
   );
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -121,10 +128,28 @@ const SSNInput: React.FC<SSNInputProps> = ({
   }, []);
 
   const toggleVisibility = useCallback(() => {
-    setIsVisible((prev) => !prev);
+    if (effectiveIsVisible) {
+      // Currently visible: user wants to Hide
+      setIsVisible(false);
+      // If focused, we must blur to allow masking to take effect (editing disabled when hidden)
+      if (isFocused) {
+        inputRef.current?.blur();
+      }
+    } else {
+      // Currently hidden: user wants to Show
+      setIsVisible(true);
+    }
+  }, [effectiveIsVisible, isFocused]);
+
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
   }, []);
 
-  const displayValue = isVisible ? value : maskSSN(value);
+  const handleBlur = useCallback(() => {
+    setIsFocused(false);
+  }, []);
+
+  const displayValue = effectiveIsVisible ? value : maskSSN(value);
 
   const inputClassName = className ??
     'w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm';
@@ -144,12 +169,14 @@ const SSNInput: React.FC<SSNInputProps> = ({
       <div className="relative">
         <input
           ref={inputRef}
-          type={isVisible ? 'text' : 'text'}
+          type="text"
           id={id}
           name={name}
           value={displayValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           placeholder={placeholder}
           disabled={disabled}
           className={`${inputClassName} ${showToggle ? 'pr-10' : ''} ${error ? 'border-red-500 focus:ring-red-500' : ''}`}
@@ -163,11 +190,15 @@ const SSNInput: React.FC<SSNInputProps> = ({
             type="button"
             onClick={toggleVisibility}
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none"
-            aria-label={isVisible ? 'Hide SSN' : 'Show SSN'}
+            aria-label={effectiveIsVisible ? 'Hide SSN' : 'Show SSN'}
             disabled={disabled}
+            onMouseDown={(e) => {
+              // Prevent the button click from causing the input to blur before the click is processed
+              e.preventDefault();
+            }}
           >
             <span className="material-symbols-outlined text-xl">
-              {isVisible ? 'visibility_off' : 'visibility'}
+              {effectiveIsVisible ? 'visibility_off' : 'visibility'}
             </span>
           </button>
         )}
