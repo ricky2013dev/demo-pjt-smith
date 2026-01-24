@@ -885,14 +885,14 @@ Important Notes
                           Transaction Detail
                         </button>
                       )}
-                      <button
+                      {/* <button
                         onClick={() => handleRequestFaxDocument()}
                         className="px-3 py-2 text-xs font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors ml-auto"
                         title="Request insurance fax document"
                       >
                         <span className="material-symbols-outlined text-sm align-text-bottom mr-1">description</span>
                         Run Fax Document Analysis
-                      </button>
+                      </button> */}
                     </div>
 
                     {/* Tab Content */}
