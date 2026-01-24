@@ -4,52 +4,8 @@ import stediService, { Subscriber, Provider } from "@/services/stediService";
 import { Patient } from "@/types/patient";
 import { useStediApi } from "@/context/StediApiContext";
 import { decryptSensitiveData, decryptInsuranceField } from "@/services/sensitiveDataService";
-
-// Sample API verification results data - moved outside component for performance
-const API_VERIFICATION_DATA: VerificationDataRow[] = [
-  // Verified fields - Plan Information
-  { saiCode: "VF000001", refInsCode: "D001", category: "Plan Information", fieldName: "Plan Name", preStepValue: "Blue Cross Dental Plus", missing: "N", aiCallValue: "Blue Cross Dental Plus", verifiedBy: "API" },
-  { saiCode: "VF000002", refInsCode: "D002", category: "Plan Information", fieldName: "Group Number", preStepValue: "GRP987654", missing: "N", aiCallValue: "GRP987654", verifiedBy: "API" },
-  { saiCode: "VF000003", refInsCode: "D003", category: "Plan Information", fieldName: "Effective Date", preStepValue: "01/01/2024", missing: "N", aiCallValue: "01/01/2024", verifiedBy: "API" },
-  { saiCode: "VF000004", refInsCode: "D004", category: "Plan Information", fieldName: "Carrier Name", preStepValue: "Blue Cross Blue Shield", missing: "N", aiCallValue: "Blue Cross Blue Shield", verifiedBy: "API" },
-  { saiCode: "VF000005", refInsCode: "D005", category: "Plan Information", fieldName: "Member ID", preStepValue: "SUB123456789", missing: "N", aiCallValue: "SUB123456789", verifiedBy: "API" },
-
-  // Verified fields - Deductible
-  { saiCode: "VF000051", refInsCode: "D051", category: "Deductible", fieldName: "Annual Deductible Amount", preStepValue: "0", missing: "N", aiCallValue: "$0 - No Deductible", verifiedBy: "API" },
-  { saiCode: "VF000052", refInsCode: "D052", category: "Deductible", fieldName: "Deductible Applies To", preStepValue: "Basic & Major", missing: "N", aiCallValue: "Basic & Major", verifiedBy: "API" },
-  { saiCode: "VF000053", refInsCode: "D053", category: "Deductible", fieldName: "Family Deductible", preStepValue: "$0", missing: "N", aiCallValue: "$0", verifiedBy: "API" },
-
-  // Verified fields - Preventative Coverage
-  { saiCode: "VF000010", refInsCode: "D010", category: "Preventative Coverage", fieldName: "Annual Cleaning Benefit", preStepValue: "2 Cleanings", missing: "N", aiCallValue: "2 Cleanings per Year", verifiedBy: "API" },
-  { saiCode: "VF000011", refInsCode: "D011", category: "Preventative Coverage", fieldName: "Annual Exams", preStepValue: "2 Exams", missing: "N", aiCallValue: "2 Exams per Year", verifiedBy: "API" },
-  { saiCode: "VF000012", refInsCode: "D012", category: "Preventative Coverage", fieldName: "X-ray Coverage", preStepValue: "1 FMS per 5 years", missing: "N", aiCallValue: "1 Full Mouth Series per 5 years", verifiedBy: "API" },
-
-  // Verified fields - Basic Coverage
-  { saiCode: "VF000020", refInsCode: "D020", category: "Basic Coverage", fieldName: "Fillings Coverage", preStepValue: "80%", missing: "N", aiCallValue: "80%", verifiedBy: "API" },
-  { saiCode: "VF000021", refInsCode: "D021", category: "Basic Coverage", fieldName: "Extractions Coverage", preStepValue: "80%", missing: "N", aiCallValue: "80%", verifiedBy: "API" },
-  { saiCode: "VF000022", refInsCode: "D022", category: "Basic Coverage", fieldName: "Scaling & Root Planing", preStepValue: "80%", missing: "N", aiCallValue: "80%", verifiedBy: "API" },
-
-  // Verified fields - Major Coverage
-  { saiCode: "VF000030", refInsCode: "D030", category: "Major Coverage", fieldName: "Crowns Coverage", preStepValue: "50%", missing: "N", aiCallValue: "50%", verifiedBy: "API" },
-  { saiCode: "VF000031", refInsCode: "D031", category: "Major Coverage", fieldName: "Bridges Coverage", preStepValue: "50%", missing: "N", aiCallValue: "50%", verifiedBy: "API" },
-  { saiCode: "VF000032", refInsCode: "D032", category: "Major Coverage", fieldName: "Dentures Coverage", preStepValue: "50%", missing: "N", aiCallValue: "50%", verifiedBy: "API" },
-  { saiCode: "VF000033", refInsCode: "D033", category: "Major Coverage", fieldName: "Root Canals Coverage", preStepValue: "50%", missing: "N", aiCallValue: "50%", verifiedBy: "API" },
-  { saiCode: "VF000034", refInsCode: "D034", category: "Major Coverage", fieldName: "Implants Coverage", preStepValue: "Not Covered", missing: "N", aiCallValue: "Not Covered - Considered Cosmetic", verifiedBy: "API" },
-
-  // Verified fields - Annual Maximums
-  { saiCode: "VF000060", refInsCode: "D060", category: "Annual Maximum", fieldName: "Annual Maximum Benefit", preStepValue: "$1200", missing: "N", aiCallValue: "$1,200 per Year", verifiedBy: "API" },
-  { saiCode: "VF000061", refInsCode: "D061", category: "Annual Maximum", fieldName: "Ortho Maximum", preStepValue: "Not Included", missing: "N", aiCallValue: "Not Included", verifiedBy: "API" },
-
-  // Missing fields - To verify during call
-  { saiCode: "VF000028", refInsCode: "D028", category: "Preventative Coverage", fieldName: "Prophylaxis/Exam Frequency", preStepValue: "", missing: "Y", aiCallValue: "", verifiedBy: "-" },
-  { saiCode: "VF000029", refInsCode: "D029", category: "Preventative Coverage", fieldName: "Last FMS Date", preStepValue: "", missing: "Y", aiCallValue: "", verifiedBy: "-" },
-  { saiCode: "VF000040", refInsCode: "D040", category: "Preventative Coverage", fieldName: "Eligible for FMS Now", preStepValue: "", missing: "Y", aiCallValue: "", verifiedBy: "-" },
-  { saiCode: "VF000041", refInsCode: "D041", category: "Preventative Coverage", fieldName: "FMS Frequency (Years)", preStepValue: "", missing: "Y", aiCallValue: "", verifiedBy: "-" },
-  { saiCode: "VF000042", refInsCode: "D042", category: "Preventative Coverage", fieldName: "Fluoride Varnish Frequency", preStepValue: "", missing: "Y", aiCallValue: "", verifiedBy: "-" },
-  { saiCode: "VF000045", refInsCode: "D045", category: "Major Coverage", fieldName: "Major Waiting Period", preStepValue: "", missing: "Y", aiCallValue: "", verifiedBy: "-" },
-  { saiCode: "VF000046", refInsCode: "D046", category: "Major Coverage", fieldName: "Major Services Effective Date", preStepValue: "", missing: "Y", aiCallValue: "", verifiedBy: "-" },
-  { saiCode: "VF000070", refInsCode: "D070", category: "Coverage Limits", fieldName: "Frequency Limitations", preStepValue: "", missing: "Y", aiCallValue: "", verifiedBy: "-" },
-];
+import { parseStediResponse } from "@/utils/stediParser";
+import { API_VERIFICATION_DATA } from "@/constants/verificationData";
 
 // Sample API JSON response - moved outside component for performance
 const SAMPLE_API_RESPONSE = JSON.stringify({
@@ -176,15 +132,18 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
   const [verificationStartTime, setVerificationStartTime] = useState<Date | null>(null);
   const [verificationEndTime, setVerificationEndTime] = useState<Date | null>(null);
 
+  const [verificationData, setVerificationData] = useState<VerificationDataRow[]>(API_VERIFICATION_DATA);
+  const [codeAnalysisText, setCodeAnalysisText] = useState(CODE_LEVEL_DATA);
+
   // Memoized filter results to avoid redundant calculations
   const verifiedFields = useMemo(
-    () => API_VERIFICATION_DATA.filter(r => r.missing === 'N'),
-    []
+    () => verificationData.filter(r => r.missing === 'N'),
+    [verificationData]
   );
   const verifiedFieldsCount = verifiedFields.length;
   const missingFieldsCount = useMemo(
-    () => API_VERIFICATION_DATA.filter(r => r.missing === 'Y').length,
-    []
+    () => verificationData.filter(r => r.missing === 'Y').length,
+    [verificationData]
   );
 
   // Refs for auto-scrolling
@@ -303,16 +262,15 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
   }, []);
 
   // Function to save transaction history to database
-  const saveTransactionHistory = async (startTime: Date, endTime: Date) => {
+  const saveTransactionHistory = async (startTime: Date, endTime: Date, currentVerificationData: VerificationDataRow[], currentStep1Text: string) => {
     if (!patient?.id) {
       return;
     }
 
-    const dataMode = !!currentUser?.dataSource;
-    const stediTest = stediMode !== 'mockup';
+    const isRealDataMode = currentUser?.stediMode && currentUser.stediMode !== 'mockup';
 
-    // Only save if data mode is on and STEDI test is on (not mockup)
-    if (!dataMode || !stediTest) {
+    // Only save if not in mockup mode
+    if (!isRealDataMode) {
       return;
     }
 
@@ -322,22 +280,19 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
         ? `${duration}s`
         : `${Math.floor(duration / 60)}m ${duration % 60}s`;
 
-      const verificationScore = Math.round((verifiedFields.length / API_VERIFICATION_DATA.length) * 100);
+      const currentVerifiedFields = currentVerificationData.filter(r => r.missing === 'N');
+      const verificationScore = Math.round((currentVerifiedFields.length / currentVerificationData.length) * 100);
 
       // Get insurance provider from patient data
-      let insuranceProvider = '-';
-      let insuranceRep = 'API System';
-      if (patient && (patient as any).insurance && (patient as any).insurance.length > 0) {
-        const insurance = (patient as any).insurance[0];
-        insuranceProvider = insurance.payorName || insurance.carrier || 'Unknown Provider';
-      }
+      let insuranceProvider = currentVerificationData.find(r => r.saiCode === 'VF000004')?.aiCallValue || '-';
+      let insuranceRep = 'API System (Stedi)';
 
-      const patientName = formatPatientName(patient);
+      const patientNameString = formatPatientName(patient);
 
       const transactionData = {
         requestId: `REQ-${startTime.toISOString().split('T')[0]}-${startTime.toTimeString().slice(0, 5).replace(':', '')}`,
         patientId: patient.id,
-        patientName,
+        patientName: patientNameString,
         type: 'API',
         method: 'POST /api/benefits/query',
         startTime: startTime.toISOString().slice(0, 19).replace('T', ' '),
@@ -351,13 +306,13 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
         fetchStatus: 'completed',
         saveStatus: 'completed',
         responseCode: '200',
-        endpoint: 'https://api.stedi.com/eligibility/query',
+        endpoint: 'https://healthcare.us.stedi.com/2024-04-01/change/medicalnetwork/eligibility/v3',
         eligibilityCheck: 'ACTIVE - Policy verified via STEDI API',
-        benefitsVerification: `Preventive: 100%, Basic: 80%, Major: 50% | Verified ${verifiedFields.length} fields`,
+        benefitsVerification: `Verified ${currentVerifiedFields.length} out of ${currentVerificationData.length} fields`,
         coverageDetails: 'Coverage details retrieved and verified via API',
         deductibleInfo: 'Deductible information retrieved from API response',
-        rawResponse: step1Text || '',
-        dataVerified: verifiedFields.map(r => r.fieldName)
+        rawResponse: currentStep1Text || '',
+        dataVerified: currentVerifiedFields.map(r => r.fieldName)
       };
 
 
@@ -409,16 +364,15 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
   };
 
   // Function to save coverage by code data to database
-  const saveCoverageByCodeData = async () => {
+  const saveCoverageByCodeData = async (currentVerificationData: VerificationDataRow[]) => {
     if (!patient?.id) {
       return;
     }
 
-    const dataMode = !!currentUser?.dataSource;
-    const stediTest = stediMode !== 'mockup';
+    const isRealDataMode = currentUser?.stediMode && currentUser.stediMode !== 'mockup';
 
-    // Only save if data mode is on and STEDI test is on (not mockup)
-    if (!dataMode || !stediTest) {
+    // Only save if not in mockup mode
+    if (!isRealDataMode) {
       return;
     }
 
@@ -430,7 +384,7 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
         },
         credentials: 'include',
         body: JSON.stringify({
-          coverageData: API_VERIFICATION_DATA,
+          coverageData: currentVerificationData,
           dataMode,
           stediTest
         })
@@ -464,21 +418,9 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
     }
   }, [step3Status]);
 
-  // Show completion toast when step 3 completes and save coverage data
+  // Show completion toast when step 3 completes
   useEffect(() => {
     if (step3Status === 'completed') {
-      const endTime = new Date();
-      setVerificationEndTime(endTime);
-      setShowCompletionToast(true);
-
-      // Save coverage by code data to database
-      saveCoverageByCodeData();
-
-      // Save transaction history to database
-      if (verificationStartTime) {
-        saveTransactionHistory(verificationStartTime, endTime);
-      }
-
       // Auto-hide toast after 4 seconds
       const timer = setTimeout(() => {
         setShowCompletionToast(false);
@@ -581,14 +523,38 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
         }
       }
 
-      await typeText(apiResponseText, setStep1Text, 0);
+      setStep1Text(apiResponseText);
       setStep1Status('completed');
+
+      // Local variables to hold parsed data to avoid stale state issues
+      let finalVerificationData = API_VERIFICATION_DATA;
+      let finalAnalysisText = CODE_LEVEL_DATA;
+
+      // Update dynamic data if not in mockup mode
+      if (stediMode !== 'mockup') {
+        try {
+          const parsed = parseStediResponse(JSON.parse(apiResponseText));
+          finalVerificationData = parsed.verificationData;
+          finalAnalysisText = parsed.codeAnalysis;
+
+          // Update state for render
+          setVerificationData(finalVerificationData);
+          setCodeAnalysisText(finalAnalysisText);
+        } catch (e) {
+          console.error('Failed to parse STEDI response:', e);
+        }
+      } else {
+        setVerificationData(API_VERIFICATION_DATA);
+        setCodeAnalysisText(CODE_LEVEL_DATA);
+      }
 
       // Step 2: Analyze and convert to code-level
       await new Promise(resolve => setTimeout(resolve, 100));
       setCurrentStep('step2');
       setStep2Status('in_progress');
-      await typeText(CODE_LEVEL_DATA, setStep2Text, 0);
+
+      // Use the local finalAnalysisText variable directly
+      await typeText(finalAnalysisText, setStep2Text, 0);
       setStep2Status('completed');
 
       // Step 3: Display verification results in table format
@@ -597,6 +563,15 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
       setStep3Status('in_progress');
       await new Promise(resolve => setTimeout(resolve, 50));
       setStep3Status('completed');
+
+      // Final Step: Save data to database using the fresh local variables
+      const endTime = new Date();
+      setVerificationEndTime(endTime);
+      setShowCompletionToast(true);
+
+      saveCoverageByCodeData(finalVerificationData);
+      saveTransactionHistory(startTime, endTime, finalVerificationData, apiResponseText);
+
     } catch (error) {
       console.error('CoverageVerification: Error during verification process:', error);
       setStep1Status('completed');
@@ -611,6 +586,8 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
     setStep3Status('pending');
     setStep1Text("");
     setStep2Text("");
+    setVerificationData(API_VERIFICATION_DATA);
+    setCodeAnalysisText(CODE_LEVEL_DATA);
     setVerificationStartTime(null);
     setVerificationEndTime(null);
   };
@@ -804,7 +781,7 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
               </div>
               {step3Status !== 'pending' && (
                 <VerificationDataPanel
-                  data={API_VERIFICATION_DATA}
+                  data={verificationData}
                   showTabs={true}
                   title="API Verification Results"
                   subtitle="Watching"

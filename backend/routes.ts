@@ -247,7 +247,6 @@ export async function registerRoutes(
           email: user.email,
           role: user.role,
           username: user.username,
-          dataSource: user.dataSource,
           stediMode: user.stediMode,
           providerId: user.providerId,
           provider: providerInfo
@@ -504,10 +503,10 @@ export async function registerRoutes(
    *                 type: string
    *                 enum: [admin, dental, insurance]
    *                 example: dental
-   *               dataSource:
+   *               stediMode:
    *                 type: string
-   *                 nullable: true
-   *                 example: null
+   *                 enum: [mockup, test-data, real-data]
+   *                 example: mockup
    *     responses:
    *       200:
    *         description: User created successfully
@@ -535,7 +534,7 @@ export async function registerRoutes(
    */
   app.post("/api/users", requireAdmin, async (req, res) => {
     try {
-      const { email, username, password, role, dataSource, providerId } = req.body;
+      const { email, username, password, role, stediMode, providerId } = req.body;
 
       if (!email || !username || !password || !role) {
         return res.status(400).json({ error: "Email, username, password, and role are required" });
@@ -559,8 +558,7 @@ export async function registerRoutes(
         username,
         password: hashedPassword,
         role,
-        dataSource: dataSource || null,
-        stediMode: "mockup",
+        stediMode: stediMode || "mockup",
         providerId: providerId || null
       });
 
@@ -574,7 +572,7 @@ export async function registerRoutes(
   app.put("/api/users/:id", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const { email, username, role, dataSource, stediMode, providerId } = req.body;
+      const { email, username, role, stediMode, providerId } = req.body;
 
       // Check if trying to update to existing email
       if (email) {
@@ -596,7 +594,6 @@ export async function registerRoutes(
       if (email) updates.email = email;
       if (username) updates.username = username;
       if (role) updates.role = role;
-      if (dataSource !== undefined) updates.dataSource = dataSource;
       if (stediMode !== undefined) updates.stediMode = stediMode;
       if (providerId !== undefined) updates.providerId = providerId;
 
@@ -1130,9 +1127,8 @@ export async function registerRoutes(
         await storage.createVerificationStatus({
           patientId: newPatient.id,
           fetchPMS: (verificationStatus as any).fetchPMS ?? 'pending',
-          documentAnalysis: (verificationStatus as any).documentAnalysis ?? 'pending',
           apiVerification: (verificationStatus as any).apiVerification ?? 'pending',
-          callCenter: (verificationStatus as any).callCenter ?? 'pending',
+          aiAnalysisAndCall: (verificationStatus as any).aiAnalysisAndCall ?? 'pending',
           saveToPMS: (verificationStatus as any).saveToPMS ?? 'pending'
         });
       }
@@ -1398,9 +1394,8 @@ export async function registerRoutes(
         await storage.createVerificationStatus({
           patientId: newPatient.id,
           fetchPMS: 'pending',
-          documentAnalysis: 'pending',
           apiVerification: 'pending',
-          callCenter: 'pending',
+          aiAnalysisAndCall: 'pending',
           saveToPMS: 'pending'
         });
 

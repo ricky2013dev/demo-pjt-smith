@@ -6,7 +6,7 @@ interface User {
   email: string;
   username: string;
   role: string;
-  dataSource: string | null;
+  stediMode: string;
 }
 
 interface Patient {

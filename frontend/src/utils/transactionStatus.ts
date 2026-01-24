@@ -36,8 +36,7 @@ export interface Transaction {
 export interface VerificationStatus {
   fetchPMS: 'pending' | 'in_progress' | 'completed';
   apiVerification: 'pending' | 'in_progress' | 'completed';
-  documentAnalysis: 'pending' | 'in_progress' | 'completed';
-  callCenter: 'pending' | 'in_progress' | 'completed';
+  aiAnalysisAndCall: 'pending' | 'in_progress' | 'completed';
   saveToPMS: 'pending' | 'in_progress' | 'completed';
 }
 
@@ -45,15 +44,14 @@ export interface VerificationStatus {
  * Derives verification status from transaction history
  * Logic:
  * - If API transaction is "Waiting", Fetch PMS is done, API is waiting/in_progress
- * - If CALL transaction is "Waiting", Fetch PMS, API, and Document Analysis are done, Call Center is waiting/in_progress
+ * - If CALL/FAX transaction is "Waiting", Fetch PMS and API are done, AI Analysis and Call is waiting/in_progress
  * - Completed transactions mark their respective steps as completed
  */
 export function deriveVerificationStatusFromTransactions(transactions: Transaction[]): VerificationStatus {
   const status: VerificationStatus = {
     fetchPMS: 'pending',
     apiVerification: 'pending',
-    documentAnalysis: 'pending',
-    callCenter: 'pending',
+    aiAnalysisAndCall: 'pending',
     saveToPMS: 'pending',
   };
 
@@ -87,30 +85,16 @@ export function deriveVerificationStatusFromTransactions(transactions: Transacti
         break;
 
       case 'FAX':
-        if (txn.status === 'Waiting') {
-          // FAX is waiting means previous steps are done
-          status.fetchPMS = 'completed';
-          status.apiVerification = 'completed';
-          status.documentAnalysis = 'in_progress';
-        } else if (txn.status === 'SUCCESS' || txn.status === 'PARTIAL') {
-          status.fetchPMS = 'completed';
-          status.apiVerification = 'completed';
-          status.documentAnalysis = 'completed';
-        }
-        break;
-
       case 'CALL':
         if (txn.status === 'Waiting') {
-          // Call is waiting means Fetch PMS, API, and Document Analysis are done
+          // FAX/CALL is waiting means previous steps are done
           status.fetchPMS = 'completed';
           status.apiVerification = 'completed';
-          status.documentAnalysis = 'completed';
-          status.callCenter = 'in_progress';
+          status.aiAnalysisAndCall = 'in_progress';
         } else if (txn.status === 'SUCCESS' || txn.status === 'PARTIAL') {
           status.fetchPMS = 'completed';
           status.apiVerification = 'completed';
-          status.documentAnalysis = 'completed';
-          status.callCenter = 'completed';
+          status.aiAnalysisAndCall = 'completed';
         }
         break;
 
@@ -119,14 +103,12 @@ export function deriveVerificationStatusFromTransactions(transactions: Transacti
           // Save is waiting means all previous steps are done
           status.fetchPMS = 'completed';
           status.apiVerification = 'completed';
-          status.documentAnalysis = 'completed';
-          status.callCenter = 'completed';
+          status.aiAnalysisAndCall = 'completed';
           status.saveToPMS = 'in_progress';
         } else if (txn.status === 'SUCCESS') {
           status.fetchPMS = 'completed';
           status.apiVerification = 'completed';
-          status.documentAnalysis = 'completed';
-          status.callCenter = 'completed';
+          status.aiAnalysisAndCall = 'completed';
           status.saveToPMS = 'completed';
         }
         break;

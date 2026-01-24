@@ -178,7 +178,7 @@ const HomePage: React.FC = () => {
                                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/30 mt-1">
                                             <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">100% Automation</span>
                                         </div>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400 text-center">Bidirectional<br/>Integration</p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400 text-center">Bidirectional<br />Integration</p>
                                     </div>
                                 </div>
 
@@ -264,7 +264,7 @@ const HomePage: React.FC = () => {
                         <div className="relative bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200 dark:border-slate-700 p-6 md:p-8 rounded-xl shadow-sm">
                             <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-300 leading-relaxed font-light">
                                 Our mission is to solve the challenge of repetitive yet complex business tasks through <span className="text-slate-900 dark:text-white font-medium">multimodal intelligence</span>.
-                                By combining <span className="text-slate-900 dark:text-white font-medium">document analysis</span> with <span className="text-slate-900 dark:text-white font-medium">autonomous voice AI</span>,
+                                By utilizing <span className="text-slate-900 dark:text-white font-medium">AI Analysis and Call</span>,
                                 we decipher intricate operational workflows and interrogate live sources to bridge data gaps, providing a complete,
                                 crystalline view of transactional status and providing <span className="text-orange-600 dark:text-orange-500 font-semibold">100% end-to-end automation</span>.
                             </p>
@@ -279,32 +279,32 @@ const HomePage: React.FC = () => {
                     >
                         <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 to-orange-500/10 rounded-3xl opacity-0 group-hover/workflow:opacity-100 transition-opacity duration-300 blur-xl"></div>
 
- 
+
 
 
                         <div className="flex flex-col items-center gap-2">
                             <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 shadow-md border border-slate-100 dark:border-slate-700 flex items-center justify-center text-blue-500">
-                               <span className="material-symbols-outlined">description</span>
+                                <span className="material-symbols-outlined">description</span>
                             </div>
-                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Document Analysis AI</span>
+                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">AI Document Analysis</span>
                         </div>
 
                         <div className="text-3xl font-bold text-slate-400 dark:text-slate-600 mt-[-2rem]">
-                              <span className="material-symbols-outlined"> add</span>
+                            <span className="material-symbols-outlined"> add</span>
                         </div>
 
                         <div className="flex flex-col items-center gap-2">
                             <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 shadow-md border border-slate-100 dark:border-slate-700 flex items-center justify-center text-blue-500">
                                 <span className="material-symbols-outlined">graphic_eq</span>
                             </div>
-                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Autonomous Voice AI</span>
+                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">AI Call Center</span>
                         </div>
 
-                       <div className="text-3xl font-bold text-slate-400 dark:text-slate-600 mt-[-2rem]"> 
-                           
-                             <span className="material-symbols-outlined">keyboard_double_arrow_right</span>
+                        <div className="text-3xl font-bold text-slate-400 dark:text-slate-600 mt-[-2rem]">
+
+                            <span className="material-symbols-outlined">keyboard_double_arrow_right</span>
                         </div>
-               <div className="flex flex-col items-center gap-2">
+                        <div className="flex flex-col items-center gap-2">
                             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-500/20 flex items-center justify-center text-white">
                                 <span className="material-symbols-outlined">auto_awesome</span>
                             </div>
@@ -355,7 +355,7 @@ const HomePage: React.FC = () => {
                         <div className="p-8">
                             <div className="relative bg-slate-50 dark:bg-slate-800/50 rounded-xl p-8">
                                 <pre className="mermaid text-center">
-{`sequenceDiagram
+                                    {`sequenceDiagram
     participant PMS
     participant SMITH as Smith AI Center
     participant INS as Insurance Company

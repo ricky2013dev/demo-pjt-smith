@@ -9,7 +9,6 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   role: text("role").notNull().default("user"),
-  dataSource: text("data_source"),
   stediMode: text("stedi_mode").notNull().default("mockup"),
   providerId: varchar("provider_id").references(() => providers.id),
 });
@@ -19,7 +18,6 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   role: true,
-  dataSource: true,
   stediMode: true,
   providerId: true,
 });
@@ -129,9 +127,8 @@ export const verificationStatuses = pgTable("verification_statuses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   patientId: varchar("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
   fetchPMS: text("fetch_pms").notNull(), // 'completed' | 'in_progress' | 'pending'
-  documentAnalysis: text("document_analysis").notNull(),
   apiVerification: text("api_verification").notNull(),
-  callCenter: text("call_center").notNull(),
+  aiAnalysisAndCall: text("ai_analysis_and_call").notNull(),
   saveToPMS: text("save_to_pms").notNull(),
 });
 

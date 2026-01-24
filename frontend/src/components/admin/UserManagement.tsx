@@ -6,7 +6,7 @@ interface User {
   email: string;
   username: string;
   role: string;
-  dataSource: string | null;
+  stediMode: string;
   providerId: string | null;
   providerName?: string | null;
   npiNumber?: string | null;
@@ -41,7 +41,7 @@ const UserManagement: React.FC = () => {
     username: '',
     password: '',
     role: 'dental',
-    dataSource: '',
+    stediMode: 'mockup',
     providerId: ''
   });
 
@@ -104,7 +104,7 @@ const UserManagement: React.FC = () => {
         credentials: 'include',
         body: JSON.stringify({
           ...formData,
-          dataSource: formData.dataSource || null,
+          stediMode: formData.stediMode || 'mockup',
           providerId: formData.providerId || null
         })
       });
@@ -115,7 +115,7 @@ const UserManagement: React.FC = () => {
       }
 
       setShowCreateModal(false);
-      setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '', providerId: '' });
+      setFormData({ email: '', username: '', password: '', role: 'dental', stediMode: 'mockup', providerId: '' });
       fetchUsers();
     } catch (err: any) {
       setError(err.message);
@@ -135,7 +135,7 @@ const UserManagement: React.FC = () => {
           email: formData.email,
           username: formData.username,
           role: formData.role,
-          dataSource: formData.dataSource || null,
+          stediMode: formData.stediMode || 'mockup',
           providerId: formData.providerId || null
         })
       });
@@ -147,7 +147,7 @@ const UserManagement: React.FC = () => {
 
       setShowEditModal(false);
       setSelectedUser(null);
-      setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '', providerId: '' });
+      setFormData({ email: '', username: '', password: '', role: 'dental', stediMode: 'mockup', providerId: '' });
       fetchUsers();
     } catch (err: any) {
       setError(err.message);
@@ -193,7 +193,7 @@ const UserManagement: React.FC = () => {
 
       setShowPasswordModal(false);
       setSelectedUser(null);
-      setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '', providerId: '' });
+      setFormData({ email: '', username: '', password: '', role: 'dental', stediMode: 'mockup', providerId: '' });
     } catch (err: any) {
       setError(err.message);
     }
@@ -206,7 +206,7 @@ const UserManagement: React.FC = () => {
       username: user.username,
       password: '',
       role: user.role,
-      dataSource: user.dataSource || '',
+      stediMode: user.stediMode || 'mockup',
       providerId: user.providerId || ''
     });
     setShowEditModal(true);
@@ -239,7 +239,7 @@ const UserManagement: React.FC = () => {
       headerActions={
         <button
           onClick={() => {
-            setFormData({ email: '', username: '', password: '', role: 'dental', dataSource: '', providerId: '' });
+            setFormData({ email: '', username: '', password: '', role: 'dental', stediMode: 'mockup', providerId: '' });
             setShowCreateModal(true);
           }}
           className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
@@ -273,7 +273,7 @@ const UserManagement: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Provider</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">NPI Number</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Data Source</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stedi Mode</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -313,8 +313,16 @@ const UserManagement: React.FC = () => {
                       '-'
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                    {user.dataSource || <span className="text-slate-400 dark:text-slate-500 italic">mockup</span>}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      user.stediMode === 'real-data'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        : user.stediMode === 'test-data'
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                          : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
+                    }`}>
+                      {user.stediMode === 'real-data' ? 'Real Data' : user.stediMode === 'test-data' ? 'Test Data' : 'Mockup'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
@@ -392,14 +400,16 @@ const UserManagement: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Source (optional)</label>
-                <input
-                  type="text"
-                  value={formData.dataSource}
-                  onChange={(e) => setFormData({ ...formData, dataSource: e.target.value })}
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Stedi Mode</label>
+                <select
+                  value={formData.stediMode}
+                  onChange={(e) => setFormData({ ...formData, stediMode: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                  placeholder="Leave empty for mockup data"
-                />
+                >
+                  <option value="mockup">Mockup (Static Data)</option>
+                  <option value="test-data">Test Data (John Doe)</option>
+                  <option value="real-data">Real Data (Live API)</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Provider (optional)</label>
@@ -475,14 +485,16 @@ const UserManagement: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Source (optional)</label>
-                <input
-                  type="text"
-                  value={formData.dataSource}
-                  onChange={(e) => setFormData({ ...formData, dataSource: e.target.value })}
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Stedi Mode</label>
+                <select
+                  value={formData.stediMode}
+                  onChange={(e) => setFormData({ ...formData, stediMode: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                  placeholder="Leave empty for mockup data"
-                />
+                >
+                  <option value="mockup">Mockup (Static Data)</option>
+                  <option value="test-data">Test Data (John Doe)</option>
+                  <option value="real-data">Real Data (Live API)</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Provider (optional)</label>

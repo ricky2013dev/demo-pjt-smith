@@ -106,27 +106,26 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
 
-  // Compute effective verification status based on Data Mode
-  // In Data Mode: derive from transactions
+  // Compute effective verification status based on Stedi Mode
+  // In Real Data Mode: derive from transactions
   // In Mock Mode: use patient's verification status
   const effectiveVerificationStatus = useMemo(() => {
-    const isDataMode = currentUser?.dataSource;
+    const isRealDataMode = currentUser?.stediMode && currentUser.stediMode !== 'mockup';
 
-    if (isDataMode && transactions.length > 0) {
-      // Data Mode ON: derive status from transactions
+    if (isRealDataMode && transactions.length > 0) {
+      // Real Data Mode ON: derive status from transactions
       const derivedStatus = deriveVerificationStatusFromTransactions(transactions);
       return derivedStatus;
     } else {
-      // Data Mode OFF or no transactions: use patient's verification status
+      // Mockup Mode or no transactions: use patient's verification status
       return patient.verificationStatus || ({
         fetchPMS: 'pending',
         apiVerification: 'pending',
-        documentAnalysis: 'pending',
-        callCenter: 'pending',
+        aiAnalysisAndCall: 'pending',
         saveToPMS: 'pending',
       } as VerificationStatus);
     }
-  }, [currentUser?.dataSource, transactions, patient.verificationStatus]);
+  }, [currentUser?.stediMode, transactions, patient.verificationStatus]);
 
   const getFullName = () => {
     const given = patient.name.given
@@ -270,11 +269,11 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
     fetchCurrentUser();
   }, []);
 
-  // Fetch transactions for this patient when in Data Mode
+  // Fetch transactions for this patient when in Real Data Mode
   useEffect(() => {
     const fetchTransactions = async () => {
-      // Only fetch transactions if Data Mode is ON
-      if (!currentUser?.dataSource) {
+      // Only fetch transactions if not in mockup mode
+      if (!currentUser?.stediMode || currentUser.stediMode === 'mockup') {
         setTransactions([]);
         return;
       }
@@ -526,13 +525,13 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
               className="ml-3 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-medium transition-colors bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700"
               title="Start AI call verification (can re-run)"
             >
-              <span className={`material-symbols-outlined text-base ${effectiveVerificationStatus?.callCenter === 'completed'
+              <span className={`material-symbols-outlined text-base ${effectiveVerificationStatus?.aiAnalysisAndCall === 'completed'
                 ? 'text-green-500'
-                : effectiveVerificationStatus?.callCenter === 'in_progress'
+                : effectiveVerificationStatus?.aiAnalysisAndCall === 'in_progress'
                   ? 'text-blue-500'
                   : ''
                 }`}>
-                {effectiveVerificationStatus?.callCenter === 'completed' ? 'check_circle' : 'smart_toy'}
+                {effectiveVerificationStatus?.aiAnalysisAndCall === 'completed' ? 'check_circle' : 'smart_toy'}
               </span>
               AI Live Call
             </button>

@@ -8,7 +8,6 @@ interface HeaderProps {
     name: string;
     email: string;
     username: string;
-    dataSource?: string;
     stediMode?: string;
   } | null;
   onLogout?: () => void;
@@ -19,13 +18,15 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onLoginClick, onInsuranceLoginClick, onAdminLoginClick, mode = 'b2b' }) => {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { stediMode, setStediMode } = useStediApi();
 
-  // Computed equivalent using useMemo
+  const isPatientDetailPage = location === '/b2b-agent/patient-detail';
+
+  // Computed equivalent using useMemo - if stediMode is not 'mockup', real data is on
   const isRealDataOn = useMemo(() => {
-    return !!currentUser?.dataSource
-  }, [currentUser?.dataSource]); // Dependencies are explicit
+    return currentUser?.stediMode !== undefined && currentUser?.stediMode !== 'mockup'
+  }, [currentUser?.stediMode]); // Dependencies are explicit
 
   const HeaderMenuBtn: React.FC<{ buttonType: "patient" | "dashboard" }> = ({ buttonType }) => {
     const urlPath = buttonType === "patient" ? "/b2b-agent/patient-appointments" : "/b2b-agent/dashboard";
@@ -152,7 +153,7 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
 
 
             {/* Stedi API Menu */}
-            {isRealDataOn && (
+            {isRealDataOn && isPatientDetailPage && (
               <div className="group relative">
                 {/* Main Button */}
                 <button

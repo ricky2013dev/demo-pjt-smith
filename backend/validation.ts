@@ -131,9 +131,8 @@ export const createPatientSchema = z.object({
     method: z.string().max(50).optional(),
     lastUpdated: z.string().max(50).optional(),
     fetchPMS: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
-    documentAnalysis: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
     apiVerification: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
-    callCenter: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
+    aiAnalysisAndCall: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
     saveToPMS: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
   }).optional(),
 });

@@ -62,10 +62,10 @@ const options: swaggerJsdoc.Options = {
               enum: ['admin', 'dental', 'insurance'],
               description: 'User role'
             },
-            dataSource: {
+            stediMode: {
               type: 'string',
-              nullable: true,
-              description: 'Data source for the user'
+              enum: ['mockup', 'test-data', 'real-data'],
+              description: 'Stedi API mode - mockup uses static data, test-data uses Stedi test data, real-data uses live API'
             }
           }
         },

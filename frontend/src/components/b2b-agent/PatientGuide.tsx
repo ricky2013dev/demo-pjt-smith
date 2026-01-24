@@ -21,7 +21,7 @@ interface PatientGuideProps {
   patients?: Patient[];
   onSelectPatient?: (patientId: string) => void;
   showAddButton?: boolean;
-  currentUser?: { dataSource?: string } | null;
+  currentUser?: { stediMode?: string } | null;
 }
 
 const PatientGuide: React.FC<PatientGuideProps> = ({
@@ -43,10 +43,10 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  // Fetch transactions when in Data Mode
+  // Fetch transactions when in Data Mode (stediMode is not 'mockup')
   useEffect(() => {
     const fetchTransactions = async () => {
-      if (!currentUser?.dataSource) {
+      if (!currentUser?.stediMode || currentUser.stediMode === 'mockup') {
         setTransactions([]);
         return;
       }
@@ -68,13 +68,14 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
     };
 
     fetchTransactions();
-  }, [currentUser?.dataSource]);
+  }, [currentUser?.stediMode]);
 
   // Derive verification status for each patient based on transactions (Data Mode)
   const patientVerificationStatusMap = useMemo(() => {
     const statusMap: Record<string, VerificationStatus> = {};
 
-    if (currentUser?.dataSource && transactions.length > 0) {
+    const isRealDataMode = currentUser?.stediMode && currentUser.stediMode !== 'mockup';
+    if (isRealDataMode && transactions.length > 0) {
       // Group transactions by patient ID
       const transactionsByPatient: Record<string, Transaction[]> = {};
       for (const txn of transactions) {
@@ -91,12 +92,13 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
     }
 
     return statusMap;
-  }, [currentUser?.dataSource, transactions]);
+  }, [currentUser?.stediMode, transactions]);
 
   // Get effective verification status for a patient
   const getEffectiveVerificationStatus = (patient: Patient): VerificationStatus | undefined => {
-    // If in Data Mode and we have derived status from transactions, use that
-    if (currentUser?.dataSource && patientVerificationStatusMap[patient.id]) {
+    // If in Data Mode (stediMode is not 'mockup') and we have derived status from transactions, use that
+    const isRealDataMode = currentUser?.stediMode && currentUser.stediMode !== 'mockup';
+    if (isRealDataMode && patientVerificationStatusMap[patient.id]) {
       return patientVerificationStatusMap[patient.id];
     }
     // Otherwise fall back to patient's verification status
@@ -243,16 +245,16 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
         return selectedStatuses.some(selectedStatus => {
           if (selectedStatus === 'not_started') {
             if (!status) return true;
-            const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = status;
-            return fetchPMS === 'pending' && documentAnalysis === 'pending' && apiVerification === 'pending' && callCenter === 'pending' && saveToPMS === 'pending';
+            const { fetchPMS, apiVerification, aiAnalysisAndCall, saveToPMS } = status;
+            return fetchPMS === 'pending' && apiVerification === 'pending' && aiAnalysisAndCall === 'pending' && saveToPMS === 'pending';
           }
           if (selectedStatus === 'completed') {
             return status?.saveToPMS === 'completed';
           }
           if (selectedStatus === 'in_progress') {
             if (!status) return false;
-            const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = status;
-            const isNotStarted = fetchPMS === 'pending' && documentAnalysis === 'pending' && apiVerification === 'pending' && callCenter === 'pending' && saveToPMS === 'pending';
+            const { fetchPMS, apiVerification, aiAnalysisAndCall, saveToPMS } = status;
+            const isNotStarted = fetchPMS === 'pending' && apiVerification === 'pending' && aiAnalysisAndCall === 'pending' && saveToPMS === 'pending';
             const isCompleted = saveToPMS === 'completed';
             return !isNotStarted && !isCompleted;
           }
@@ -270,7 +272,7 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
     });
 
     return filtered;
-  }, [patients, dateRange, searchQuery, selectedStatuses, patientVerificationStatusMap, currentUser?.dataSource]);
+  }, [patients, dateRange, searchQuery, selectedStatuses, patientVerificationStatusMap, currentUser?.stediMode]);
 
   const getVerificationStatus = (patient: Patient) => {
     const effectiveStatus = getEffectiveVerificationStatus(patient);
@@ -278,7 +280,7 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
       return { label: VERIFICATION_STATUS_LABELS.NOT_STARTED, color: 'text-slate-600 dark:text-slate-400', percentage: 0 };
     }
 
-    const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = effectiveStatus;
+    const { fetchPMS, apiVerification, aiAnalysisAndCall, saveToPMS } = effectiveStatus;
 
     // Fully verified
     if (saveToPMS === 'completed') {
@@ -287,26 +289,20 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
     if (saveToPMS === 'in_progress') {
       return { label: VERIFICATION_STATUS_LABELS.SAVE_TO_PMS, color: 'text-blue-600 dark:text-blue-400', percentage: 90 };
     }
-    if (callCenter === 'completed') {
-      return { label: VERIFICATION_STATUS_LABELS.CALL_CENTER, color: 'text-orange-600 dark:text-orange-400', percentage: 80 };
+    if (aiAnalysisAndCall === 'completed') {
+      return { label: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL, color: 'text-orange-600 dark:text-orange-400', percentage: 75 };
     }
-    if (callCenter === 'in_progress') {
-      return { label: VERIFICATION_STATUS_LABELS.CALL_CENTER, color: 'text-blue-600 dark:text-blue-400', percentage: 70 };
+    if (aiAnalysisAndCall === 'in_progress') {
+      return { label: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL, color: 'text-blue-600 dark:text-blue-400', percentage: 60 };
     }
     if (apiVerification === 'completed') {
-      return { label: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-orange-600 dark:text-orange-400', percentage: 60 };
+      return { label: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-orange-600 dark:text-orange-400', percentage: 50 };
     }
     if (apiVerification === 'in_progress') {
-      return { label: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-blue-600 dark:text-blue-400', percentage: 50 };
-    }
-    if (documentAnalysis === 'completed') {
-      return { label: VERIFICATION_STATUS_LABELS.DOCUMENT_ANALYSIS, color: 'text-orange-600 dark:text-orange-400', percentage: 40 };
-    }
-    if (documentAnalysis === 'in_progress') {
-      return { label: VERIFICATION_STATUS_LABELS.DOCUMENT_ANALYSIS, color: 'text-blue-600 dark:text-blue-400', percentage: 30 };
+      return { label: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-blue-600 dark:text-blue-400', percentage: 40 };
     }
     if (fetchPMS === 'completed') {
-      return { label: VERIFICATION_STATUS_LABELS.FETCH_PMS, color: 'text-orange-600 dark:text-orange-400', percentage: 20 };
+      return { label: VERIFICATION_STATUS_LABELS.FETCH_PMS, color: 'text-orange-600 dark:text-orange-400', percentage: 25 };
     }
     if (fetchPMS === 'in_progress') {
       return { label: VERIFICATION_STATUS_LABELS.FETCH_PMS, color: 'text-blue-600 dark:text-blue-400', percentage: 10 };
@@ -443,7 +439,7 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
                   <span className="material-symbols-outlined text-xl">date_range</span>
                   <span className="text-sm font-medium hidden sm:inline">
                     {dateRange.from && dateRange.to
-                      ? `${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d')}`
+                      ? `${format(dateRange.from, 'MMM d, yyyy')} - ${format(dateRange.to, 'MMM d, yyyy')}`
                       : 'Date range'}
                   </span>
                 </button>

@@ -13,10 +13,9 @@
     "birthDate": "1985-03-15",
     "verificationStatus": {
       "fetchPMS": "completed",
-      "documentAnalysis": "completed",
       "apiVerification": "completed",
-      "callCenter": "completed",
-      "saveToPMS": "completed"
+      "saveToPMS": "completed",
+      "aiAnalysisAndCall": "completed"
     },
     "telecom": [
       {
@@ -163,10 +162,9 @@
     "birthDate": "1978-07-22",
     "verificationStatus": {
       "fetchPMS": "in_progress",
-      "documentAnalysis": "in_progress",
       "apiVerification": "in_progress",
-      "callCenter": "in_progress",
-      "saveToPMS": "pending"
+      "saveToPMS": "pending",
+      "aiAnalysisAndCall": "in_progress"
     },
     "telecom": [
       {
@@ -322,10 +320,9 @@
     "birthDate": "1992-11-08",
     "verificationStatus": {
       "fetchPMS": "pending",
-      "documentAnalysis": "pending",
       "apiVerification": "pending",
-      "callCenter": "pending",
-      "saveToPMS": "pending"
+      "saveToPMS": "pending",
+      "aiAnalysisAndCall": "pending"
     },
     "telecom": [
       {
@@ -495,10 +492,9 @@
     },
     "verificationStatus": {
       "fetchPMS": "completed",
-      "documentAnalysis": "completed",
       "apiVerification": "pending",
-      "callCenter": "pending",
-      "saveToPMS": "pending"
+      "saveToPMS": "pending",
+      "aiAnalysisAndCall": "completed"
     }
   },
   {
@@ -515,10 +511,9 @@
     "birthDate": "1988-09-12",
     "verificationStatus": {
       "fetchPMS": "in_progress",
-      "documentAnalysis": "in_progress",
       "apiVerification": "completed",
-      "callCenter": "pending",
-      "saveToPMS": "pending"
+      "saveToPMS": "pending",
+      "aiAnalysisAndCall": "in_progress"
     },
     "telecom": [
       {
@@ -674,10 +669,9 @@
     "birthDate": "1975-02-18",
     "verificationStatus": {
       "fetchPMS": "pending",
-      "documentAnalysis": "pending",
       "apiVerification": "in_progress",
-      "callCenter": "completed",
-      "saveToPMS": "pending"
+      "saveToPMS": "pending",
+      "aiAnalysisAndCall": "completed"
     },
     "telecom": [
       {
@@ -795,10 +789,9 @@
     "birthDate": "1995-12-25",
     "verificationStatus": {
       "fetchPMS": "completed",
-      "documentAnalysis": "completed",
       "apiVerification": "pending",
-      "callCenter": "in_progress",
-      "saveToPMS": "completed"
+      "saveToPMS": "completed",
+      "aiAnalysisAndCall": "in_progress"
     },
     "telecom": [
       {
@@ -908,10 +901,9 @@
     "birthDate": "1982-04-07",
     "verificationStatus": {
       "fetchPMS": "in_progress",
-      "documentAnalysis": "in_progress",
       "apiVerification": "pending",
-      "callCenter": "pending",
-      "saveToPMS": "pending"
+      "saveToPMS": "pending",
+      "aiAnalysisAndCall": "in_progress"
     },
     "telecom": [
       {
@@ -1029,10 +1021,9 @@
     "birthDate": "1970-08-14",
     "verificationStatus": {
       "fetchPMS": "pending",
-      "documentAnalysis": "pending",
       "apiVerification": "completed",
-      "callCenter": "pending",
-      "saveToPMS": "pending"
+      "saveToPMS": "pending",
+      "aiAnalysisAndCall": "pending"
     },
     "telecom": [
       {
@@ -1170,10 +1161,9 @@
     "birthDate": "2010-03-22",
     "verificationStatus": {
       "fetchPMS": "completed",
-      "documentAnalysis": "completed",
       "apiVerification": "in_progress",
-      "callCenter": "pending",
-      "saveToPMS": "pending"
+      "saveToPMS": "pending",
+      "aiAnalysisAndCall": "completed"
     },
     "telecom": [
       {

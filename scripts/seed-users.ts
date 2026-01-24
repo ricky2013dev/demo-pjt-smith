@@ -71,7 +71,7 @@ const seedTestUsers = async () => {
           username: user.username,
           password: hashedPassword,
           role: user.role,
-          dataSource: user.role === "dental" ? "db" : null
+          stediMode: "mockup"
         });
         console.log(`Created ${user.role} user: ${user.email}`);
       } else {

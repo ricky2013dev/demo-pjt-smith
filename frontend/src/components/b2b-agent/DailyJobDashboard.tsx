@@ -6,7 +6,7 @@ import patientsData from '@mockupdata/patients.json';
 import { TRANSACTION_TYPE_STYLES } from '@/constants/transactionTypes';
 
 interface JobStep {
-  id: 'fetch_pms' | 'analysis' | 'api_call' | 'call_center' | 'save_pms';
+  id: 'fetch_pms' | 'ai_analysis_and_call' | 'api_call' | 'save_pms';
   label: string;
   icon: string;
 }
@@ -37,11 +37,10 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
 
   const jobSteps: JobStep[] = [
-    { id: 'fetch_pms', label: 'Fetch PMS', icon: 'download' },
+    { id: 'fetch_pms', label: 'Patient Data Ready', icon: 'download' },
     { id: 'api_call', label: 'API Verification', icon: 'api' },
-    { id: 'analysis', label: 'Document Analysis', icon: 'description' },
-    { id: 'call_center', label: 'Call Center', icon: 'phone' },
-    { id: 'save_pms', label: 'Save To PMS', icon: 'save' }
+    { id: 'ai_analysis_and_call', label: 'AI Analysis and Call', icon: 'smart_toy' },
+    { id: 'save_pms', label: 'Verification Completed', icon: 'save' }
   ];
 
   // Generate jobs for a specific date
@@ -77,26 +76,23 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
         if (isPastDate) {
           return {
             fetch_pms: 'completed' as const,
-            analysis: 'completed' as const,
             api_call: 'completed' as const,
-            call_center: 'completed' as const,
+            ai_analysis_and_call: 'completed' as const,
             save_pms: 'completed' as const
           };
         } else if (isFutureDate) {
           return {
             fetch_pms: 'pending' as const,
-            analysis: 'pending' as const,
             api_call: 'pending' as const,
-            call_center: 'pending' as const,
+            ai_analysis_and_call: 'pending' as const,
             save_pms: 'pending' as const
           };
         } else {
           return {
             fetch_pms: rng > 30 ? 'completed' as const : 'in_progress' as const,
-            analysis: rng > 40 ? 'completed' as const : 'in_progress' as const,
-            api_call: rng > 55 ? 'completed' as const : 'in_progress' as const,
-            call_center: rng > 70 ? 'completed' as const : 'in_progress' as const,
-            save_pms: rng > 80 ? 'completed' as const : 'in_progress' as const
+            api_call: rng > 45 ? 'completed' as const : 'in_progress' as const,
+            ai_analysis_and_call: rng > 65 ? 'completed' as const : 'in_progress' as const,
+            save_pms: rng > 85 ? 'completed' as const : 'in_progress' as const
           };
         }
       };
@@ -279,33 +275,30 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
       });
     }
 
-    // Document Analysis transaction
-    if (job.steps.analysis !== 'pending') {
+    // AI Analysis and Call transaction
+    if (job.steps.ai_analysis_and_call !== 'pending') {
       const analysisStartTime = new Date(job.jobDate.getTime() + 9 * 60000); // 9 minutes after job start
       transactions.push({
         startTime: analysisStartTime.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' +
           `${String(analysisStartTime.getHours()).padStart(2, '0')}:${String(analysisStartTime.getMinutes()).padStart(2, '0')}:30`,
         reqId: `REQ-${job.jobDate.toISOString().split('T')[0].replace(/-/g, '')}-${Math.floor((seed + 50) % 1000).toString().padStart(4, '0')}`,
         duration: '5m 25s',
-        type: 'ANALYSIS',
-        status: job.steps.analysis === 'completed' ? 'SUCCESS' : 'IN_PROGRESS',
+        type: 'FAX', // Using FAX as part of AI Analysis
+        status: job.steps.ai_analysis_and_call === 'completed' ? 'SUCCESS' : 'IN_PROGRESS',
         insuranceProvider,
         insuranceRep: 'Document AI',
         score: '85%',
         runBy: 'Smith AI System'
       });
-    }
 
-    // Call Center transaction
-    if (job.steps.call_center !== 'pending') {
-      const callStartTime = new Date(job.jobDate.getTime() + 12 * 60000); // 12 minutes after job start
+      const callStartTime = new Date(job.jobDate.getTime() + 15 * 60000); // 15 minutes after job start
       transactions.push({
         startTime: callStartTime.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' +
           `${String(callStartTime.getHours()).padStart(2, '0')}:${String(callStartTime.getMinutes()).padStart(2, '0')}:22`,
         reqId: `REQ-${job.jobDate.toISOString().split('T')[0].replace(/-/g, '')}-${Math.floor((seed + 200) % 1000).toString().padStart(4, '0')}`,
         duration: '48m 0s',
         type: 'CALL',
-        status: job.steps.call_center === 'completed' ? 'SUCCESS' : 'IN_PROGRESS',
+        status: job.steps.ai_analysis_and_call === 'completed' ? 'SUCCESS' : 'IN_PROGRESS',
         insuranceProvider,
         insuranceRep: 'Amanda Rodriguez',
         score: '98%',
@@ -401,31 +394,28 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setViewMode('day')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                  viewMode === 'day'
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${viewMode === 'day'
+                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                  }`}
               >
                 Day
               </button>
               <button
                 onClick={() => setViewMode('week')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                  viewMode === 'week'
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${viewMode === 'week'
+                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                  }`}
               >
                 Week
               </button>
               <button
                 onClick={() => setViewMode('month')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                  viewMode === 'month'
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${viewMode === 'month'
+                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                  }`}
               >
                 Month
               </button>
@@ -516,179 +506,175 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
                       onClick={() => toggleJobExpansion(jobId)}
                       className="flex gap-3 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer items-center"
                     >
-                    {/* Expand/Collapse Icon */}
-                    <div className="w-6 flex items-center justify-center">
-                      <span className={`material-symbols-outlined text-slate-400 dark:text-slate-500 text-lg transition-transform duration-200 ${
-                        isExpanded ? 'rotate-180' : ''
-                      }`}>
-                        expand_more
-                      </span>
-                    </div>
-
-                    {/* Date & Time */}
-                    <div style={{ width: '15%' }}>
-                      <div className="flex flex-col">
-                        <p className="text-sm text-slate-600 dark:text-slate-400">{job.jobDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                        <p className="text-xs text-slate-900 dark:text-white font-medium">{job.startTime} - {job.endTime}</p>
-                      </div>
-                    </div>
-
-                    {/* Duration */}
-                    <div style={{ width: '10%' }}>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">{durationMin}m</p>
-                    </div>
-
-                    {/* Appointment Date */}
-                    <div style={{ width: '15%' }}>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {job.appointmentDate
-                          ? job.appointmentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                          : 'No appointment'
-                        }
-                      </p>
-                    </div>
-
-                    {/* Patient Name */}
-                    <div style={{ width: '15%' }}>
-                      <p className="font-medium text-slate-900 dark:text-white text-sm truncate">{getPatientName(job.patient)}</p>
-                    </div>
-
-                    {/* Progress Steps */}
-                    <div style={{ width: '35%' }}>
-                      <div className="flex items-center justify-between h-8">
-                        {jobSteps.map((step, stepIndex) => {
-                          const status = job.steps[step.id];
-                          const isLast = stepIndex === jobSteps.length - 1;
-                          return (
-                            <React.Fragment key={step.id}>
-                              {/* Step Circle */}
-                              <div className="flex flex-col items-center flex-1">
-                                <div
-                                  className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs border-2 transition-all ${
-                                    status === 'completed'
-                                      ? 'bg-green-500 dark:bg-green-600 border-green-500 dark:border-green-600 text-white'
-                                      : status === 'in_progress'
-                                      ? 'bg-blue-500 dark:bg-blue-600 border-blue-500 dark:border-blue-600 text-white'
-                                      : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400'
-                                  }`}
-                                >
-                                  {status === 'completed' ? (
-                                    <span className="material-symbols-outlined text-sm">check</span>
-                                  ) : status === 'in_progress' ? (
-                                    <span className="material-symbols-outlined text-sm animate-spin">sync</span>
-                                  ) : (
-                                    stepIndex + 1
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Connector Line */}
-                              {!isLast && (
-                                <div className="flex-1 h-0.5 mx-1 relative">
-                                  <div
-                                    className={`absolute inset-0 rounded-full transition-all ${getStepLineColor(status)}`}
-                                  ></div>
-                                </div>
-                              )}
-                            </React.Fragment>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Status Badge */}
-                    <div style={{ width: '10%' }} className="flex justify-end">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${jobStatus.bg} ${jobStatus.color}`}>
-                        {jobStatus.text}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Expandable Transaction Summary */}
-                  {isExpanded && (
-                    <div className="bg-slate-50 dark:bg-slate-800/30 p-6 border-t border-slate-200 dark:border-slate-700">
-                      {/* Summary Header */}
-                      <div className="flex items-center gap-4 mb-4">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                          Transaction Summary
-                        </h3>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleGoToDetail(job);
-                          }}
-                          className="px-3 py-1.5 bg-slate-900 dark:bg-slate-700 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors text-xs font-medium flex items-center gap-1"
-                        >
-                          Go to Detail
-                          <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                        </button>
+                      {/* Expand/Collapse Icon */}
+                      <div className="w-6 flex items-center justify-center">
+                        <span className={`material-symbols-outlined text-slate-400 dark:text-slate-500 text-lg transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''
+                          }`}>
+                          expand_more
+                        </span>
                       </div>
 
-                      {/* Patient Info */}
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                        Patient: {getPatientName(job.patient)} | Date: {job.jobDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                      </p>
-
-                      {/* Transaction History Table */}
-                      <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-
-                        {/* Table */}
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead className="bg-slate-100 dark:bg-slate-800">
-                              <tr>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Start Time</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Duration</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Type</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Status</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Insurance(Payer)</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Insurance Rep</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Score</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Run By</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                              {generateTransactionHistory(job).map((transaction, idx) => (
-                                <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                  <td className="px-4 py-3">
-                                    <div className="text-sm text-slate-900 dark:text-white font-medium">{transaction.startTime.split(' ')[0]}</div>
-                                    <div className="text-xs text-slate-500 dark:text-slate-400">{transaction.reqId}</div>
-                                  </td>
-                                  <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{transaction.duration}</td>
-                                  <td className="px-4 py-3">
-                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${TRANSACTION_TYPE_STYLES[transaction.type as keyof typeof TRANSACTION_TYPE_STYLES]?.bgColor} ${TRANSACTION_TYPE_STYLES[transaction.type as keyof typeof TRANSACTION_TYPE_STYLES]?.textColor}`}>
-                                      {transaction.type}
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${
-                                      transaction.status === 'SUCCESS' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
-                                      'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
-                                    }`}>
-                                      {transaction.status}
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-3 text-sm text-slate-900 dark:text-white">{transaction.insuranceProvider}</td>
-                                  <td className="px-4 py-3 text-sm text-slate-900 dark:text-white">{transaction.insuranceRep}</td>
-                                  <td className="px-4 py-3">
-                                    <span className={`text-sm font-bold ${
-                                      parseInt(transaction.score) === 100 ? 'text-green-600 dark:text-green-400' :
-                                      parseInt(transaction.score) >= 80 ? 'text-orange-600 dark:text-orange-400' :
-                                      'text-red-600 dark:text-red-400'
-                                    }`}>
-                                      {transaction.score}
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-3 text-sm text-slate-900 dark:text-white">{transaction.runBy}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                      {/* Date & Time */}
+                      <div style={{ width: '15%' }}>
+                        <div className="flex flex-col">
+                          <p className="text-sm text-slate-600 dark:text-slate-400">{job.jobDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                          <p className="text-xs text-slate-900 dark:text-white font-medium">{job.startTime} - {job.endTime}</p>
                         </div>
                       </div>
+
+                      {/* Duration */}
+                      <div style={{ width: '10%' }}>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{durationMin}m</p>
+                      </div>
+
+                      {/* Appointment Date */}
+                      <div style={{ width: '15%' }}>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          {job.appointmentDate
+                            ? job.appointmentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                            : 'No appointment'
+                          }
+                        </p>
+                      </div>
+
+                      {/* Patient Name */}
+                      <div style={{ width: '15%' }}>
+                        <p className="font-medium text-slate-900 dark:text-white text-sm truncate">{getPatientName(job.patient)}</p>
+                      </div>
+
+                      {/* Progress Steps */}
+                      <div style={{ width: '35%' }}>
+                        <div className="flex items-center justify-between h-8">
+                          {jobSteps.map((step, stepIndex) => {
+                            const status = job.steps[step.id];
+                            const isLast = stepIndex === jobSteps.length - 1;
+                            return (
+                              <React.Fragment key={step.id}>
+                                {/* Step Circle */}
+                                <div className="flex flex-col items-center flex-1">
+                                  <div
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs border-2 transition-all ${status === 'completed'
+                                      ? 'bg-green-500 dark:bg-green-600 border-green-500 dark:border-green-600 text-white'
+                                      : status === 'in_progress'
+                                        ? 'bg-blue-500 dark:bg-blue-600 border-blue-500 dark:border-blue-600 text-white'
+                                        : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400'
+                                      }`}
+                                  >
+                                    {status === 'completed' ? (
+                                      <span className="material-symbols-outlined text-sm">check</span>
+                                    ) : status === 'in_progress' ? (
+                                      <span className="material-symbols-outlined text-sm animate-spin">sync</span>
+                                    ) : (
+                                      stepIndex + 1
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Connector Line */}
+                                {!isLast && (
+                                  <div className="flex-1 h-0.5 mx-1 relative">
+                                    <div
+                                      className={`absolute inset-0 rounded-full transition-all ${getStepLineColor(status)}`}
+                                    ></div>
+                                  </div>
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Status Badge */}
+                      <div style={{ width: '10%' }} className="flex justify-end">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${jobStatus.bg} ${jobStatus.color}`}>
+                          {jobStatus.text}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </div>
+
+                    {/* Expandable Transaction Summary */}
+                    {isExpanded && (
+                      <div className="bg-slate-50 dark:bg-slate-800/30 p-6 border-t border-slate-200 dark:border-slate-700">
+                        {/* Summary Header */}
+                        <div className="flex items-center gap-4 mb-4">
+                          <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                            Transaction Summary
+                          </h3>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleGoToDetail(job);
+                            }}
+                            className="px-3 py-1.5 bg-slate-900 dark:bg-slate-700 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors text-xs font-medium flex items-center gap-1"
+                          >
+                            Go to Detail
+                            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                          </button>
+                        </div>
+
+                        {/* Patient Info */}
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                          Patient: {getPatientName(job.patient)} | Date: {job.jobDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                        </p>
+
+                        {/* Transaction History Table */}
+                        <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+
+                          {/* Table */}
+                          <div className="overflow-x-auto">
+                            <table className="w-full">
+                              <thead className="bg-slate-100 dark:bg-slate-800">
+                                <tr>
+                                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Start Time</th>
+                                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Duration</th>
+                                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Type</th>
+                                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Status</th>
+                                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Insurance(Payer)</th>
+                                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Insurance Rep</th>
+                                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Score</th>
+                                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Run By</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                {generateTransactionHistory(job).map((transaction, idx) => (
+                                  <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <td className="px-4 py-3">
+                                      <div className="text-sm text-slate-900 dark:text-white font-medium">{transaction.startTime.split(' ')[0]}</div>
+                                      <div className="text-xs text-slate-500 dark:text-slate-400">{transaction.reqId}</div>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{transaction.duration}</td>
+                                    <td className="px-4 py-3">
+                                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${TRANSACTION_TYPE_STYLES[transaction.type as keyof typeof TRANSACTION_TYPE_STYLES]?.bgColor} ${TRANSACTION_TYPE_STYLES[transaction.type as keyof typeof TRANSACTION_TYPE_STYLES]?.textColor}`}>
+                                        {transaction.type}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${transaction.status === 'SUCCESS' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                                        'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
+                                        }`}>
+                                        {transaction.status}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-slate-900 dark:text-white">{transaction.insuranceProvider}</td>
+                                    <td className="px-4 py-3 text-sm text-slate-900 dark:text-white">{transaction.insuranceRep}</td>
+                                    <td className="px-4 py-3">
+                                      <span className={`text-sm font-bold ${parseInt(transaction.score) === 100 ? 'text-green-600 dark:text-green-400' :
+                                        parseInt(transaction.score) >= 80 ? 'text-orange-600 dark:text-orange-400' :
+                                          'text-red-600 dark:text-red-400'
+                                        }`}>
+                                        {transaction.score}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-slate-900 dark:text-white">{transaction.runBy}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>

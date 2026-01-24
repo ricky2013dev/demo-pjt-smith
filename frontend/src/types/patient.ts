@@ -16,9 +16,8 @@ export interface Patient {
 
 export interface VerificationStatus {
   fetchPMS: 'completed' | 'in_progress' | 'pending';
-  documentAnalysis: 'completed' | 'in_progress' | 'pending';
   apiVerification: 'completed' | 'in_progress' | 'pending';
-  callCenter: 'completed' | 'in_progress' | 'pending';
+  aiAnalysisAndCall: 'completed' | 'in_progress' | 'pending';
   saveToPMS: 'completed' | 'in_progress' | 'pending';
 }
 

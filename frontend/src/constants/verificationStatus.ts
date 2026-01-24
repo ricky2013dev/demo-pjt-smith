@@ -3,11 +3,10 @@
 
 export const VERIFICATION_STATUS_LABELS = {
   NOT_STARTED: 'Not Started',
-  FETCH_PMS: 'Fetch PMS',
-  DOCUMENT_ANALYSIS: 'Document Analysis',
+  FETCH_PMS: 'Patient Data Ready',
   API_VERIFICATION: 'API Verification',
-  CALL_CENTER: 'Call Center',
-  SAVE_TO_PMS: 'Save To PMS',
+  AI_ANALYSIS_AND_CALL: 'AI Analysis and Call',
+  SAVE_TO_PMS: 'Verification Completed',
   IN_PROGRESS: 'In Progress',
   PENDING: 'Pending',
   COMPLETED: 'Completed',

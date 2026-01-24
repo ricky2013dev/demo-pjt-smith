@@ -24,7 +24,7 @@ The application uses PostgreSQL with Drizzle ORM. The schema is defined in `shar
 
 #### Users
 - **Purpose**: Authentication and user management
-- **Fields**: id, email, username, password, role, dataSource
+- **Fields**: id, email, username, password, role, stediMode
 - **Relations**: One-to-many with patients and coverageByCode
 
 #### Patients

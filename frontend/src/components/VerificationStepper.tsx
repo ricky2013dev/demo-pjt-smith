@@ -18,9 +18,8 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
     const getVerificationStep = () => {
         if (!status) return 1;
 
-        if (status.saveToPMS === 'completed' || status.saveToPMS === 'in_progress') return 5;
-        if (status.callCenter === 'completed' || status.callCenter === 'in_progress') return 4;
-        if (status.documentAnalysis === 'completed' || status.documentAnalysis === 'in_progress') return 3;
+        if (status.saveToPMS === 'completed' || status.saveToPMS === 'in_progress') return 4;
+        if (status.aiAnalysisAndCall === 'completed' || status.aiAnalysisAndCall === 'in_progress') return 3;
         if (status.apiVerification === 'completed' || status.apiVerification === 'in_progress') return 2;
         if (status.fetchPMS === 'completed') return 2;
         if (status.fetchPMS === 'in_progress') return 1;
@@ -33,8 +32,7 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
     const steps = [
         { key: 'fetchPMS', icon: 'download', label: VERIFICATION_STATUS_LABELS.FETCH_PMS },
         { key: 'apiVerification', icon: 'api', label: VERIFICATION_STATUS_LABELS.API_VERIFICATION },
-        { key: 'documentAnalysis', icon: 'description', label: VERIFICATION_STATUS_LABELS.DOCUMENT_ANALYSIS },
-        { key: 'callCenter', icon: 'phone', label: VERIFICATION_STATUS_LABELS.CALL_CENTER },
+        { key: 'aiAnalysisAndCall', icon: 'smart_toy', label: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL },
         { key: 'saveToPMS', icon: 'save', label: VERIFICATION_STATUS_LABELS.SAVE_TO_PMS },
     ] as const;
 
@@ -45,7 +43,7 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
     // Render step count text
     const renderStepCount = () => (
         <span className={`font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap ${layout === 'detail' ? 'text-[10px]' : 'text-xs'}`}>
-            Step {currentStep} of 5
+            Step {currentStep} of 4
         </span>
     );
 
@@ -65,29 +63,9 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
             {/* Stepper Visualization */}
             <div className={`relative ${layout === 'detail' ? 'py-1' : ''} flex-1`}>
                 {/* Connector Lines */}
-                {/* We have 5 steps, so 4 connections: 1-2, 2-3, 3-4, 4-5 */}
-                {/* Positions: 10%, 30%, 50%, 70% based on 5 items each taking 20% width centered at 10, 30, 50, 70, 90 */}
-                {/* Step centers: 
-            Step 1: 10%
-            Step 2: 30%
-            Step 3: 50%
-            Step 4: 70%
-            Step 5: 90%
-           Lines connect centers.
-           Line 1 (1->2): Left 10%, Width 20% (from 10 to 30)
-           Wait, original code used Left 10%, Width 18% (to leave gap?) or 15% in Table view.
-           Let's use consistent logic.
-        */}
-
-                {[0, 1, 2, 3].map((index) => {
-                    // Line between step[index] and step[index+1]
-                    // Logic for line color: if step[index] is completed, line is colored? 
-                    // Original code: `isFetchPMSCompleted ? 'bg-green-500' : ...` for first line.
-                    // So if the starting point is completed, the line is completed?
-                    // Actually, usually line is filled if *both* are completed or if we are progressing to next.
-                    // Original Detail: isFetchPMSCompleted() ? green : slate.
-                    // Original Table: isFetchPMSCompleted ? green : slate.
-
+                {/* We have 4 steps, so 3 connections: 1-2, 2-3, 3-4 */}
+                {/* Positions: 12.5%, 37.5%, 62.5%, 87.5% based on 4 items each taking 25% width */}
+                {[0, 1, 2].map((index) => {
                     const stepKey = steps[index].key;
                     const isLineActive = isCompleted(stepKey);
 
@@ -97,8 +75,8 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
                             className={`absolute top-4 h-0.5 transition-colors ${isLineActive ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
                                 }`}
                             style={{
-                                left: `${10 + (index * 20)}%`,
-                                width: '20%'
+                                left: `${12.5 + (index * 25)}%`,
+                                width: '25%'
                             }}
                         />
                     );
@@ -150,7 +128,7 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
                         const labelSize = layout === 'detail' ? 'text-[9px]' : 'text-[8px]';
 
                         return (
-                            <div key={step.key} className="flex flex-col items-center" style={{ width: '20%' }}>
+                            <div key={step.key} className="flex flex-col items-center" style={{ width: '25%' }}>
                                 <div className={`flex items-center justify-center w-8 h-8 rounded-full ${bgColor} ${textColor} shrink-0 relative z-10 border-2 border-white dark:border-slate-900 transition-colors`}>
                                     <span className={`material-symbols-outlined text-sm ${inProgress ? 'animate-spin' : ''}`}>
                                         {iconName}

@@ -39,8 +39,8 @@ const PatientsManagement: React.FC = () => {
           syncWithUser(data.user.stediMode);
         }
 
-        // If user has dataSource, use database
-        if (data.user.dataSource) {
+        // If stediMode is not 'mockup', use database
+        if (data.user.stediMode && data.user.stediMode !== 'mockup') {
           setUseDatabase(true);
           await fetchPatientsFromDatabase();
         } else {
@@ -200,7 +200,7 @@ const PatientsManagement: React.FC = () => {
         return;
       }
 
-      const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = patient.verificationStatus;
+      const { fetchPMS, aiAnalysisAndCall, apiVerification, saveToPMS } = patient.verificationStatus;
 
       // Fully verified
       if (saveToPMS === 'completed') {
@@ -209,9 +209,8 @@ const PatientsManagement: React.FC = () => {
       // In progress (any step in progress)
       else if (
         fetchPMS === 'in_progress' ||
-        documentAnalysis === 'in_progress' ||
+        aiAnalysisAndCall === 'in_progress' ||
         apiVerification === 'in_progress' ||
-        callCenter === 'in_progress' ||
         saveToPMS === 'in_progress'
       ) {
         inProgress++;
@@ -219,9 +218,8 @@ const PatientsManagement: React.FC = () => {
       // Pending (at least one step completed but not all)
       else if (
         fetchPMS === 'completed' ||
-        documentAnalysis === 'completed' ||
-        apiVerification === 'completed' ||
-        callCenter === 'completed'
+        aiAnalysisAndCall === 'completed' ||
+        apiVerification === 'completed'
       ) {
         pending++;
       }
@@ -306,7 +304,6 @@ const PatientsManagement: React.FC = () => {
           name: currentUser.username,
           email: currentUser.email,
           username: currentUser.username,
-          dataSource: currentUser.dataSource,
           stediMode: currentUser.stediMode
         } : null}
         onLogout={handleLogout}

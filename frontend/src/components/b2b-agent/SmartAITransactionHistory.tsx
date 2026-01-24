@@ -42,7 +42,7 @@ interface Transaction {
 }
 
 export const mockData: Transaction[] = [
-  // FETCH PMS
+  // Patient Data Ready
   {
     id: '0',
     requestId: 'REQ-2025-11-28-0800',
@@ -67,7 +67,7 @@ export const mockData: Transaction[] = [
       benefitsVerification: 'Data synchronized with local database',
       coverageDetails: 'Patient active in system',
       deductibleInfo: 'Initial data fetch completed',
-      transcript: 'Fetch PMS data completed successfully. Patient information retrieved and validated.'
+      transcript: 'Patient data ready. Information retrieved and validated successfully.'
     }
   },
   // API SUCCESS
@@ -251,7 +251,7 @@ export const mockData: Transaction[] = [
       deductibleInfo: 'Individual Deductible: $50 | Met: $0'
     }
   },
-  // SAVE TO PMS
+  // Verification Completed
   {
     id: '4',
     requestId: 'REQ-2025-11-28-1135',
@@ -276,7 +276,7 @@ export const mockData: Transaction[] = [
       benefitsVerification: 'Insurance benefits synchronized with PMS',
       coverageDetails: 'Coverage details updated in patient record',
       deductibleInfo: 'Deductible information recorded in system',
-      transcript: 'Save to PMS completed successfully. All verified information has been synchronized with the patient management system.'
+      transcript: 'Verification completed successfully. All verified information has been synchronized with the patient management system.'
     }
   }
 ];
@@ -299,7 +299,7 @@ interface SmartAITransactionHistoryProps {
 const SmartAITransactionHistory: React.FC<SmartAITransactionHistoryProps> = ({ patientId, refreshTrigger }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'API' | 'CALL' | 'FAX'>('ALL');
-  const [activeDetailTab, setActiveDetailTab] = useState<{[key: string]: string}>({});
+  const [activeDetailTab, setActiveDetailTab] = useState<{ [key: string]: string }>({});
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -352,17 +352,17 @@ const SmartAITransactionHistory: React.FC<SmartAITransactionHistoryProps> = ({ p
     try {
       setLoading(true);
 
-      // Check if data mode is enabled
-      const dataMode = currentUser?.dataSource;
+      // Check if real data mode is enabled (stediMode is not 'mockup')
+      const isRealDataMode = currentUser?.stediMode && currentUser.stediMode !== 'mockup';
 
-      if (!dataMode) {
-        // Data mode is OFF - use mock data
+      if (!isRealDataMode) {
+        // Mockup mode - use mock data
         setTransactions(getMockTransactions());
         setLoading(false);
         return;
       }
 
-      // Data mode is ON - fetch from database
+      // Real data mode - fetch from database
 
       const response = await fetch('/api/transactions', {
         credentials: 'include'
@@ -404,12 +404,12 @@ const SmartAITransactionHistory: React.FC<SmartAITransactionHistoryProps> = ({ p
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
     if (!activeDetailTab[id]) {
-      setActiveDetailTab({...activeDetailTab, [id]: 'action'});
+      setActiveDetailTab({ ...activeDetailTab, [id]: 'action' });
     }
   };
 
   const setDetailTab = (transactionId: string, tab: string) => {
-    setActiveDetailTab({...activeDetailTab, [transactionId]: tab});
+    setActiveDetailTab({ ...activeDetailTab, [transactionId]: tab });
   };
 
   // Typing animation effect
@@ -704,41 +704,37 @@ Important Notes
         {/* Type Filters */}
         <button
           onClick={() => setTypeFilter('ALL')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-            typeFilter === 'ALL'
+          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'ALL'
               ? 'bg-slate-900 dark:bg-slate-700 text-white'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
+            }`}
         >
           ALL
         </button>
         <button
           onClick={() => setTypeFilter('API')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-            typeFilter === 'API'
+          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'API'
               ? 'bg-blue-600 text-white'
               : 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
-          }`}
+            }`}
         >
           API
         </button>
         <button
           onClick={() => setTypeFilter('FAX')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-            typeFilter === 'FAX'
+          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'FAX'
               ? 'bg-cyan-600 text-white'
               : 'text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20'
-          }`}
+            }`}
         >
           FAX
         </button>
         <button
           onClick={() => setTypeFilter('CALL')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-            typeFilter === 'CALL'
+          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'CALL'
               ? 'bg-purple-600 text-white'
               : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
-          }`}
+            }`}
         >
           CALL
         </button>
@@ -808,282 +804,276 @@ Important Notes
             </div>
           ) : (
             filteredData.map((transaction) => (
-            <div key={transaction.id} className="group">
-              <div
-                onClick={() => toggleExpand(transaction.id)}
-                className="grid grid-cols-[auto_1fr] gap-3 p-3 items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors text-sm text-slate-700 dark:text-slate-200"
-              >
-                <div className="w-6 flex items-center justify-center">
-                  <span className={`material-symbols-outlined text-slate-400 dark:text-slate-500 text-lg transition-transform duration-200 ${
-                    expandedId === transaction.id ? 'rotate-180' : ''
-                  }`}>
-                    expand_more
-                  </span>
-                </div>
-                <div className="grid grid-cols-12 gap-3 items-center text-sm">
-                  <div className="col-span-2">
-                    <div className="text-slate-900 dark:text-white">{transaction.startTime}</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">{transaction.requestId}</div>
-                  </div>
-                  <div className="col-span-1 text-center font-mono text-xs text-slate-600 dark:text-slate-400">{transaction.duration}</div>
-                  <div className={`col-span-1 text-center font-semibold text-xs ${getTypeColor(transaction.type)}`}>
-                    {transaction.type}
-                  </div>
-                  <div className={`col-span-1 text-center font-semibold text-xs ${getStatusColor(transaction.status)}`}>
-                    {transaction.status}
-                  </div>
-                  <div className="col-span-2 text-slate-700 dark:text-slate-300">{transaction.insuranceProvider}</div>
-                  <div className="col-span-2 text-slate-600 dark:text-slate-400">{transaction.insuranceRep}</div>
-                  <div className="col-span-1 text-center">
-                    <span className={`font-semibold text-sm ${
-                      transaction.verificationScore >= 90 ? 'text-green-600 dark:text-green-400' :
-                      transaction.verificationScore >= 70 ? 'text-yellow-600 dark:text-yellow-400' :
-                      'text-red-600 dark:text-red-400'
-                    }`}>
-                      {transaction.verificationScore}%
+              <div key={transaction.id} className="group">
+                <div
+                  onClick={() => toggleExpand(transaction.id)}
+                  className="grid grid-cols-[auto_1fr] gap-3 p-3 items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors text-sm text-slate-700 dark:text-slate-200"
+                >
+                  <div className="w-6 flex items-center justify-center">
+                    <span className={`material-symbols-outlined text-slate-400 dark:text-slate-500 text-lg transition-transform duration-200 ${expandedId === transaction.id ? 'rotate-180' : ''
+                      }`}>
+                      expand_more
                     </span>
                   </div>
-                  <div className="col-span-2 text-slate-700 dark:text-slate-300">{transaction.runBy}</div>
-                </div>
-              </div>
-
-              {/* Collapsible Detail */}
-              {expandedId === transaction.id && (
-                <div className="ml-8 p-2 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-700">
-                  {/* Tabs */}
-                  <div className="flex border-b border-slate-200 dark:border-slate-700 px-4">
-                    <button
-                      onClick={() => setDetailTab(transaction.id, 'action')}
-                      className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                        (activeDetailTab[transaction.id] || 'action') === 'action'
-                          ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                          : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                      }`}
-                    >
-                      Transaction Info
-                    </button>
-                    <button
-                      onClick={() => setDetailTab(transaction.id, 'summary')}
-                      className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                        (activeDetailTab[transaction.id] || 'action') === 'summary'
-                          ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                          : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                      }`}
-                    >
-                      Transaction Summary
-                    </button>
-                    {transaction.status === 'SUCCESS' && transaction.callHistory && transaction.callHistory.length > 0 ? (
-                      <button
-                        onClick={() => setDetailTab(transaction.id, 'callHistory')}
-                        className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                          (activeDetailTab[transaction.id] || 'action') === 'callHistory'
-                            ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                        }`}
-                      >
-                        Call History Detail
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setDetailTab(transaction.id, 'detail')}
-                        className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                          (activeDetailTab[transaction.id] || 'action') === 'detail'
-                            ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                        }`}
-                      >
-                        Transaction Detail
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleRequestFaxDocument()}
-                      className="px-3 py-2 text-xs font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors ml-auto"
-                      title="Request insurance fax document"
-                    >
-                      <span className="material-symbols-outlined text-sm align-text-bottom mr-1">description</span>
-                      Run Fax Document Analysis
-                    </button>
+                  <div className="grid grid-cols-12 gap-3 items-center text-sm">
+                    <div className="col-span-2">
+                      <div className="text-slate-900 dark:text-white">{transaction.startTime}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">{transaction.requestId}</div>
+                    </div>
+                    <div className="col-span-1 text-center font-mono text-xs text-slate-600 dark:text-slate-400">{transaction.duration}</div>
+                    <div className={`col-span-1 text-center font-semibold text-xs ${getTypeColor(transaction.type)}`}>
+                      {transaction.type}
+                    </div>
+                    <div className={`col-span-1 text-center font-semibold text-xs ${getStatusColor(transaction.status)}`}>
+                      {transaction.status}
+                    </div>
+                    <div className="col-span-2 text-slate-700 dark:text-slate-300">{transaction.insuranceProvider}</div>
+                    <div className="col-span-2 text-slate-600 dark:text-slate-400">{transaction.insuranceRep}</div>
+                    <div className="col-span-1 text-center">
+                      <span className={`font-semibold text-sm ${transaction.verificationScore >= 90 ? 'text-green-600 dark:text-green-400' :
+                          transaction.verificationScore >= 70 ? 'text-yellow-600 dark:text-yellow-400' :
+                            'text-red-600 dark:text-red-400'
+                        }`}>
+                        {transaction.verificationScore}%
+                      </span>
+                    </div>
+                    <div className="col-span-2 text-slate-700 dark:text-slate-300">{transaction.runBy}</div>
                   </div>
+                </div>
 
-                  {/* Tab Content */}
-                  <div className="p-8 mx-8">
-                    {/* Transaction Action Info Tab */}
-                    {(activeDetailTab[transaction.id] || 'action') === 'action' && (
-                      <div className="space-y-4 text-sm">
-                        {/* Transaction Meta Info */}
-                        <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Request ID</div>
-                            <div className="font-mono text-xs text-slate-900 dark:text-white">{transaction.requestId}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Method</div>
-                            <div className="font-mono text-xs text-slate-900 dark:text-white">{transaction.method}</div>
-                          </div>
-                          {transaction.endpoint && (
+                {/* Collapsible Detail */}
+                {expandedId === transaction.id && (
+                  <div className="ml-8 p-2 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-700">
+                    {/* Tabs */}
+                    <div className="flex border-b border-slate-200 dark:border-slate-700 px-4">
+                      <button
+                        onClick={() => setDetailTab(transaction.id, 'action')}
+                        className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${(activeDetailTab[transaction.id] || 'action') === 'action'
+                            ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                          }`}
+                      >
+                        Transaction Info
+                      </button>
+                      <button
+                        onClick={() => setDetailTab(transaction.id, 'summary')}
+                        className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${(activeDetailTab[transaction.id] || 'action') === 'summary'
+                            ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                          }`}
+                      >
+                        Transaction Summary
+                      </button>
+                      {transaction.status === 'SUCCESS' && transaction.callHistory && transaction.callHistory.length > 0 ? (
+                        <button
+                          onClick={() => setDetailTab(transaction.id, 'callHistory')}
+                          className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${(activeDetailTab[transaction.id] || 'action') === 'callHistory'
+                              ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                            }`}
+                        >
+                          Call History Detail
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setDetailTab(transaction.id, 'detail')}
+                          className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${(activeDetailTab[transaction.id] || 'action') === 'detail'
+                              ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                            }`}
+                        >
+                          Transaction Detail
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleRequestFaxDocument()}
+                        className="px-3 py-2 text-xs font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors ml-auto"
+                        title="Request insurance fax document"
+                      >
+                        <span className="material-symbols-outlined text-sm align-text-bottom mr-1">description</span>
+                        Run Fax Document Analysis
+                      </button>
+                    </div>
+
+                    {/* Tab Content */}
+                    <div className="p-8 mx-8">
+                      {/* Transaction Action Info Tab */}
+                      {(activeDetailTab[transaction.id] || 'action') === 'action' && (
+                        <div className="space-y-4 text-sm">
+                          {/* Transaction Meta Info */}
+                          <div className="grid grid-cols-3 gap-4">
                             <div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Endpoint</div>
-                              <div className="font-mono text-xs text-slate-900 dark:text-white truncate">{transaction.endpoint}</div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Request ID</div>
+                              <div className="font-mono text-xs text-slate-900 dark:text-white">{transaction.requestId}</div>
                             </div>
-                          )}
-                          {transaction.phoneNumber && (
                             <div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Phone Number</div>
-                              <div className="font-mono text-xs text-slate-900 dark:text-white">{transaction.phoneNumber}</div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Method</div>
+                              <div className="font-mono text-xs text-slate-900 dark:text-white">{transaction.method}</div>
                             </div>
-                          )}
-                          {transaction.responseCode && (
-                            <div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Response Code</div>
-                              <div className="font-mono text-xs text-slate-900 dark:text-white">{transaction.responseCode}</div>
-                            </div>
-                          )}
-                          <div className="col-span-2">
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Timing</div>
-                            <div className="text-xs text-slate-900 dark:text-white">
-                              Start: {transaction.startTime} | End: {transaction.endTime}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Data Verified */}
-                        {transaction.dataVerified && transaction.dataVerified.length > 0 && (
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">Data Verified</div>
-                            <div className="flex flex-wrap gap-1">
-                              {transaction.dataVerified.map((item, idx) => (
-                                <span key={idx} className="px-2 py-0.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 rounded text-xs">
-                                  ✓ {item}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Error Message */}
-                        {transaction.errorMessage && (
-                          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Error</div>
-                            <div className="text-sm text-red-600 dark:text-red-400">{transaction.errorMessage}</div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Content Summary Tab */}
-                    {(activeDetailTab[transaction.id] || 'action') === 'summary' && (
-                      <div className="space-y-3 text-sm">
-                        {transaction.eligibilityCheck && (
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{VERIFICATION_STATUS_LABELS.ELIGIBILITY_CHECK}</div>
-                            <div className="text-sm text-slate-700 dark:text-slate-300">{transaction.eligibilityCheck}</div>
-                          </div>
-                        )}
-
-                        {transaction.benefitsVerification && (
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Benefits Verification</div>
-                            <div className="text-sm text-slate-700 dark:text-slate-300">{transaction.benefitsVerification}</div>
-                          </div>
-                        )}
-
-                        {transaction.coverageDetails && (
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Coverage Details</div>
-                            <div className="text-sm text-slate-700 dark:text-slate-300">{transaction.coverageDetails}</div>
-                          </div>
-                        )}
-
-                        {transaction.deductibleInfo && (
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Deductible Information</div>
-                            <div className="text-sm text-slate-700 dark:text-slate-300">{transaction.deductibleInfo}</div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Content All Detail Tab */}
-                    {(activeDetailTab[transaction.id] || 'action') === 'detail' && (
-                      <div className="space-y-3 text-sm">
-                        {transaction.type === 'FAX' ? (
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">Fax Document (Click to view all pages)</div>
-                            <div className="bg-white dark:bg-slate-900 p-4 rounded border border-slate-200 dark:border-slate-700">
-                              <ImageViewerWithModal imageUrl="/assets/fax-sample.png" firstPageMaxWidth="50%" alt="Fax Document" />
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            {transaction.transcript && (
+                            {transaction.endpoint && (
                               <div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">Call Transcript</div>
-                                <div className="text-xs bg-white dark:bg-slate-900 p-4 rounded border border-slate-200 dark:border-slate-700 max-h-96 overflow-y-auto">
-                                  {formatTranscript(transaction.transcript)}
+                                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Endpoint</div>
+                                <div className="font-mono text-xs text-slate-900 dark:text-white truncate">{transaction.endpoint}</div>
+                              </div>
+                            )}
+                            {transaction.phoneNumber && (
+                              <div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Phone Number</div>
+                                <div className="font-mono text-xs text-slate-900 dark:text-white">{transaction.phoneNumber}</div>
+                              </div>
+                            )}
+                            {transaction.responseCode && (
+                              <div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Response Code</div>
+                                <div className="font-mono text-xs text-slate-900 dark:text-white">{transaction.responseCode}</div>
+                              </div>
+                            )}
+                            <div className="col-span-2">
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Timing</div>
+                              <div className="text-xs text-slate-900 dark:text-white">
+                                Start: {transaction.startTime} | End: {transaction.endTime}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Data Verified */}
+                          {transaction.dataVerified && transaction.dataVerified.length > 0 && (
+                            <div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">Data Verified</div>
+                              <div className="flex flex-wrap gap-1">
+                                {transaction.dataVerified.map((item, idx) => (
+                                  <span key={idx} className="px-2 py-0.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 rounded text-xs">
+                                    ✓ {item}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Error Message */}
+                          {transaction.errorMessage && (
+                            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Error</div>
+                              <div className="text-sm text-red-600 dark:text-red-400">{transaction.errorMessage}</div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Content Summary Tab */}
+                      {(activeDetailTab[transaction.id] || 'action') === 'summary' && (
+                        <div className="space-y-3 text-sm">
+                          {transaction.eligibilityCheck && (
+                            <div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{VERIFICATION_STATUS_LABELS.ELIGIBILITY_CHECK}</div>
+                              <div className="text-sm text-slate-700 dark:text-slate-300">{transaction.eligibilityCheck}</div>
+                            </div>
+                          )}
+
+                          {transaction.benefitsVerification && (
+                            <div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Benefits Verification</div>
+                              <div className="text-sm text-slate-700 dark:text-slate-300">{transaction.benefitsVerification}</div>
+                            </div>
+                          )}
+
+                          {transaction.coverageDetails && (
+                            <div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Coverage Details</div>
+                              <div className="text-sm text-slate-700 dark:text-slate-300">{transaction.coverageDetails}</div>
+                            </div>
+                          )}
+
+                          {transaction.deductibleInfo && (
+                            <div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Deductible Information</div>
+                              <div className="text-sm text-slate-700 dark:text-slate-300">{transaction.deductibleInfo}</div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Content All Detail Tab */}
+                      {(activeDetailTab[transaction.id] || 'action') === 'detail' && (
+                        <div className="space-y-3 text-sm">
+                          {transaction.type === 'FAX' ? (
+                            <div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">Fax Document (Click to view all pages)</div>
+                              <div className="bg-white dark:bg-slate-900 p-4 rounded border border-slate-200 dark:border-slate-700">
+                                <ImageViewerWithModal imageUrl="/assets/fax-sample.png" firstPageMaxWidth="50%" alt="Fax Document" />
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              {transaction.transcript && (
+                                <div>
+                                  <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">Call Transcript</div>
+                                  <div className="text-xs bg-white dark:bg-slate-900 p-4 rounded border border-slate-200 dark:border-slate-700 max-h-96 overflow-y-auto">
+                                    {formatTranscript(transaction.transcript)}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
 
-                            {transaction.rawResponse && (
-                              <div>
-                                <div className="text-xs text-slate-400 mb-1">Raw API Response</div>
-                                <div className="text-xs text-green-400 font-mono bg-slate-900 dark:bg-slate-950 p-3 rounded border border-slate-700 overflow-x-auto">{transaction.rawResponse}</div>
-                              </div>
-                            )}
+                              {transaction.rawResponse && (
+                                <div>
+                                  <div className="text-xs text-slate-400 mb-1">Raw API Response</div>
+                                  <div className="text-xs text-green-400 font-mono bg-slate-900 dark:bg-slate-950 p-3 rounded border border-slate-700 overflow-x-auto">{transaction.rawResponse}</div>
+                                </div>
+                              )}
 
-                            {!transaction.transcript && !transaction.rawResponse && (
-                              <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-                                No detailed content available
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Call History Tab */}
-                    {(activeDetailTab[transaction.id] || 'action') === 'callHistory' && transaction.callHistory && (
-                      <div className="space-y-4">
-                        {/* Call Transcript */}
-                        <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">Call Transcript</div>
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 max-h-96 overflow-y-auto space-y-2">
-                          {transaction.callHistory.filter(c => c.speaker !== 'System').map((comm, idx) => {
-                            const isAI = comm.speaker === 'AI';
-                            const highlightedMessage = comm.message.replace(
-                              /([A-Z]{3,}-[0-9]+|[A-Z]{2,}-[0-9]+|D[0-9]{4}|(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}|[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4}|\$[0-9,]+(?:\.\d{2})?|[0-9]+%|(?:every\s+)?(?:once|twice|[0-9]+\s+times)\s+(?:per|every|a)\s+\w+|days?|months?|years?|January|February|March|April|May|June|July|August|September|October|November|December)/gi,
-                              '<span class="text-blue-600 dark:text-blue-400 font-semibold">$&</span>'
-                            );
-
-                            return (
-                              <div key={idx} className="mb-2">
-                                <span className={`font-bold ${isAI ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}>
-                                  {isAI ? 'AI Agent:' : 'Insurance Rep:'}
-                                </span>
-                                <span className="text-slate-700 dark:text-slate-300 ml-1" dangerouslySetInnerHTML={{ __html: highlightedMessage }} />
-                              </div>
-                            );
-                          })}
+                              {!transaction.transcript && !transaction.rawResponse && (
+                                <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                                  No detailed content available
+                                </div>
+                              )}
+                            </>
+                          )}
                         </div>
+                      )}
 
-                        {/* Verified Fields Section */}
-                        {transaction.dataVerified && transaction.dataVerified.length > 0 && (
-                          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-3">Verified Fields ({transaction.dataVerified.length})</div>
-                            <div className="flex flex-wrap gap-2">
-                              {transaction.dataVerified.map((field, idx) => (
-                                <span key={idx} className="px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 rounded text-xs font-medium">
-                                  ✓ {field}
-                                </span>
-                              ))}
-                            </div>
+                      {/* Call History Tab */}
+                      {(activeDetailTab[transaction.id] || 'action') === 'callHistory' && transaction.callHistory && (
+                        <div className="space-y-4">
+                          {/* Call Transcript */}
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">Call Transcript</div>
+                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 max-h-96 overflow-y-auto space-y-2">
+                            {transaction.callHistory.filter(c => c.speaker !== 'System').map((comm, idx) => {
+                              const isAI = comm.speaker === 'AI';
+                              const highlightedMessage = comm.message.replace(
+                                /([A-Z]{3,}-[0-9]+|[A-Z]{2,}-[0-9]+|D[0-9]{4}|(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}|[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4}|\$[0-9,]+(?:\.\d{2})?|[0-9]+%|(?:every\s+)?(?:once|twice|[0-9]+\s+times)\s+(?:per|every|a)\s+\w+|days?|months?|years?|January|February|March|April|May|June|July|August|September|October|November|December)/gi,
+                                '<span class="text-blue-600 dark:text-blue-400 font-semibold">$&</span>'
+                              );
+
+                              return (
+                                <div key={idx} className="mb-2">
+                                  <span className={`font-bold ${isAI ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}>
+                                    {isAI ? 'AI Agent:' : 'Insurance Rep:'}
+                                  </span>
+                                  <span className="text-slate-700 dark:text-slate-300 ml-1" dangerouslySetInnerHTML={{ __html: highlightedMessage }} />
+                                </div>
+                              );
+                            })}
                           </div>
-                        )}
-                      </div>
-                    )}
+
+                          {/* Verified Fields Section */}
+                          {transaction.dataVerified && transaction.dataVerified.length > 0 && (
+                            <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-3">Verified Fields ({transaction.dataVerified.length})</div>
+                              <div className="flex flex-wrap gap-2">
+                                {transaction.dataVerified.map((field, idx) => (
+                                  <span key={idx} className="px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 rounded text-xs font-medium">
+                                    ✓ {field}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
             ))
           )}
         </div>
@@ -1124,13 +1114,12 @@ Important Notes
               <div className="flex items-center justify-center">
                 {/* Step 1 */}
                 <div className="flex items-center gap-2 flex-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                    step1Status === 'completed'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step1Status === 'completed'
                       ? 'bg-green-500 text-white'
                       : step1Status === 'in_progress'
-                      ? 'bg-blue-500 text-white animate-pulse'
-                      : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
-                  }`}>
+                        ? 'bg-blue-500 text-white animate-pulse'
+                        : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
+                    }`}>
                     {step1Status === 'completed' ? '✓' : '1'}
                   </div>
                   <div className="text-sm">
@@ -1139,19 +1128,17 @@ Important Notes
                   </div>
                 </div>
 
-                <div className={`h-0.5 flex-1 mx-2 ${
-                  step1Status === 'completed' ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
-                }`}></div>
+                <div className={`h-0.5 flex-1 mx-2 ${step1Status === 'completed' ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
+                  }`}></div>
 
                 {/* Step 2 */}
                 <div className="flex items-center gap-2 flex-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                    step2Status === 'completed'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step2Status === 'completed'
                       ? 'bg-green-500 text-white'
                       : step2Status === 'in_progress'
-                      ? 'bg-blue-500 text-white animate-pulse'
-                      : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
-                  }`}>
+                        ? 'bg-blue-500 text-white animate-pulse'
+                        : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
+                    }`}>
                     {step2Status === 'completed' ? '✓' : '2'}
                   </div>
                   <div className="text-sm">
@@ -1160,19 +1147,17 @@ Important Notes
                   </div>
                 </div>
 
-                <div className={`h-0.5 flex-1 mx-2 ${
-                  step2Status === 'completed' ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
-                }`}></div>
+                <div className={`h-0.5 flex-1 mx-2 ${step2Status === 'completed' ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
+                  }`}></div>
 
                 {/* Step 3 */}
                 <div className="flex items-center gap-2 flex-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                    step3Status === 'completed'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step3Status === 'completed'
                       ? 'bg-green-500 text-white'
                       : step3Status === 'in_progress'
-                      ? 'bg-blue-500 text-white animate-pulse'
-                      : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
-                  }`}>
+                        ? 'bg-blue-500 text-white animate-pulse'
+                        : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
+                    }`}>
                     {step3Status === 'completed' ? '✓' : '3'}
                   </div>
                   <div className="text-sm">

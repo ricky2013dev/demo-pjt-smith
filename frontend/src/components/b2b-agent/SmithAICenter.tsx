@@ -554,11 +554,10 @@ const SmithAICenter: React.FC<SmithAICenterProps> = ({ patient, onClose }) => {
                 <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
                   {/* Agent AI */}
                   <div className="flex flex-col items-center gap-0.5">
-                    <div className={`w-7 h-7 rounded-full border-2 bg-white dark:bg-slate-900 flex items-center justify-center transition-all ${
-                      currentSpeaker === 'AI Agent'
+                    <div className={`w-7 h-7 rounded-full border-2 bg-white dark:bg-slate-900 flex items-center justify-center transition-all ${currentSpeaker === 'AI Agent'
                         ? 'border-blue-500 shadow-lg shadow-blue-500/50'
                         : 'border-blue-400'
-                    }`}>
+                      }`}>
                       <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-sm">smart_toy</span>
                     </div>
                     <span className="text-[9px] font-semibold text-slate-600 dark:text-slate-400">Agent AI</span>
@@ -568,21 +567,18 @@ const SmithAICenter: React.FC<SmithAICenterProps> = ({ patient, onClose }) => {
                   <div className="flex items-center gap-1 pb-3">
                     {/* Left Signal Waves - AI Speaking */}
                     <div className="flex items-center gap-0.5">
-                      <span className={`w-1 h-3 rounded-full transition-all ${
-                        currentSpeaker === 'AI Agent'
+                      <span className={`w-1 h-3 rounded-full transition-all ${currentSpeaker === 'AI Agent'
                           ? 'bg-blue-500 animate-pulse'
                           : 'bg-slate-200 dark:bg-slate-700'
-                      }`}></span>
-                      <span className={`w-1 h-4 rounded-full transition-all ${
-                        currentSpeaker === 'AI Agent'
+                        }`}></span>
+                      <span className={`w-1 h-4 rounded-full transition-all ${currentSpeaker === 'AI Agent'
                           ? 'bg-blue-500 animate-pulse'
                           : 'bg-slate-200 dark:bg-slate-700'
-                      }`}></span>
-                      <span className={`w-1 h-5 rounded-full transition-all ${
-                        currentSpeaker === 'AI Agent'
+                        }`}></span>
+                      <span className={`w-1 h-5 rounded-full transition-all ${currentSpeaker === 'AI Agent'
                           ? 'bg-blue-500 animate-pulse'
                           : 'bg-slate-200 dark:bg-slate-700'
-                      }`}></span>
+                        }`}></span>
                     </div>
 
                     {/* Phone Icon in the middle */}
@@ -592,31 +588,27 @@ const SmithAICenter: React.FC<SmithAICenterProps> = ({ patient, onClose }) => {
 
                     {/* Right Signal Waves - Rep Speaking */}
                     <div className="flex items-center gap-0.5">
-                      <span className={`w-1 h-5 rounded-full transition-all ${
-                        currentSpeaker === 'Insurance Rep'
+                      <span className={`w-1 h-5 rounded-full transition-all ${currentSpeaker === 'Insurance Rep'
                           ? 'bg-slate-500 animate-pulse'
                           : 'bg-slate-200 dark:bg-slate-700'
-                      }`}></span>
-                      <span className={`w-1 h-4 rounded-full transition-all ${
-                        currentSpeaker === 'Insurance Rep'
+                        }`}></span>
+                      <span className={`w-1 h-4 rounded-full transition-all ${currentSpeaker === 'Insurance Rep'
                           ? 'bg-slate-500 animate-pulse'
                           : 'bg-slate-200 dark:bg-slate-700'
-                      }`}></span>
-                      <span className={`w-1 h-3 rounded-full transition-all ${
-                        currentSpeaker === 'Insurance Rep'
+                        }`}></span>
+                      <span className={`w-1 h-3 rounded-full transition-all ${currentSpeaker === 'Insurance Rep'
                           ? 'bg-slate-500 animate-pulse'
                           : 'bg-slate-200 dark:bg-slate-700'
-                      }`}></span>
+                        }`}></span>
                     </div>
                   </div>
 
                   {/* Insurance Representative */}
                   <div className="flex flex-col items-center gap-0.5">
-                    <div className={`w-7 h-7 rounded-full border-2 bg-white dark:bg-slate-900 flex items-center justify-center transition-all ${
-                      currentSpeaker === 'Insurance Rep'
+                    <div className={`w-7 h-7 rounded-full border-2 bg-white dark:bg-slate-900 flex items-center justify-center transition-all ${currentSpeaker === 'Insurance Rep'
                         ? 'border-slate-500 shadow-lg shadow-slate-500/50'
                         : 'border-slate-400'
-                    }`}>
+                      }`}>
                       <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 text-sm">headset_mic</span>
                     </div>
                     <span className="text-[9px] font-semibold text-slate-600 dark:text-slate-400">Insurance</span>
@@ -691,21 +683,19 @@ const SmithAICenter: React.FC<SmithAICenterProps> = ({ patient, onClose }) => {
               <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
                 <button
                   onClick={() => setShowSummary(false)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                    !showSummary
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${!showSummary
                       ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
+                    }`}
                 >
                   Conversation
                 </button>
                 <button
                   onClick={() => setShowSummary(true)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                    showSummary
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${showSummary
                       ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
+                    }`}
                 >
                   Show Call Summary
                 </button>
@@ -753,101 +743,93 @@ const SmithAICenter: React.FC<SmithAICenterProps> = ({ patient, onClose }) => {
                 /* Conversation Messages */
                 <>
                   {messages.map((message, index) => (
-                <div key={index} className="flex items-start gap-2">
-                  {message.speaker !== 'System' && (
-                    <div className="relative flex-shrink-0">
-                      {/* User Icon */}
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 ${
-                        message.speaker === 'AI Agent'
-                          ? 'bg-white dark:bg-slate-900 border-blue-500'
-                          : 'bg-white dark:bg-slate-900 border-slate-400'
-                      }`}>
-                        <span className={`material-symbols-outlined text-base ${
-                          message.speaker === 'AI Agent'
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-slate-600 dark:text-slate-400'
-                        }`}>
-                          {message.speaker === 'AI Agent' ? 'smart_toy' : 'headset_mic'}
-                        </span>
+                    <div key={index} className="flex items-start gap-2">
+                      {message.speaker !== 'System' && (
+                        <div className="relative flex-shrink-0">
+                          {/* User Icon */}
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 ${message.speaker === 'AI Agent'
+                              ? 'bg-white dark:bg-slate-900 border-blue-500'
+                              : 'bg-white dark:bg-slate-900 border-slate-400'
+                            }`}>
+                            <span className={`material-symbols-outlined text-base ${message.speaker === 'AI Agent'
+                                ? 'text-blue-600 dark:text-blue-400'
+                                : 'text-slate-600 dark:text-slate-400'
+                              }`}>
+                              {message.speaker === 'AI Agent' ? 'smart_toy' : 'headset_mic'}
+                            </span>
+                          </div>
+                          {/* Phone Icon Badge */}
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 ${message.speaker === 'AI Agent'
+                              ? 'bg-blue-600 dark:bg-blue-500'
+                              : 'bg-slate-600 dark:bg-slate-500'
+                            }`}>
+                            <span className="material-symbols-outlined text-white text-[9px]">phone</span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex-1 space-y-1">
+                        {message.speaker === 'System' ? (
+                          <div className="bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 text-center py-2 px-4 rounded-md text-sm font-medium">
+                            {highlightValues(message.text)}
+                          </div>
+                        ) : (
+                          <>
+                            <div className={`text-sm ${message.speaker === 'AI Agent'
+                                ? 'text-slate-900 dark:text-slate-100'
+                                : 'text-slate-700 dark:text-slate-300'
+                              }`}>
+                              {highlightValues(message.text)}
+                            </div>
+                            <div className="text-[10px] text-slate-400 dark:text-slate-500">
+                              {message.time}
+                            </div>
+                          </>
+                        )}
                       </div>
-                      {/* Phone Icon Badge */}
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 ${
-                        message.speaker === 'AI Agent'
-                          ? 'bg-blue-600 dark:bg-blue-500'
-                          : 'bg-slate-600 dark:bg-slate-500'
-                      }`}>
-                        <span className="material-symbols-outlined text-white text-[9px]">phone</span>
+                    </div>
+                  ))}
+
+                  {/* Typing indicator */}
+                  {currentTypingMessage && currentSpeaker && currentSpeaker !== 'System' && (
+                    <div className="flex items-start gap-2">
+                      <div className="relative flex-shrink-0">
+                        {/* Pulsing circle indicator for active speaker */}
+                        <div className={`absolute inset-0 w-12 h-12 -left-1.5 -top-1.5 rounded-full border-2 animate-ping ${currentSpeaker === 'AI Agent'
+                            ? 'border-blue-500'
+                            : 'border-slate-500'
+                          } opacity-60`}></div>
+
+                        {/* User Icon */}
+                        <div className={`relative z-10 w-9 h-9 rounded-full flex items-center justify-center border-2 ${currentSpeaker === 'AI Agent'
+                            ? 'bg-white dark:bg-slate-900 border-blue-500'
+                            : 'bg-white dark:bg-slate-900 border-slate-400'
+                          }`}>
+                          <span className={`material-symbols-outlined text-base ${currentSpeaker === 'AI Agent'
+                              ? 'text-blue-600 dark:text-blue-400'
+                              : 'text-slate-600 dark:text-slate-400'
+                            }`}>
+                            {currentSpeaker === 'AI Agent' ? 'smart_toy' : 'headset_mic'}
+                          </span>
+                        </div>
+
+                        {/* Phone Icon Badge */}
+                        <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 ${currentSpeaker === 'AI Agent'
+                            ? 'bg-blue-600 dark:bg-blue-500'
+                            : 'bg-slate-600 dark:bg-slate-500'
+                          } z-10 animate-pulse`}>
+                          <span className="material-symbols-outlined text-white text-[9px]">phone</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="text-slate-700 dark:text-slate-300 text-sm">
+                          {currentTypingMessage}
+                          <span className="inline-block w-1 h-4 bg-slate-400 dark:bg-slate-500 ml-0.5 animate-pulse"></span>
+                        </div>
                       </div>
                     </div>
                   )}
-
-                  <div className="flex-1 space-y-1">
-                    {message.speaker === 'System' ? (
-                      <div className="bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 text-center py-2 px-4 rounded-md text-sm font-medium">
-                        {highlightValues(message.text)}
-                      </div>
-                    ) : (
-                      <>
-                        <div className={`text-sm ${
-                          message.speaker === 'AI Agent'
-                            ? 'text-slate-900 dark:text-slate-100'
-                            : 'text-slate-700 dark:text-slate-300'
-                        }`}>
-                          {highlightValues(message.text)}
-                        </div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500">
-                          {message.time}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {/* Typing indicator */}
-              {currentTypingMessage && currentSpeaker && currentSpeaker !== 'System' && (
-                <div className="flex items-start gap-2">
-                  <div className="relative flex-shrink-0">
-                    {/* Pulsing circle indicator for active speaker */}
-                    <div className={`absolute inset-0 w-12 h-12 -left-1.5 -top-1.5 rounded-full border-2 animate-ping ${
-                      currentSpeaker === 'AI Agent'
-                        ? 'border-blue-500'
-                        : 'border-slate-500'
-                    } opacity-60`}></div>
-
-                    {/* User Icon */}
-                    <div className={`relative z-10 w-9 h-9 rounded-full flex items-center justify-center border-2 ${
-                      currentSpeaker === 'AI Agent'
-                        ? 'bg-white dark:bg-slate-900 border-blue-500'
-                        : 'bg-white dark:bg-slate-900 border-slate-400'
-                    }`}>
-                      <span className={`material-symbols-outlined text-base ${
-                        currentSpeaker === 'AI Agent'
-                          ? 'text-blue-600 dark:text-blue-400'
-                          : 'text-slate-600 dark:text-slate-400'
-                      }`}>
-                        {currentSpeaker === 'AI Agent' ? 'smart_toy' : 'headset_mic'}
-                      </span>
-                    </div>
-
-                    {/* Phone Icon Badge */}
-                    <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 ${
-                      currentSpeaker === 'AI Agent'
-                        ? 'bg-blue-600 dark:bg-blue-500'
-                        : 'bg-slate-600 dark:bg-slate-500'
-                    } z-10 animate-pulse`}>
-                      <span className="material-symbols-outlined text-white text-[9px]">phone</span>
-                    </div>
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="text-slate-700 dark:text-slate-300 text-sm">
-                      {currentTypingMessage}
-                      <span className="inline-block w-1 h-4 bg-slate-400 dark:bg-slate-500 ml-0.5 animate-pulse"></span>
-                    </div>
-                  </div>
-                </div>
-              )}
 
                   {/* System message typing */}
                   {currentTypingMessage && currentSpeaker === 'System' && (

@@ -75,34 +75,28 @@ const PatientList: React.FC<PatientListProps> = ({
       return { text: VERIFICATION_STATUS_LABELS.NOT_STARTED, color: 'text-slate-400', step: 0, percentage: 0 };
     }
 
-    const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = patient.verificationStatus;
+    const { fetchPMS, apiVerification, aiAnalysisAndCall, saveToPMS } = patient.verificationStatus;
 
     if (saveToPMS === 'completed') {
-      return { text: VERIFICATION_STATUS_LABELS.COMPLETED, color: 'text-status-green', step: 5, percentage: 100 };
+      return { text: VERIFICATION_STATUS_LABELS.COMPLETED, color: 'text-status-green', step: 4, percentage: 100 };
     }
     if (saveToPMS === 'in_progress') {
-      return { text: VERIFICATION_STATUS_LABELS.SAVE_TO_PMS, color: 'text-primary', step: 5, percentage: 90 };
+      return { text: VERIFICATION_STATUS_LABELS.SAVE_TO_PMS, color: 'text-primary', step: 4, percentage: 90 };
     }
-    if (callCenter === 'completed') {
-      return { text: VERIFICATION_STATUS_LABELS.SAVE_TO_PMS, color: 'text-status-orange', step: 4, percentage: 80 };
+    if (aiAnalysisAndCall === 'completed') {
+      return { text: VERIFICATION_STATUS_LABELS.SAVE_TO_PMS, color: 'text-status-orange', step: 3, percentage: 75 };
     }
-    if (callCenter === 'in_progress') {
-      return { text: VERIFICATION_STATUS_LABELS.CALL_CENTER, color: 'text-primary', step: 4, percentage: 70 };
+    if (aiAnalysisAndCall === 'in_progress') {
+      return { text: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL, color: 'text-primary', step: 3, percentage: 60 };
     }
     if (apiVerification === 'completed') {
-      return { text: VERIFICATION_STATUS_LABELS.CALL_CENTER, color: 'text-status-orange', step: 3, percentage: 60 };
+      return { text: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL, color: 'text-status-orange', step: 2, percentage: 50 };
     }
     if (apiVerification === 'in_progress') {
-      return { text: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-primary', step: 3, percentage: 50 };
-    }
-    if (documentAnalysis === 'completed') {
-      return { text: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-status-orange', step: 2, percentage: 40 };
-    }
-    if (documentAnalysis === 'in_progress') {
-      return { text: VERIFICATION_STATUS_LABELS.DOCUMENT_ANALYSIS, color: 'text-primary', step: 2, percentage: 30 };
+      return { text: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-primary', step: 2, percentage: 40 };
     }
     if (fetchPMS === 'completed') {
-      return { text: VERIFICATION_STATUS_LABELS.DOCUMENT_ANALYSIS, color: 'text-status-orange', step: 1, percentage: 20 };
+      return { text: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-status-orange', step: 1, percentage: 25 };
     }
     if (fetchPMS === 'in_progress') {
       return { text: VERIFICATION_STATUS_LABELS.FETCH_PMS, color: 'text-primary', step: 1, percentage: 10 };
@@ -151,25 +145,23 @@ const PatientList: React.FC<PatientListProps> = ({
       return { label: VERIFICATION_STATUS_LABELS.NOT_STARTED, color: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400' };
     }
 
-    const { fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS } = patient.verificationStatus;
+    const { fetchPMS, apiVerification, aiAnalysisAndCall, saveToPMS } = patient.verificationStatus;
 
     if (saveToPMS === 'completed') {
       return { label: VERIFICATION_STATUS_LABELS.COMPLETED, color: 'bg-status-green/10 text-status-green' };
     }
     if (
       fetchPMS === 'in_progress' ||
-      documentAnalysis === 'in_progress' ||
       apiVerification === 'in_progress' ||
-      callCenter === 'in_progress' ||
+      aiAnalysisAndCall === 'in_progress' ||
       saveToPMS === 'in_progress'
     ) {
       return { label: VERIFICATION_STATUS_LABELS.IN_PROGRESS, color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' };
     }
     if (
       fetchPMS === 'completed' ||
-      documentAnalysis === 'completed' ||
       apiVerification === 'completed' ||
-      callCenter === 'completed'
+      aiAnalysisAndCall === 'completed'
     ) {
       return { label: VERIFICATION_STATUS_LABELS.PENDING, color: 'bg-status-orange/10 text-status-orange' };
     }
@@ -261,21 +253,19 @@ const PatientList: React.FC<PatientListProps> = ({
             {/* Active/Inactive Filters */}
             <button
               onClick={() => toggleFilter('Active')}
-              className={`flex h-7 shrink-0 items-center justify-center px-3 rounded-md text-xs font-medium transition-colors ${
-                activeFilters.includes('Active')
+              className={`flex h-7 shrink-0 items-center justify-center px-3 rounded-md text-xs font-medium transition-colors ${activeFilters.includes('Active')
                   ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                   : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
+                }`}
             >
               Active
             </button>
             <button
               onClick={() => toggleFilter('Inactive')}
-              className={`flex h-7 shrink-0 items-center justify-center px-3 rounded-md text-xs font-medium transition-colors ${
-                activeFilters.includes('Inactive')
+              className={`flex h-7 shrink-0 items-center justify-center px-3 rounded-md text-xs font-medium transition-colors ${activeFilters.includes('Inactive')
                   ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                   : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
+                }`}
             >
               Inactive
             </button>
@@ -285,21 +275,19 @@ const PatientList: React.FC<PatientListProps> = ({
             {/* Verification Step Filters */}
             <button
               onClick={() => toggleFilter('Eligibility')}
-              className={`flex h-7 shrink-0 items-center justify-center px-3 rounded-md text-xs font-medium transition-colors ${
-                activeFilters.includes('Eligibility')
+              className={`flex h-7 shrink-0 items-center justify-center px-3 rounded-md text-xs font-medium transition-colors ${activeFilters.includes('Eligibility')
                   ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                   : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
+                }`}
             >
               Eligibility
             </button>
             <button
               onClick={() => toggleFilter('Verification')}
-              className={`flex h-7 shrink-0 items-center justify-center px-3 rounded-md text-xs font-medium transition-colors ${
-                activeFilters.includes('Verification')
+              className={`flex h-7 shrink-0 items-center justify-center px-3 rounded-md text-xs font-medium transition-colors ${activeFilters.includes('Verification')
                   ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                   : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
+                }`}
             >
               Verification
             </button>
@@ -370,20 +358,18 @@ const PatientList: React.FC<PatientListProps> = ({
             <div
               key={patient.id}
               onClick={() => onSelectPatient(patient.id)}
-              className={`cursor-pointer px-2 py-2.5 border-b border-slate-100 dark:border-slate-800 ${
-                isSelected
+              className={`cursor-pointer px-2 py-2.5 border-b border-slate-100 dark:border-slate-800 ${isSelected
                   ? 'bg-slate-100 dark:bg-slate-800 border-l-2 border-l-slate-900 dark:border-l-white'
                   : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
-              }`}
+                }`}
             >
               {/* Multi-Column Layout */}
               <div className="flex items-center gap-1">
                 {/* Checkbox - Always First */}
-                <div className={`flex items-center justify-center shrink-0 w-3 h-3 rounded border transition-all ${
-                  isSelected
+                <div className={`flex items-center justify-center shrink-0 w-3 h-3 rounded border transition-all ${isSelected
                     ? 'bg-slate-900 border-slate-900 dark:bg-white dark:border-white'
                     : 'border-slate-300 dark:border-slate-600'
-                }`}>
+                  }`}>
                   {isSelected && (
                     <span className="material-symbols-outlined text-white dark:text-slate-900" style={{ fontSize: '8px' }}>check</span>
                   )}
@@ -409,20 +395,18 @@ const PatientList: React.FC<PatientListProps> = ({
 
                 {/* Column 2: Patient Info */}
                 <div className="flex-1 flex items-center gap-1.5 min-w-0">
-                  <div className={`rounded-full h-7 w-7 flex items-center justify-center shrink-0 ${
-                    verificationStatus.percentage === 100
+                  <div className={`rounded-full h-7 w-7 flex items-center justify-center shrink-0 ${verificationStatus.percentage === 100
                       ? 'bg-status-green/20'
                       : verificationStatus.percentage >= 50
                         ? 'bg-status-orange/20'
                         : 'bg-slate-100 dark:bg-slate-800'
-                  }`}>
-                    <span className={`text-[10px] font-medium ${
-                      verificationStatus.percentage === 100
+                    }`}>
+                    <span className={`text-[10px] font-medium ${verificationStatus.percentage === 100
                         ? 'text-status-green'
                         : verificationStatus.percentage >= 50
                           ? 'text-status-orange'
                           : 'text-slate-700 dark:text-slate-300'
-                    }`}>
+                      }`}>
                       {getInitials(patient)}
                     </span>
                   </div>
