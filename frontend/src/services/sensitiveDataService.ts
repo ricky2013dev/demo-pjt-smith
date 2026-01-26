@@ -81,8 +81,7 @@ export function isSensitiveField(fieldName: string): boolean {
     'email',
     'address',
     'medicalRecordNumber',
-    'insuranceNumber',
-    'policyNumber'
+    'insuranceNumber'
   ];
 
   return sensitiveFields.some(field =>
@@ -100,8 +99,7 @@ export const SENSITIVE_FIELD_TYPES = {
   EMAIL: 'email',
   ADDRESS: 'address',
   MEDICAL_RECORD_NUMBER: 'medicalRecordNumber',
-  INSURANCE_NUMBER: 'insuranceNumber',
-  POLICY_NUMBER: 'policyNumber'
+  INSURANCE_NUMBER: 'insuranceNumber'
 } as const;
 
 export type SensitiveFieldType = typeof SENSITIVE_FIELD_TYPES[keyof typeof SENSITIVE_FIELD_TYPES];
@@ -110,7 +108,7 @@ export type SensitiveFieldType = typeof SENSITIVE_FIELD_TYPES[keyof typeof SENSI
  * Decrypt a sensitive insurance field
  * @param patientId - The patient's ID
  * @param insuranceId - The insurance record ID
- * @param fieldName - The field name to decrypt (e.g., 'policyNumber', 'groupNumber')
+ * @param fieldName - The field name to decrypt (e.g., 'groupNumber', 'subscriberId')
  * @returns The decrypted value
  */
 export async function decryptInsuranceField(

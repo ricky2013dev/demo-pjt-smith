@@ -21,12 +21,14 @@ const CREATE_PATIENT_TAB_LABELS: Record<CreatePatientTabType, string> = {
 interface CreatePatientFormData {
   // Basic
   givenName: string;
+  middleName: string;
   familyName: string;
   gender: string;
   birthDate: string;
   ssn: string;
   phone: string;
   email: string;
+  clinicPatientId: string;
 
   // Address
   addressLine1: string;
@@ -36,10 +38,9 @@ interface CreatePatientFormData {
   postalCode: string;
 
   // Insurance
-  insuranceType: 'Primary' | 'Secondary' | '';
   insuranceProvider: string;
   payerId: string;
-  policyNumber: string;
+  employerName: string;
   groupNumber: string;
   subscriberName: string;
   subscriberId: string;
@@ -80,21 +81,22 @@ const getDefaultAppointmentDate = (): string => {
 
 const getInitialFormData = (userName?: string): CreatePatientFormData => ({
   givenName: '',
+  middleName: '',
   familyName: '',
   gender: '',
   birthDate: '',
   ssn: '',
   phone: '',
   email: '',
+  clinicPatientId: '',
   addressLine1: '',
   addressLine2: '',
   city: '',
   state: '',
   postalCode: '',
-  insuranceType: '',
   insuranceProvider: '',
   payerId: '',
-  policyNumber: '',
+  employerName: '',
   groupNumber: '',
   subscriberName: '',
   subscriberId: '',
@@ -188,21 +190,22 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
     setFormData({
       ...formData,
       givenName: "Jordan",
+      middleName: "Lee",
       familyName: "Doe",
       gender: "male",
       birthDate: "2015-09-20",
       ssn: "123-45-6789",
       phone: "212-233-2234",
       email: "jordan.doe@example.com",
+      clinicPatientId: "CL-00123",
       addressLine1: "11305 Ocean Rd",
       addressLine2: "",
       city: "Frisco",
       state: "TX",
       postalCode: "75035",
-      insuranceType: "Primary",
       insuranceProvider: "Cigna Dental",
       payerId: "CIGNA",
-      policyNumber: "POL-123456789",
+      employerName: "Acme Corp",
       groupNumber: "GRP-12345",
       subscriberName: "Jordan Doe",
       subscriberId: "CIGNAJTUxNm",
@@ -294,6 +297,17 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
                   </div>
 
                   <div>
+                    <label className={labelClassName}>Middle Name</label>
+                    <input
+                      type="text"
+                      value={formData.middleName}
+                      onChange={(e) => handleChange('middleName', e.target.value)}
+                      className={inputClassName}
+                      placeholder="Lee"
+                    />
+                  </div>
+
+                  <div>
                     <label className={labelClassName}>Last Name *</label>
                     <input
                       type="text"
@@ -305,6 +319,17 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
                     {validationErrors.familyName && (
                       <p className={errorClassName}>{validationErrors.familyName}</p>
                     )}
+                  </div>
+
+                  <div>
+                    <label className={labelClassName}>Clinic Patient ID #</label>
+                    <input
+                      type="text"
+                      value={formData.clinicPatientId}
+                      onChange={(e) => handleChange('clinicPatientId', e.target.value)}
+                      className={inputClassName}
+                      placeholder="CL-00123"
+                    />
                   </div>
 
                   <div>
@@ -427,19 +452,6 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
               <div className="space-y-4 animate-fadeIn">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className={labelClassName}>Insurance Type</label>
-                    <select
-                      value={formData.insuranceType}
-                      onChange={(e) => handleChange('insuranceType', e.target.value as 'Primary' | 'Secondary' | '')}
-                      className={inputClassName}
-                    >
-                      <option value="">Select Type</option>
-                      <option value="Primary">Primary</option>
-                      <option value="Secondary">Secondary</option>
-                    </select>
-                  </div>
-
-                  <div>
                     <InsuranceProviderSelect
                       label="Insurance(Payer)"
                       value={formData.payerId}
@@ -452,15 +464,13 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
                   </div>
 
                   <div>
-                    <label className={labelClassName}>
-                      Policy Number <span className="text-xs text-orange-600">(HIPAA Protected)</span>
-                    </label>
+                    <label className={labelClassName}>Employer Name</label>
                     <input
                       type="text"
-                      value={formData.policyNumber}
-                      onChange={(e) => handleChange('policyNumber', e.target.value)}
+                      value={formData.employerName}
+                      onChange={(e) => handleChange('employerName', e.target.value)}
                       className={inputClassName}
-                      placeholder="POL-123456789"
+                      placeholder="Acme Corp"
                     />
                   </div>
 
@@ -526,7 +536,7 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
                     />
                   </div>
 
-                  <div className="col-span-2">
+                  <div>
                     <label className={labelClassName}>Expiration Date</label>
                     <input
                       type="date"

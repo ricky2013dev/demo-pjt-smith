@@ -59,10 +59,9 @@ const addressSchema = z.object({
 
 // Insurance schema
 const insuranceSchema = z.object({
-  type: z.enum(['Primary', 'Secondary']).optional(),
   provider: z.string().max(255).optional().nullable(),
   payerId: z.string().max(50).optional().nullable(),
-  policyNumber: z.string().max(100).optional().nullable(),
+  employerName: z.string().max(255).optional().nullable(),
   groupNumber: z.string().max(100).optional().nullable(),
   subscriberName: z.string().max(255).optional().nullable(),
   subscriberId: z.string().max(100).optional().nullable(),
@@ -85,7 +84,9 @@ export const createPatientSchema = z.object({
     active: z.boolean().optional().default(true),
     name: patientNameSchema,
     givenName: z.string().max(200).optional(),
+    middleName: z.string().max(200).optional(),
     familyName: z.string().max(100).optional(),
+    clinicPatientId: z.string().max(100).optional(),
     gender: z.preprocess(
       (val) => (val === '' ? undefined : val),
       z.enum(['male', 'female', 'other', 'unknown']).optional()
@@ -131,7 +132,9 @@ export const createPatientSchema = z.object({
     method: z.string().max(50).optional(),
     lastUpdated: z.string().max(50).optional(),
     fetchPMS: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
+    documentAnalysis: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
     apiVerification: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
+    callCenter: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
     aiAnalysisAndCall: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
     saveToPMS: z.enum(['pending', 'in_progress', 'completed', 'error']).optional(),
   }).optional(),
@@ -141,6 +144,8 @@ export const createPatientSchema = z.object({
 export const updatePatientSchema = z.object({
   active: z.boolean().optional(),
   name: patientNameSchema,
+  middleName: z.string().max(200).optional(),
+  clinicPatientId: z.string().max(100).optional(),
   gender: z.preprocess(
     (val) => (val === '' ? undefined : val),
     z.enum(['male', 'female', 'other', 'unknown']).optional()

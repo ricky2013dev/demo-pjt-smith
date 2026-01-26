@@ -1,0 +1,15 @@
+{
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "smitdb",
+            "database": "your_db_here",
+            "username": "your_user_here",
+            "password": "your_password_here"
+        }
+    ]
+}

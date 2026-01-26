@@ -73,8 +73,9 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   // Default to view mode for all users to protect sensitive data
   const [isEditing, setIsEditing] = useState(false);
   const [editedFirstName, setEditedFirstName] = useState(patient.name.given[0] || "");
-  const [editedMiddleName, setEditedMiddleName] = useState(patient.name.given[1] || "");
+  const [editedMiddleName, setEditedMiddleName] = useState((patient as any).middleName || patient.name.given[1] || "");
   const [editedLastName, setEditedLastName] = useState(patient.name.family);
+  const [editedClinicPatientId, setEditedClinicPatientId] = useState((patient as any).clinicPatientId || "");
   const [editedSSN, setEditedSSN] = useState(
     (patient as any).ssnEncrypted ? "XXX-XX-XXXX" : ((patient as any).ssn || "")
   );
@@ -308,8 +309,9 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   // Initialize edited contact info and insurance from patient data
   React.useEffect(() => {
     setEditedFirstName(patient.name.given[0] || "");
-    setEditedMiddleName(patient.name.given[1] || "");
+    setEditedMiddleName((patient as any).middleName || patient.name.given[1] || "");
     setEditedLastName(patient.name.family);
+    setEditedClinicPatientId((patient as any).clinicPatientId || "");
     setEditedSSN((patient as any).ssnEncrypted ? "XXX-XX-XXXX" : ((patient as any).ssn || ""));
     // Initialize encrypted birth date to empty string so date picker is clean
     setEditedBirthDate((patient as any).birthDateEncrypted ? "" : (patient.birthDate || ""));
@@ -322,7 +324,6 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
     // Mask encrypted insurance fields
     const insuranceData = ((patient as any).insurance || []).map((ins: any) => ({
       ...ins,
-      policyNumber: ins.policyNumberEncrypted ? "************" : ins.policyNumber,
       groupNumber: ins.groupNumberEncrypted ? "********" : ins.groupNumber
     }));
     setEditedInsurance(insuranceData);
@@ -377,12 +378,14 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
           formattedBirthDate = undefined;
         }
 
-        const updatedPatient: Partial<Patient> = {
+        const updatedPatient: any = {
           id: patient.id,
           name: {
-            given: [editedFirstName, editedMiddleName].filter(Boolean),
+            given: [editedFirstName].filter(Boolean),
             family: editedLastName
           },
+          middleName: editedMiddleName || undefined,
+          clinicPatientId: editedClinicPatientId || undefined,
           gender: editedGender || undefined,
           birthDate: formattedBirthDate || undefined,
           ssn: editedSSN || undefined,
@@ -413,10 +416,13 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
     setEditedEmail(getEmail());
     setEditedAddress(getAddress());
 
+    // Reset clinic patient ID
+    setEditedClinicPatientId((patient as any).clinicPatientId || "");
+    setEditedMiddleName((patient as any).middleName || patient.name.given[1] || "");
+
     // Mask encrypted insurance fields
     const insuranceData = ((patient as any).insurance || []).map((ins: any) => ({
       ...ins,
-      policyNumber: ins.policyNumberEncrypted ? "************" : ins.policyNumber,
       groupNumber: ins.groupNumberEncrypted ? "********" : ins.groupNumber
     }));
     setEditedInsurance(insuranceData);
@@ -675,7 +681,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                     />
                   ) : (
                     <p className="font-medium text-slate-800 dark:text-slate-100">
-                      {capitalizeWord(patient.name.given[1]) || "N/A"}
+                      {capitalizeWord((patient as any).middleName || patient.name.given[1]) || "N/A"}
                     </p>
                   )}
                 </div>
@@ -805,6 +811,24 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                       >
                         {patient.active ? "Active" : "Inactive"}
                       </span>
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-sm text-slate-500 dark:text-slate-400 mb-2 block">
+                    Clinic Patient ID #
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedClinicPatientId}
+                      onChange={(e) => setEditedClinicPatientId(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                      placeholder="Clinic Patient ID"
+                    />
+                  ) : (
+                    <p className="font-medium text-slate-800 dark:text-slate-100">
+                      {(patient as any).clinicPatientId || "N/A"}
                     </p>
                   )}
                 </div>
@@ -942,25 +966,20 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                       </div>
                       <div>
                         <label className="text-sm text-slate-500 dark:text-slate-400 mb-2 block">
-                          Policy Number
+                          Employer Name
                         </label>
                         {isEditing ? (
                           <input
                             type="text"
-                            value={ins.policyNumber}
-                            onChange={(e) => handleInsuranceChange(index, 'policyNumber', e.target.value)}
+                            value={(ins as any).employerName || ''}
+                            onChange={(e) => handleInsuranceChange(index, 'employerName' as any, e.target.value)}
                             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                            placeholder="Policy Number"
+                            placeholder="Employer Name"
                           />
                         ) : (
-                          <InsuranceSensitiveDataField
-                            patientId={patient.id}
-                            insuranceId={(ins as any).id || ''}
-                            fieldName="policyNumber"
-                            maskedValue={ins.policyNumber || '************'}
-                            label="Policy Number"
-                            isEncrypted={(ins as any).policyNumberEncrypted || false}
-                          />
+                          <p className="font-medium text-slate-800 dark:text-slate-100">
+                            {(ins as any).employerName || "N/A"}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1095,9 +1114,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 <button
                   onClick={() => {
                     const newInsurance: Insurance = {
-                      type: "Primary",
                       provider: "",
-                      policyNumber: "",
+                      employerName: "",
                       groupNumber: "",
                       subscriberName: "",
                       subscriberId: "",
@@ -1147,9 +1165,6 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                   >
                     <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                          {ins.type}
-                        </span>
                         <h3 className="text-sm font-medium text-slate-900 dark:text-white">
                           {ins.provider}{(ins as any).payerId && <span className="text-slate-500 dark:text-slate-400 font-normal"> ({(ins as any).payerId})</span>}
                         </h3>
@@ -1158,16 +1173,11 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
-                          Policy Number
+                          Employer Name
                         </p>
-                        <InsuranceSensitiveDataField
-                          patientId={patient.id}
-                          insuranceId={(ins as any).id || ''}
-                          fieldName="policyNumber"
-                          maskedValue={ins.policyNumber || '************'}
-                          label="Policy Number"
-                          isEncrypted={(ins as any).policyNumberEncrypted || false}
-                        />
+                        <p className="font-medium text-slate-800 dark:text-slate-100">
+                          {(ins as any).employerName || "N/A"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">

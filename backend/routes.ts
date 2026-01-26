@@ -838,10 +838,8 @@ export async function registerRoutes(
         // DB: flat fields → Client: nested coverage object
         const transformedInsurances = insurances.map(ins => ({
           id: ins.id,
-          type: ins.type,
           provider: ins.provider,
-          policyNumber: ins.policyNumber ? '************' : null, // Masked (HIPAA)
-          policyNumberEncrypted: !!ins.policyNumber,
+          employerName: ins.employerName,
           groupNumber: ins.groupNumber ? '********' : null, // Masked (HIPAA)
           groupNumberEncrypted: !!ins.groupNumber,
           subscriberName: ins.subscriberName,
@@ -879,6 +877,8 @@ export async function registerRoutes(
             given: givenNames,
             family: patient.familyName
           },
+          middleName: patient.middleName,
+          clinicPatientId: patient.clinicPatientId,
           gender: patient.gender,
           birthDate: patient.birthDate ? '****-**-**' : null, // Masked (HIPAA)
           birthDateEncrypted: !!patient.birthDate,
@@ -1055,10 +1055,12 @@ export async function registerRoutes(
         userId,
         active: patient.active,
         givenName: patient.name?.given?.join(' ') || patient.givenName || '',
+        middleName: patient.middleName || null,
         familyName: patient.name?.family || patient.familyName || '',
         gender: patient.gender,
         birthDate: encryptedBirthDate,
-        ssn: encryptedSSN
+        ssn: encryptedSSN,
+        clinicPatientId: patient.clinicPatientId || null
       });
 
       // Create related data
@@ -1081,13 +1083,12 @@ export async function registerRoutes(
 
       if (insurances && Array.isArray(insurances)) {
         // Transform insurances from client format (nested coverage) to DB format (flat fields)
-        // Encrypt HIPAA-sensitive fields (policyNumber, groupNumber, subscriberId)
+        // Encrypt HIPAA-sensitive fields (groupNumber, subscriberId)
         await Promise.all(insurances.map(i => storage.createInsurance({
           patientId: newPatient.id,
-          type: i.type ?? 'Primary',
           provider: i.provider ?? '',
           payerId: i.payerId ?? null,
-          policyNumber: i.policyNumber ? encrypt(i.policyNumber) : null,
+          employerName: i.employerName ?? null,
           groupNumber: i.groupNumber ? encrypt(i.groupNumber) : null,
           subscriberName: i.subscriberName ?? null,
           subscriberId: i.subscriberId ? encrypt(i.subscriberId) : null,
@@ -1127,7 +1128,9 @@ export async function registerRoutes(
         await storage.createVerificationStatus({
           patientId: newPatient.id,
           fetchPMS: (verificationStatus as any).fetchPMS ?? 'pending',
+          documentAnalysis: (verificationStatus as any).documentAnalysis ?? 'pending',
           apiVerification: (verificationStatus as any).apiVerification ?? 'pending',
+          callCenter: (verificationStatus as any).callCenter ?? 'pending',
           aiAnalysisAndCall: (verificationStatus as any).aiAnalysisAndCall ?? 'pending',
           saveToPMS: (verificationStatus as any).saveToPMS ?? 'pending'
         });
@@ -1196,9 +1199,7 @@ export async function registerRoutes(
           ],
           insurances: [
             {
-              type: 'Dental',
               provider: 'Delta Dental',
-              policyNumber: 'DD123456789',
               groupNumber: 'GRP001',
               subscriberName: 'Emily Rodriguez',
               subscriberId: 'ER123456',
@@ -1239,9 +1240,7 @@ export async function registerRoutes(
           ],
           insurances: [
             {
-              type: 'Dental',
               provider: 'MetLife',
-              policyNumber: 'ML987654321',
               groupNumber: 'GRP002',
               subscriberName: 'Michael Chen',
               subscriberId: 'MC987654',
@@ -1282,9 +1281,7 @@ export async function registerRoutes(
           ],
           insurances: [
             {
-              type: 'Dental',
               provider: 'Cigna',
-              policyNumber: 'CG456789012',
               groupNumber: 'GRP003',
               subscriberName: 'Sarah Thompson',
               subscriberId: 'ST456789',
@@ -1348,10 +1345,9 @@ export async function registerRoutes(
         await Promise.all(sampleData.insurances.map(i =>
           storage.createInsurance({
             patientId: newPatient.id,
-            type: i.type,
             provider: i.provider,
             payerId: (i as any).payerId ?? null,
-            policyNumber: encrypt(i.policyNumber),
+            employerName: (i as any).employerName ?? null,
             groupNumber: encrypt(i.groupNumber),
             subscriberName: i.subscriberName,
             subscriberId: encrypt(i.subscriberId),
@@ -1394,7 +1390,9 @@ export async function registerRoutes(
         await storage.createVerificationStatus({
           patientId: newPatient.id,
           fetchPMS: 'pending',
+          documentAnalysis: 'pending',
           apiVerification: 'pending',
+          callCenter: 'pending',
           aiAnalysisAndCall: 'pending',
           saveToPMS: 'pending'
         });
@@ -1486,6 +1484,8 @@ export async function registerRoutes(
       // Handle other fields
       if (updates.gender !== undefined) patientUpdates.gender = updates.gender;
       if (updates.active !== undefined) patientUpdates.active = updates.active;
+      if (updates.middleName !== undefined) patientUpdates.middleName = updates.middleName;
+      if (updates.clinicPatientId !== undefined) patientUpdates.clinicPatientId = updates.clinicPatientId;
 
       // Encrypt sensitive fields
       if (updates.birthDate) {
@@ -1512,17 +1512,15 @@ export async function registerRoutes(
 
         // Update or create insurance records
         for (const insuranceData of updates.insurance) {
-          // Find matching existing insurance by type (Primary/Secondary)
-          const existingInsurance = existingInsurances.find(i => i.type === insuranceData.type);
+          // Find matching existing insurance by provider
+          const existingInsurance = existingInsurances.find(i => i.provider === insuranceData.provider);
 
           if (existingInsurance) {
             // Update existing insurance
             await storage.updateInsurance(existingInsurance.id, {
               provider: insuranceData.provider ?? existingInsurance.provider,
               payerId: insuranceData.payerId ?? existingInsurance.payerId,
-              policyNumber: insuranceData.policyNumber === '************'
-                ? existingInsurance.policyNumber // Keep existing encrypted value
-                : (insuranceData.policyNumber ? encrypt(insuranceData.policyNumber) : null),
+              employerName: insuranceData.employerName ?? existingInsurance.employerName,
               groupNumber: insuranceData.groupNumber === '********'
                 ? existingInsurance.groupNumber // Keep existing encrypted value
                 : (insuranceData.groupNumber ? encrypt(insuranceData.groupNumber) : null),
@@ -1544,10 +1542,9 @@ export async function registerRoutes(
             // Create new insurance
             await storage.createInsurance({
               patientId: id,
-              type: insuranceData.type ?? 'Primary',
               provider: insuranceData.provider ?? '',
               payerId: insuranceData.payerId ?? null,
-              policyNumber: insuranceData.policyNumber ? encrypt(insuranceData.policyNumber) : null,
+              employerName: insuranceData.employerName ?? null,
               groupNumber: insuranceData.groupNumber ? encrypt(insuranceData.groupNumber) : null,
               subscriberName: insuranceData.subscriberName ?? null,
               subscriberId: insuranceData.subscriberId ? encrypt(insuranceData.subscriberId) : null,
@@ -1631,10 +1628,8 @@ export async function registerRoutes(
       // Mask sensitive fields (HIPAA-compliant)
       const transformedInsurances = insurances.map(ins => ({
         id: ins.id, // Include insurance ID for decryption
-        type: ins.type,
         provider: ins.provider,
-        policyNumber: ins.policyNumber ? '************' : null, // Masked (HIPAA)
-        policyNumberEncrypted: !!ins.policyNumber,
+        employerName: ins.employerName,
         groupNumber: ins.groupNumber ? '********' : null, // Masked (HIPAA)
         groupNumberEncrypted: !!ins.groupNumber,
         subscriberName: ins.subscriberName,
@@ -1674,6 +1669,8 @@ export async function registerRoutes(
             given: givenNames,
             family: patient.familyName
           },
+          middleName: patient.middleName,
+          clinicPatientId: patient.clinicPatientId,
           gender: patient.gender,
           birthDate: patient.birthDate ? '****-**-**' : null, // Masked (HIPAA)
           birthDateEncrypted: !!patient.birthDate,
@@ -1866,7 +1863,7 @@ export async function registerRoutes(
       const { field } = req.body;
 
       // List of allowed sensitive insurance fields
-      const allowedFields = ['policyNumber', 'groupNumber', 'subscriberId'];
+      const allowedFields = ['groupNumber', 'subscriberId'];
 
       if (!field || !allowedFields.includes(field)) {
         return res.status(400).json({ error: "Invalid field specified" });
@@ -1897,12 +1894,6 @@ export async function registerRoutes(
 
       try {
         switch (field) {
-          case 'policyNumber':
-            if (insurance.policyNumber) {
-              decryptedValue = decrypt(insurance.policyNumber);
-            }
-            break;
-
           case 'groupNumber':
             if (insurance.groupNumber) {
               decryptedValue = decrypt(insurance.groupNumber);
@@ -2042,25 +2033,23 @@ export async function registerRoutes(
 
         // Update or create insurance
         const existingInsurances = await storage.getPatientInsurances(id);
-        const primaryInsurance = existingInsurances.find(i => i.type === 'Primary');
+        const existingInsurance = existingInsurances[0];
 
-        if (primaryInsurance) {
-          // Update existing primary insurance
-          await storage.updateInsurance(primaryInsurance.id, {
+        if (existingInsurance) {
+          // Update existing insurance
+          await storage.updateInsurance(existingInsurance.id, {
             provider: extractedData.provider,
-            policyNumber: extractedData.policyNumber ? encrypt(extractedData.policyNumber) : null,
             groupNumber: extractedData.groupNumber ? encrypt(extractedData.groupNumber) : null,
             subscriberId: extractedData.subscriberId ? encrypt(extractedData.subscriberId) : null,
             subscriberName: `${extractedData.firstName} ${extractedData.lastName}`
           });
         } else {
-          // Create new primary insurance
+          // Create new insurance
           await storage.createInsurance({
             patientId: id,
-            type: 'Primary',
             provider: extractedData.provider,
             payerId: null,
-            policyNumber: extractedData.policyNumber ? encrypt(extractedData.policyNumber) : null,
+            employerName: null,
             groupNumber: extractedData.groupNumber ? encrypt(extractedData.groupNumber) : null,
             subscriberId: extractedData.subscriberId ? encrypt(extractedData.subscriberId) : null,
             subscriberName: `${extractedData.firstName} ${extractedData.lastName}`,
@@ -2550,7 +2539,7 @@ export async function registerRoutes(
             .from(insurances)
             .where(eq(insurances.patientId, existingTransaction.patientId));
 
-          const primaryInsurance = patientInsurances.find(i => i.type === 'Primary') || patientInsurances[0];
+          const primaryInsurance = patientInsurances[0];
 
           // 1. Insert into if_call_transaction_list with insurance information
           const [ifCallTxn] = await db.insert(ifCallTransactionList).values({
@@ -2559,7 +2548,7 @@ export async function registerRoutes(
             patientId: newCallTransaction.patientId,
             patientName: newCallTransaction.patientName,
             insuranceProvider: newCallTransaction.insuranceProvider,
-            policyNumber: primaryInsurance?.policyNumber || null, // Already encrypted
+            policyNumber: null,
             groupNumber: primaryInsurance?.groupNumber || null, // Already encrypted
             subscriberId: primaryInsurance?.subscriberId || null, // Already encrypted
             phoneNumber: newCallTransaction.phoneNumber || null,

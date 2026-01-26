@@ -31,10 +31,12 @@ export const patients = pgTable("patients", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   active: boolean("active").notNull().default(true),
   givenName: text("given_name").notNull(),
+  middleName: text("middle_name"),
   familyName: text("family_name").notNull(),
   gender: text("gender"),
   birthDate: text("birth_date"), // Encrypted - HIPAA sensitive
   ssn: text("ssn"), // Encrypted - HIPAA sensitive (Social Security Number)
+  clinicPatientId: text("clinic_patient_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -62,10 +64,9 @@ export const patientAddresses = pgTable("patient_addresses", {
 export const insurances = pgTable("insurances", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   patientId: varchar("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
-  type: text("type").notNull(), // 'Primary' | 'Secondary'
   provider: text("provider").notNull(),
   payerId: text("payer_id"), // Stedi API payer ID for verification
-  policyNumber: text("policy_number"), // Encrypted - HIPAA sensitive
+  employerName: text("employer_name"),
   groupNumber: text("group_number"), // Encrypted - HIPAA sensitive
   subscriberName: text("subscriber_name"),
   subscriberId: text("subscriber_id"), // Encrypted - HIPAA sensitive
@@ -127,7 +128,9 @@ export const verificationStatuses = pgTable("verification_statuses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   patientId: varchar("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
   fetchPMS: text("fetch_pms").notNull(), // 'completed' | 'in_progress' | 'pending'
+  documentAnalysis: text("document_analysis").notNull().default("pending"),
   apiVerification: text("api_verification").notNull(),
+  callCenter: text("call_center").notNull().default("pending"),
   aiAnalysisAndCall: text("ai_analysis_and_call").notNull(),
   saveToPMS: text("save_to_pms").notNull(),
 });

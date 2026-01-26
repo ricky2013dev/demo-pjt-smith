@@ -81,21 +81,22 @@ const PatientsManagement: React.FC = () => {
 
   interface CreatePatientFormData {
     givenName: string;
+    middleName: string;
     familyName: string;
     gender: string;
     birthDate: string;
     ssn: string;
     phone: string;
     email: string;
+    clinicPatientId: string;
     addressLine1: string;
     addressLine2: string;
     city: string;
     state: string;
     postalCode: string;
-    insuranceType: 'Primary' | 'Secondary' | '';
     insuranceProvider: string;
     payerId: string;
-    policyNumber: string;
+    employerName: string;
     groupNumber: string;
     subscriberName: string;
     subscriberId: string;
@@ -117,10 +118,12 @@ const PatientsManagement: React.FC = () => {
         body: JSON.stringify({
           patient: {
             givenName: formData.givenName,
+            middleName: formData.middleName,
             familyName: formData.familyName,
             gender: formData.gender,
             birthDate: formData.birthDate,
             ssn: formData.ssn,
+            clinicPatientId: formData.clinicPatientId,
             active: true
           },
           telecoms: [
@@ -135,10 +138,9 @@ const PatientsManagement: React.FC = () => {
             postalCode: formData.postalCode
           }] : [],
           insurances: formData.insuranceProvider ? [{
-            type: formData.insuranceType || 'Primary',
             provider: formData.insuranceProvider,
             payerId: formData.payerId,
-            policyNumber: formData.policyNumber,
+            employerName: formData.employerName,
             groupNumber: formData.groupNumber,
             subscriberName: formData.subscriberName,
             subscriberId: formData.subscriberId,
@@ -159,6 +161,7 @@ const PatientsManagement: React.FC = () => {
             documentAnalysis: 'pending',
             apiVerification: 'pending',
             callCenter: 'pending',
+            aiAnalysisAndCall: 'pending',
             saveToPMS: 'pending'
           }
         })

@@ -163,6 +163,7 @@ export async function seedTransactions() {
         documentAnalysis: 'pending',
         apiVerification: 'completed',
         callCenter: 'completed',
+        aiAnalysisAndCall: 'pending',
         saveToPMS: 'pending'
       });
 

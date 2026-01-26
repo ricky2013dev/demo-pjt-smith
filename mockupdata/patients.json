@@ -40,9 +40,7 @@
     ],
     "insurance": [
       {
-        "type": "Primary",
         "provider": "Blue Cross Blue Shield",
-        "policyNumber": "BCBS-123456789",
         "groupNumber": "GRP-98765",
         "subscriberName": "Sarah Jane Johnson",
         "subscriberId": "123456789",
@@ -56,7 +54,8 @@
           "preventiveCoverage": "100%",
           "basicCoverage": "80%",
           "majorCoverage": "50%"
-        }
+        },
+        "employerName": ""
       }
     ],
     "appointments": [
@@ -188,9 +187,7 @@
     ],
     "insurance": [
       {
-        "type": "Primary",
         "provider": "Delta Dental",
-        "policyNumber": "DD-987654321",
         "groupNumber": "GRP-54321",
         "subscriberName": "Michael Robert Anderson",
         "subscriberId": "987654321",
@@ -204,12 +201,11 @@
           "preventiveCoverage": "100%",
           "basicCoverage": "80%",
           "majorCoverage": "50%"
-        }
+        },
+        "employerName": ""
       },
       {
-        "type": "Secondary",
         "provider": "MetLife Dental",
-        "policyNumber": "ML-456789123",
         "groupNumber": "GRP-11111",
         "subscriberName": "Michael Robert Anderson",
         "subscriberId": "456789123",
@@ -223,7 +219,8 @@
           "preventiveCoverage": "100%",
           "basicCoverage": "50%",
           "majorCoverage": "50%"
-        }
+        },
+        "employerName": ""
       }
     ],
     "appointments": [
@@ -346,9 +343,7 @@
     ],
     "insurance": [
       {
-        "type": "Primary",
         "provider": "Cigna Dental",
-        "policyNumber": "CIG-555666777",
         "groupNumber": "GRP-77777",
         "subscriberName": "Emily Rose Martinez",
         "subscriberId": "555666777",
@@ -362,7 +357,8 @@
           "preventiveCoverage": "100%",
           "basicCoverage": "80%",
           "majorCoverage": "60%"
-        }
+        },
+        "employerName": ""
       }
     ],
     "appointments": [
@@ -537,9 +533,7 @@
     ],
     "insurance": [
       {
-        "type": "Primary",
         "provider": "Aetna Dental",
-        "policyNumber": "AET-111222333",
         "groupNumber": "GRP-33333",
         "subscriberName": "Jennifer Ann Williams",
         "subscriberId": "111222333",
@@ -553,7 +547,8 @@
           "preventiveCoverage": "100%",
           "basicCoverage": "80%",
           "majorCoverage": "50%"
-        }
+        },
+        "employerName": ""
       }
     ],
     "appointments": [
@@ -695,9 +690,7 @@
     ],
     "insurance": [
       {
-        "type": "Primary",
         "provider": "Guardian Dental",
-        "policyNumber": "GRD-888999000",
         "groupNumber": "GRP-99999",
         "subscriberName": "Christopher James Davis",
         "subscriberId": "888999000",
@@ -711,7 +704,8 @@
           "preventiveCoverage": "100%",
           "basicCoverage": "80%",
           "majorCoverage": "50%"
-        }
+        },
+        "employerName": ""
       }
     ],
     "appointments": [
@@ -815,9 +809,7 @@
     ],
     "insurance": [
       {
-        "type": "Primary",
         "provider": "Humana Dental",
-        "policyNumber": "HUM-444555666",
         "groupNumber": "GRP-66666",
         "subscriberName": "Robert Brown",
         "subscriberId": "444555666",
@@ -831,7 +823,8 @@
           "preventiveCoverage": "100%",
           "basicCoverage": "80%",
           "majorCoverage": "50%"
-        }
+        },
+        "employerName": ""
       }
     ],
     "appointments": [
@@ -927,9 +920,7 @@
     ],
     "insurance": [
       {
-        "type": "Primary",
         "provider": "United Healthcare Dental",
-        "policyNumber": "UHC-222333444",
         "groupNumber": "GRP-44444",
         "subscriberName": "Robert William Garcia",
         "subscriberId": "222333444",
@@ -943,7 +934,8 @@
           "preventiveCoverage": "100%",
           "basicCoverage": "80%",
           "majorCoverage": "50%"
-        }
+        },
+        "employerName": ""
       }
     ],
     "appointments": [
@@ -1047,9 +1039,7 @@
     ],
     "insurance": [
       {
-        "type": "Primary",
         "provider": "Anthem Blue Cross",
-        "policyNumber": "ABC-777888999",
         "groupNumber": "GRP-12345",
         "subscriberName": "Patricia Lynn Miller",
         "subscriberId": "777888999",
@@ -1063,7 +1053,8 @@
           "preventiveCoverage": "100%",
           "basicCoverage": "85%",
           "majorCoverage": "60%"
-        }
+        },
+        "employerName": ""
       }
     ],
     "appointments": [
@@ -1187,9 +1178,7 @@
     ],
     "insurance": [
       {
-        "type": "Primary",
         "provider": "Cigna Dental",
-        "policyNumber": "CIG-333444555",
         "groupNumber": "GRP-22222",
         "subscriberName": "Sarah Wilson",
         "subscriberId": "333444555",
@@ -1203,7 +1192,8 @@
           "preventiveCoverage": "100%",
           "basicCoverage": "80%",
           "majorCoverage": "50%"
-        }
+        },
+        "employerName": ""
       }
     ],
     "appointments": [

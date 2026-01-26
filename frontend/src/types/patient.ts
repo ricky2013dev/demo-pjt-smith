@@ -2,6 +2,8 @@ export interface Patient {
   id: string;
   active: boolean;
   name: PatientName;
+  middleName?: string;
+  clinicPatientId?: string;
   gender: string;
   birthDate: string;
   ssn?: string; // HIPAA-sensitive, encrypted in database
@@ -16,7 +18,9 @@ export interface Patient {
 
 export interface VerificationStatus {
   fetchPMS: 'completed' | 'in_progress' | 'pending';
+  documentAnalysis: 'completed' | 'in_progress' | 'pending';
   apiVerification: 'completed' | 'in_progress' | 'pending';
+  callCenter: 'completed' | 'in_progress' | 'pending';
   aiAnalysisAndCall: 'completed' | 'in_progress' | 'pending';
   saveToPMS: 'completed' | 'in_progress' | 'pending';
 }
@@ -39,10 +43,9 @@ export interface Address {
 }
 
 export interface Insurance {
-  type: 'Primary' | 'Secondary';
   payerId?: string;
   provider: string;
-  policyNumber: string;
+  employerName: string;
   groupNumber: string;
   subscriberName: string;
   subscriberId: string;
