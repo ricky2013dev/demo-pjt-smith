@@ -20,7 +20,7 @@
     "paths": {
       "@/*": ["./frontend/src/*"],
       "@shared/*": ["./shared/*"],
-      "@mockupdata/*": ["./mockupdata/*"]
+      "@mockupdata/*": ["./frontend/mockupdata/*"]
     }
   }
 }

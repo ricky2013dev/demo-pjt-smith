@@ -4,12 +4,10 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "init": "docker-compose up -d && until docker exec pjt-smith-postgres pg_isready -U postgres; do sleep 1; done && ./scripts/db-push.sh",
     "dev": "tsx backend/index.ts",
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.mjs",
-    "check": "tsc",
-    "docker:down": "docker-compose down"
+    "check": "tsc"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

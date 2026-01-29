@@ -2625,7 +2625,7 @@ export async function registerRoutes(
   });
 
   // Load dental codes
-  const dentalCodesPath = join(process.cwd(), "mockupdata", "common_dental_cdt_codes.json");
+  const dentalCodesPath = join(process.cwd(), "frontend", "mockupdata", "common_dental_cdt_codes.json");
   const dentalCodes = JSON.parse(readFileSync(dentalCodesPath, "utf-8"));
 
   const STEDI_API_KEY = process.env.STEDI_API_KEY;

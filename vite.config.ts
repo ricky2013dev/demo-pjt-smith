@@ -24,7 +24,7 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "frontend", "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
-      "@mockupdata": path.resolve(import.meta.dirname, "mockupdata"),
+      "@mockupdata": path.resolve(import.meta.dirname, "frontend", "mockupdata"),
     },
   },
   root: path.resolve(import.meta.dirname, "frontend"),
