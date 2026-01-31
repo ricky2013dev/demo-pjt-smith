@@ -7,18 +7,28 @@ A comprehensive dental insurance verification system that automates patient data
 
 ```
 pjt-smith-demo/
-├── backend/          # Express.js server (formerly 'server')
-├── frontend/         # React frontend (formerly 'client')
+├── backend/          # Express.js server
+├── frontend/         # React frontend
 ├── shared/           # Shared code and database schema
-├── db/              # Database migrations
 ├── doc/             # All project documentation
-├── mockupdata/      # Sample data for testing
-└── script/          # Build and utility scripts
+└── script/          # Build utilities & DB schema (script/db/createDB.sql)
 ```
 
-## Database Schema
+## Database Setup
 
-The application uses PostgreSQL with Drizzle ORM. The schema is defined in `shared/schema.ts`.
+The application uses a **remote PostgreSQL database**. All connection credentials are read from the `.env.local` file.
+
+### Schema Creation
+
+Run the schema file manually against your PostgreSQL instance:
+
+```bash
+psql -h <host> -U <user> -d <database> -f script/db/createDB.sql
+```
+
+The full schema is defined in `script/db/createDB.sql`. The Drizzle ORM schema definition lives in `shared/schema.ts` for type-safe database access in application code.
+
+**Note:** No data seeding scripts are provided. Initial data should be populated manually.
 
 ### Core Tables
 
@@ -31,8 +41,7 @@ The application uses PostgreSQL with Drizzle ORM. The schema is defined in `shar
 - **Purpose**: Patient demographic information
 - **Fields**: id, userId, active, givenName, familyName, gender, birthDate (encrypted), ssn (encrypted)
 - **HIPAA Sensitive**: birthDate and ssn are encrypted
-- **Relations**:
-  - One-to-many with patientTelecoms, patientAddresses, insurances, appointments, treatments, coverageDetails, verificationStatuses, aiCallHistory, transactions, coverageByCode
+- **Relations**: One-to-many with patientTelecoms, patientAddresses, insurances, appointments, treatments, coverageDetails, verificationStatuses, aiCallHistory, transactions, coverageByCode
 
 #### Patient Telecoms
 - **Purpose**: Patient contact information (phone/email)
@@ -44,7 +53,7 @@ The application uses PostgreSQL with Drizzle ORM. The schema is defined in `shar
 
 #### Insurances
 - **Purpose**: Patient insurance policy information
-- **Fields**: id, patientId, type (Primary/Secondary), provider, policyNumber, groupNumber, subscriberName, subscriberId, relationship, effectiveDate, expirationDate, deductible, deductibleMet, maxBenefit, preventiveCoverage, basicCoverage, majorCoverage
+- **Fields**: id, patientId, provider, payerId, employerName, groupNumber, subscriberName, subscriberId, relationship, effectiveDate, expirationDate, deductible, deductibleMet, maxBenefit, preventiveCoverage, basicCoverage, majorCoverage
 
 #### Appointments
 - **Purpose**: Patient appointment scheduling
@@ -65,7 +74,7 @@ The application uses PostgreSQL with Drizzle ORM. The schema is defined in `shar
 
 #### Verification Statuses
 - **Purpose**: Track verification workflow status
-- **Fields**: id, patientId, fetchPMS (fetch from PMS), documentAnalysis, apiVerification, callCenter, saveToPMS
+- **Fields**: id, patientId, fetchPMS, documentAnalysis, apiVerification, callCenter, saveToPMS
 - **Status Values**: completed, in_progress, pending
 
 #### Transactions
@@ -98,7 +107,7 @@ The application uses PostgreSQL with Drizzle ORM. The schema is defined in `shar
 ### Backend
 - **Runtime**: Node.js with Express.js
 - **Language**: TypeScript
-- **Database**: PostgreSQL (Docker for local dev, Neon/Supabase for remote)
+- **Database**: PostgreSQL (remote)
 - **ORM**: Drizzle ORM
 - **Authentication**: Passport.js with local strategy
 - **Session**: express-session with connect-pg-simple
@@ -118,38 +127,25 @@ The application uses PostgreSQL with Drizzle ORM. The schema is defined in `shar
 ### Development Tools
 - **Build**: Vite + esbuild
 - **Type Checking**: TypeScript
-- **Database Migrations**: Drizzle Kit
-- **Containerization**: Docker + Docker Compose (local development)
+- **Database Schema**: Drizzle Kit (schema definition in `shared/schema.ts`)
 
 ## Environment Setup
 
 ### Prerequisites
 - Node.js 22+
-- **Database Options:**
-  - **Local Development**: Docker + Docker Compose (recommended for local dev)
-  - **Remote Development**: PostgreSQL 16 (Neon, Supabase, etc.)
+- Remote PostgreSQL 16 database (Neon, Supabase, or any hosted provider)
 
 ### Environment Variables
 
-#### Local Development with Docker
-Create a `.env.local` file:
+Create a `.env.local` file in the project root:
 
 ```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/smithai?sslmode=disable
+DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<database>?sslmode=require
 NODE_ENV=local_development
 PORT=3000
+STEDI_API_KEY=<your-stedi-key>
+ENCRYPTION_KEY=<your-encryption-key>
 ```
-
-#### Development Server with Remote Database
-Create a `.env.local` file:
-
-```env
-DATABASE_URL=postgresql://user:password@host/database?sslmode=require
-NODE_ENV=development
-PORT=3000
-```
-
-See `doc/DOCKER_SETUP.md` for detailed Docker configuration and troubleshooting.
 
 ### Installation
 
@@ -157,38 +153,18 @@ See `doc/DOCKER_SETUP.md` for detailed Docker configuration and troubleshooting.
 # Install dependencies
 npm install
 
-# Local Development (with Docker)
-npm run dev:local          # Starts Docker PostgreSQL + application server
-npm run dev:clean          # Clean restart (stops Docker first)
+# Create the database schema (run manually)
+psql -h <host> -U <user> -d <database> -f script/db/createDB.sql
 
-# Development Server (without Docker, remote DB)
-npm run dev                # Starts application server only
+# Start the development server
+npm run dev
 
-# Database Management
-npm run db:push            # Push database schema
-npm run seed:transactions  # Seed transaction data (optional)
-npm run docker:down        # Stop Docker containers
+# Build for production
+npm run build
 
-# Production
-npm run build              # Build for production
-npm run start              # Start production server
+# Start production server
+npm run start
 ```
-
-## Database Migrations
-
-Database migrations are managed by Drizzle Kit and stored in `db/migrations/`.
-
-To create a new migration:
-```bash
-npx drizzle-kit generate
-```
-
-To apply migrations:
-```bash
-npm run db:push
-```
-
-See `doc/MIGRATION_GUIDE.md` for detailed migration instructions.
 
 ## Security & Compliance
 
@@ -199,7 +175,7 @@ This system handles Protected Health Information (PHI) and must comply with HIPA
 - Patient birth dates
 - Social Security Numbers (SSN)
 
-See `doc/HIPAA_SENSITIVE_DATA_GUIDE.md` and `doc/SSN_FIELD_IMPLEMENTATION.md` for detailed security implementation.
+See `doc/HIPAA_SENSITIVE_DATA_GUIDE.md` for detailed security implementation.
 
 ### Authentication & Authorization
 - Passport.js local strategy
@@ -213,7 +189,7 @@ See `doc/HIPAA_SENSITIVE_DATA_GUIDE.md` and `doc/SSN_FIELD_IMPLEMENTATION.md` fo
 ## API Documentation
 
 API documentation is available via Swagger UI when running the development server:
-- Navigate to `/api-docs` endpoint
+- Navigate to `/docs` endpoint
 - Interactive API testing interface
 - Complete endpoint documentation
 
@@ -252,21 +228,17 @@ The admin panel provides system-wide management capabilities accessible only to 
 - View all system users
 - Create new users with assigned roles
 - Manage user data sources
-- Monitor user activity
 
 #### Patient Management (`/admin/patients`)
 - **Unified Table View**: See all patients across all users in a single table
 - **User Filter**: Filter patients by specific user or view all
-- **User Column**: Shows which user each patient belongs to (username + email)
 - **Full Patient Details**: Patient ID, name, gender, contact info, insurance, status
-- **Admin Delete**: Admins can delete any patient (regular users can only delete their own)
-- **Cascade Delete**: Patient deletion removes all related data (appointments, treatments, transactions, etc.)
+- **Admin Delete**: Admins can delete any patient
 
 #### Interface Table Management (`/admin/interface-tables`)
 - Manage call transaction interface tables
 - View and manage coverage code data
 - Monitor call message logs
-- Export/sync with external systems
 
 ## Workflow Overview
 
@@ -278,7 +250,7 @@ The admin panel provides system-wide management capabilities accessible only to 
 4. **Call Center** - AI-powered phone verification with insurance providers
 5. **Save to PMS** - Update verified information back to PMS
 
-Each step is tracked in the `verificationStatuses` table and detailed transactions are logged in the `transactions` table.
+Each step is tracked in the `verification_statuses` table and detailed transactions are logged in the `transactions` table.
 
 ### Transaction Types
 
@@ -303,34 +275,14 @@ The application is fully typed with TypeScript. Database types are automatically
 
 ### Scripts
 
-#### Development
-- `npm run dev:local` - Start local development with Docker PostgreSQL
-- `npm run dev` - Start server only (for development server with remote DB)
-- `npm run dev:clean` - Stop Docker and restart fresh
-
-#### Docker Management
-- `npm run docker:up` - Start Docker PostgreSQL only
-- `npm run docker:down` - Stop all Docker containers
-- `npm run db:wait` - Wait for Docker PostgreSQL to be ready
-
-#### Database
-- `npm run db:push` - Push schema changes to database
-- `npm run db:setup` - Run database migrations
-- `npm run seed:transactions` - Seed sample transaction data
-
-#### Build & Production
+- `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run check` - Type check without build
 
-#### Utilities
-- `npm run refresh-dates` - Update mockup data with current dates
-
 ## Additional Documentation
 
-- `DOCKER_SETUP.md` - Docker setup guide for local development
 - `HIPAA_SENSITIVE_DATA_GUIDE.md` - HIPAA compliance and access control guidelines
-- `MOCKUPDATA_README.md` - Sample data documentation
 
 ## License
 MIT

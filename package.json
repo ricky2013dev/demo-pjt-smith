@@ -4,12 +4,12 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "init": "docker-compose up -d && until docker exec pjt-smith-postgres pg_isready -U postgres; do sleep 1; done && ./scripts/db-push.sh",
     "dev": "tsx backend/index.ts",
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.mjs",
     "check": "tsc",
-    "docker:down": "docker-compose down"
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -92,6 +92,7 @@
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@replit/vite-plugin-cartographer": "^0.4.4",
     "@replit/vite-plugin-dev-banner": "^0.1.1",
     "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
@@ -107,14 +108,19 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/ws": "^8.5.13",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.31.4",
     "esbuild": "^0.25.12",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react": "^7.37.5",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.5",
     "typescript": "5.6.3",
+    "typescript-eslint": "^8.54.0",
     "vite": "^5.4.20"
   },
   "optionalDependencies": {

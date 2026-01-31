@@ -92,7 +92,7 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
                         // Styles
                         let bgColor = 'bg-slate-300 dark:bg-slate-600'; // Default pending
                         let textColor = 'text-slate-600 dark:text-slate-400';
-                        let iconColor = ''; // Inherits usually
+                        const iconColor = ''; // Inherits usually
 
                         if (completed) {
                             bgColor = 'bg-green-500 dark:bg-green-600';

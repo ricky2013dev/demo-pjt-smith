@@ -13,7 +13,7 @@ import {
   coverageByCode,
   insurances
 } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import axios from "axios";
 import { readFileSync } from "fs";
@@ -2625,7 +2625,7 @@ export async function registerRoutes(
   });
 
   // Load dental codes
-  const dentalCodesPath = join(process.cwd(), "mockupdata", "common_dental_cdt_codes.json");
+  const dentalCodesPath = join(process.cwd(), "frontend", "mockupdata", "common_dental_cdt_codes.json");
   const dentalCodes = JSON.parse(readFileSync(dentalCodesPath, "utf-8"));
 
   const STEDI_API_KEY = process.env.STEDI_API_KEY;
@@ -3167,11 +3167,29 @@ export async function registerRoutes(
   });
 
   // Admin Interface Table Management Endpoints
-  // Get all interface transactions
+  // Get all interface transactions (optionally filtered by userId via patient relationship)
   app.get("/api/admin/interface/transactions", requireAuth, requireAdmin, async (req, res) => {
     try {
-      const transactions = await db.select().from(ifCallTransactionList).orderBy(ifCallTransactionList.createdAt);
-      res.json(transactions);
+      const { userId } = req.query;
+
+      if (userId && typeof userId === 'string') {
+        // Get patient IDs for this user, then filter transactions
+        const userPatients = await db.select({ id: patients.id }).from(patients).where(eq(patients.userId, userId));
+        const patientIds = userPatients.map(p => p.id);
+
+        if (patientIds.length === 0) {
+          res.json([]);
+          return;
+        }
+
+        const filteredTransactions = await db.select().from(ifCallTransactionList)
+          .where(inArray(ifCallTransactionList.patientId, patientIds))
+          .orderBy(ifCallTransactionList.createdAt);
+        res.json(filteredTransactions);
+      } else {
+        const allTransactions = await db.select().from(ifCallTransactionList).orderBy(ifCallTransactionList.createdAt);
+        res.json(allTransactions);
+      }
     } catch (error: any) {
       auditLog('ERROR', { action: 'admin_get_transactions', success: false, errorMessage: error.message }, req);
       res.status(500).json({ error: "Failed to fetch transactions." });

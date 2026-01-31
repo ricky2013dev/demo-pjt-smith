@@ -10,4 +10,5 @@ export const VERIFICATION_STATUS_LABELS = {
   IN_PROGRESS: 'In Progress',
   PENDING: 'Pending',
   COMPLETED: 'Completed',
+  ELIGIBILITY_CHECK: 'Eligibility Status',
 };

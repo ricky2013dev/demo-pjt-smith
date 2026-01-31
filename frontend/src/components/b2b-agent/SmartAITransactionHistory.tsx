@@ -62,13 +62,11 @@ export const mockData: Transaction[] = [
     fetchStatus: 'completed',
     saveStatus: 'pending',
     endpoint: 'https://pms.dental.local/api/patient/data',
-    details: {
-      eligibilityCheck: 'Patient record retrieved from PMS',
-      benefitsVerification: 'Data synchronized with local database',
-      coverageDetails: 'Patient active in system',
-      deductibleInfo: 'Initial data fetch completed',
-      transcript: 'Patient data ready. Information retrieved and validated successfully.'
-    }
+    eligibilityCheck: 'Patient record retrieved from PMS',
+    benefitsVerification: 'Data synchronized with local database',
+    coverageDetails: 'Patient active in system',
+    deductibleInfo: 'Initial data fetch completed',
+    transcript: 'Patient data ready. Information retrieved and validated successfully.'
   },
   // API SUCCESS
   {
@@ -91,13 +89,11 @@ export const mockData: Transaction[] = [
     saveStatus: 'completed',
     responseCode: '200',
     endpoint: 'https://api.cigna.com/dental/benefits',
-    details: {
-      eligibilityCheck: 'ACTIVE - Policy effective through 12/31/2026. Policy status: active and in good standing. Verification date: 01/21/2025',
-      benefitsVerification: 'Preventive: 100%, Basic: 80%, Major: 50% | Waiting Periods: Preventive - None, Basic - None, Major - 12 months',
-      coverageDetails: 'Annual Maximum: $2,000 | Used: $450 | Remaining: $1,550 | Plan Type: PPO Premium',
-      deductibleInfo: 'Individual Deductible: $50 | Family Deductible: $150 | Deductible Met: $50',
-      rawResponse: '{"verification_id":"VER-2025-001234","timestamp":"2025-01-21T10:30:45Z","patient":{"name":"Michael Robert Anderson","dob":"1978-07-22","member_id":"BCBS123456789"},"insurance":{"carrier":"Blue Cross Blue Shield","group_number":"GRP987654","policy_status":"active","effective_date":"2024-01-01","plan_type":"PPO Premium"},"eligibility":{"active":true,"coverage_status":"verified","verification_date":"2025-01-21"},"benefits":{"annual_maximum":2000,"annual_used":450,"annual_remaining":1550,"deductible":50,"deductible_met":50,"preventive_coverage":"100%","basic_coverage":"80%","major_coverage":"50%","waiting_periods":{"preventive":"none","basic":"none","major":"12 months"}}}'
-    }
+    eligibilityCheck: 'ACTIVE - Policy effective through 12/31/2026. Policy status: active and in good standing. Verification date: 01/21/2025',
+    benefitsVerification: 'Preventive: 100%, Basic: 80%, Major: 50% | Waiting Periods: Preventive - None, Basic - None, Major - 12 months',
+    coverageDetails: 'Annual Maximum: $2,000 | Used: $450 | Remaining: $1,550 | Plan Type: PPO Premium',
+    deductibleInfo: 'Individual Deductible: $50 | Family Deductible: $150 | Deductible Met: $50',
+    rawResponse: '{"verification_id":"VER-2025-001234","timestamp":"2025-01-21T10:30:45Z","patient":{"name":"Michael Robert Anderson","dob":"1978-07-22","member_id":"BCBS123456789"},"insurance":{"carrier":"Blue Cross Blue Shield","group_number":"GRP987654","policy_status":"active","effective_date":"2024-01-01","plan_type":"PPO Premium"},"eligibility":{"active":true,"coverage_status":"verified","verification_date":"2025-01-21"},"benefits":{"annual_maximum":2000,"annual_used":450,"annual_remaining":1550,"deductible":50,"deductible_met":50,"preventive_coverage":"100%","basic_coverage":"80%","major_coverage":"50%","waiting_periods":{"preventive":"none","basic":"none","major":"12 months"}}}'
   },
   // FAX DOCUMENT ANALYSIS
   {
@@ -118,13 +114,11 @@ export const mockData: Transaction[] = [
     verificationScore: 30,
     fetchStatus: 'completed',
     saveStatus: 'completed',
-    details: {
-      eligibilityCheck: 'ACTIVE - Policy effective through 12/31/2025',
-      benefitsVerification: 'Preventive: 100%, Basic: 80%, Major: 50%',
-      coverageDetails: 'Annual Maximum: $2,000 | Used: $0 | Remaining: $2,000',
-      deductibleInfo: 'Individual Deductible: $50 | Met: $0',
-      transcript: 'Fax document analysis completed successfully. Insurance information extracted and verified from fax document.'
-    }
+    eligibilityCheck: 'ACTIVE - Policy effective through 12/31/2025',
+    benefitsVerification: 'Preventive: 100%, Basic: 80%, Major: 50%',
+    coverageDetails: 'Annual Maximum: $2,000 | Used: $0 | Remaining: $2,000',
+    deductibleInfo: 'Individual Deductible: $50 | Met: $0',
+    transcript: 'Fax document analysis completed successfully. Insurance information extracted and verified from fax document.'
   },
   // CALL SUCCESS
   {
@@ -244,12 +238,10 @@ export const mockData: Transaction[] = [
         type: 'note'
       }
     ],
-    details: {
-      transcript: 'Complete verification successful for patient Sarah Johnson. All benefits verified.',
-      benefitsVerification: 'Preventive: 100%, Basic: 80%, Major: 50%',
-      coverageDetails: 'Annual Maximum: $2,000 | Used: $0 | Remaining: $2,000',
-      deductibleInfo: 'Individual Deductible: $50 | Met: $0'
-    }
+    transcript: 'Complete verification successful for patient Sarah Johnson. All benefits verified.',
+    benefitsVerification: 'Preventive: 100%, Basic: 80%, Major: 50%',
+    coverageDetails: 'Annual Maximum: $2,000 | Used: $0 | Remaining: $2,000',
+    deductibleInfo: 'Individual Deductible: $50 | Met: $0'
   },
   // Verification Completed
   {
@@ -271,13 +263,11 @@ export const mockData: Transaction[] = [
     fetchStatus: 'completed',
     saveStatus: 'completed',
     endpoint: 'https://pms.dental.local/api/patient/save',
-    details: {
-      eligibilityCheck: 'All verification data saved to PMS',
-      benefitsVerification: 'Insurance benefits synchronized with PMS',
-      coverageDetails: 'Coverage details updated in patient record',
-      deductibleInfo: 'Deductible information recorded in system',
-      transcript: 'Verification completed successfully. All verified information has been synchronized with the patient management system.'
-    }
+    eligibilityCheck: 'All verification data saved to PMS',
+    benefitsVerification: 'Insurance benefits synchronized with PMS',
+    coverageDetails: 'Coverage details updated in patient record',
+    deductibleInfo: 'Deductible information recorded in system',
+    transcript: 'Verification completed successfully. All verified information has been synchronized with the patient management system.'
   }
 ];
 
@@ -333,18 +323,8 @@ const SmartAITransactionHistory: React.FC<SmartAITransactionHistoryProps> = ({ p
 
   // Mock data for when data mode is OFF
   const getMockTransactions = (): Transaction[] => {
-    // Flatten the details object from old mockData to match new interface
-    return mockData.map((txn: any) => ({
-      ...txn,
-      eligibilityCheck: txn.details?.eligibilityCheck,
-      benefitsVerification: txn.details?.benefitsVerification,
-      coverageDetails: txn.details?.coverageDetails,
-      deductibleInfo: txn.details?.deductibleInfo,
-      transcript: txn.details?.transcript,
-      rawResponse: txn.details?.rawResponse,
-      // Filter by patient if needed
-      patientId: patientId || txn.patientId
-    })).filter((txn: Transaction) => !patientId || txn.patientId === patientId);
+    // Return mockData, filtering by patient if needed
+    return mockData.filter((txn) => !patientId || txn.patientId === patientId);
   };
 
   // Fetch transactions from API or use mock data
@@ -705,8 +685,8 @@ Important Notes
         <button
           onClick={() => setTypeFilter('ALL')}
           className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'ALL'
-              ? 'bg-slate-900 dark:bg-slate-700 text-white'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            ? 'bg-slate-900 dark:bg-slate-700 text-white'
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
         >
           ALL
@@ -714,26 +694,18 @@ Important Notes
         <button
           onClick={() => setTypeFilter('API')}
           className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'API'
-              ? 'bg-blue-600 text-white'
-              : 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+            ? 'bg-blue-600 text-white'
+            : 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
             }`}
         >
           API
         </button>
-        <button
-          onClick={() => setTypeFilter('FAX')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'FAX'
-              ? 'bg-cyan-600 text-white'
-              : 'text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20'
-            }`}
-        >
-          FAX
-        </button>
+
         <button
           onClick={() => setTypeFilter('CALL')}
           className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'CALL'
-              ? 'bg-purple-600 text-white'
-              : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
+            ? 'bg-purple-600 text-white'
+            : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
             }`}
         >
           CALL
@@ -831,8 +803,8 @@ Important Notes
                     <div className="col-span-2 text-slate-600 dark:text-slate-400">{transaction.insuranceRep}</div>
                     <div className="col-span-1 text-center">
                       <span className={`font-semibold text-sm ${transaction.verificationScore >= 90 ? 'text-green-600 dark:text-green-400' :
-                          transaction.verificationScore >= 70 ? 'text-yellow-600 dark:text-yellow-400' :
-                            'text-red-600 dark:text-red-400'
+                        transaction.verificationScore >= 70 ? 'text-yellow-600 dark:text-yellow-400' :
+                          'text-red-600 dark:text-red-400'
                         }`}>
                         {transaction.verificationScore}%
                       </span>
@@ -849,8 +821,8 @@ Important Notes
                       <button
                         onClick={() => setDetailTab(transaction.id, 'action')}
                         className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${(activeDetailTab[transaction.id] || 'action') === 'action'
-                            ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                          ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                          : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                           }`}
                       >
                         Transaction Info
@@ -858,8 +830,8 @@ Important Notes
                       <button
                         onClick={() => setDetailTab(transaction.id, 'summary')}
                         className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${(activeDetailTab[transaction.id] || 'action') === 'summary'
-                            ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                          ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                          : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                           }`}
                       >
                         Transaction Summary
@@ -868,8 +840,8 @@ Important Notes
                         <button
                           onClick={() => setDetailTab(transaction.id, 'callHistory')}
                           className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${(activeDetailTab[transaction.id] || 'action') === 'callHistory'
-                              ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                            ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                             }`}
                         >
                           Call History Detail
@@ -878,8 +850,8 @@ Important Notes
                         <button
                           onClick={() => setDetailTab(transaction.id, 'detail')}
                           className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${(activeDetailTab[transaction.id] || 'action') === 'detail'
-                              ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                            ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                             }`}
                         >
                           Transaction Detail
@@ -1115,10 +1087,10 @@ Important Notes
                 {/* Step 1 */}
                 <div className="flex items-center gap-2 flex-1">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step1Status === 'completed'
-                      ? 'bg-green-500 text-white'
-                      : step1Status === 'in_progress'
-                        ? 'bg-blue-500 text-white animate-pulse'
-                        : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
+                    ? 'bg-green-500 text-white'
+                    : step1Status === 'in_progress'
+                      ? 'bg-blue-500 text-white animate-pulse'
+                      : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
                     }`}>
                     {step1Status === 'completed' ? '✓' : '1'}
                   </div>
@@ -1134,10 +1106,10 @@ Important Notes
                 {/* Step 2 */}
                 <div className="flex items-center gap-2 flex-1">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step2Status === 'completed'
-                      ? 'bg-green-500 text-white'
-                      : step2Status === 'in_progress'
-                        ? 'bg-blue-500 text-white animate-pulse'
-                        : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
+                    ? 'bg-green-500 text-white'
+                    : step2Status === 'in_progress'
+                      ? 'bg-blue-500 text-white animate-pulse'
+                      : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
                     }`}>
                     {step2Status === 'completed' ? '✓' : '2'}
                   </div>
@@ -1153,10 +1125,10 @@ Important Notes
                 {/* Step 3 */}
                 <div className="flex items-center gap-2 flex-1">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step3Status === 'completed'
-                      ? 'bg-green-500 text-white'
-                      : step3Status === 'in_progress'
-                        ? 'bg-blue-500 text-white animate-pulse'
-                        : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
+                    ? 'bg-green-500 text-white'
+                    : step3Status === 'in_progress'
+                      ? 'bg-blue-500 text-white animate-pulse'
+                      : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
                     }`}>
                     {step3Status === 'completed' ? '✓' : '3'}
                   </div>

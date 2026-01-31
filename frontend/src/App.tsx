@@ -4,15 +4,10 @@ import PatientsManagement from '@/components/b2b-agent/PatientsManagement';
 import PatientDetailPage from '@/components/b2b-agent/PatientDetailPage';
 import SmartAITransactionHistory from '@/components/b2b-agent/SmartAITransactionHistory';
 import DailyJobDashboard from '@/components/b2b-agent/DailyJobDashboard';
-import InsuranceCallDashboard from '@/components/insurance/InsuranceCallDashboard';
-import InsuranceCallDetail from '@/components/insurance/InsuranceCallDetail';
-import StediEligibilityChecker from '@/components/insurance/StediEligibilityChecker';
 import StediApiTester from '@/components/admin/StediApiTester';
 import UserManagement from '@/components/admin/UserManagement';
-import PatientManagement from '@/components/admin/PatientManagement';
-import PayerManagement from '@/components/admin/PayerManagement';
-import ProviderManagement from '@/components/admin/ProviderManagement';
-import InterfaceTableManagement from '@/components/admin/InterfaceTableManagement';
+import UserRelatedData from '@/components/admin/UserRelatedData';
+import SystemRelatedData from '@/components/admin/SystemRelatedData';
 import { StediApiProvider } from '@/context/StediApiContext';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -26,15 +21,10 @@ function App() {
           <Route path="/b2b-agent/patient-detail" component={() => <PatientDetailPage />} />
           <Route path="/b2b-agent/patient-appointments" component={() => <PatientsManagement />} />
           <Route path="/b2b-agent/smart-ai-transaction-history" component={() => <SmartAITransactionHistory />} />
-          <Route path="/insurance/dashboard" component={() => <InsuranceCallDashboard />} />
-          <Route path="/insurance/call/:id" component={() => <InsuranceCallDetail />} />
-          <Route path="/insurance/stedi-eligibility" component={() => <StediEligibilityChecker />} />
           <Route path="/admin/stedi-api-tester" component={() => <StediApiTester />} />
           <Route path="/admin/users" component={() => <UserManagement />} />
-          <Route path="/admin/patients" component={() => <PatientManagement />} />
-          <Route path="/admin/payers" component={() => <PayerManagement />} />
-          <Route path="/admin/providers" component={() => <ProviderManagement />} />
-          <Route path="/admin/interface-tables" component={() => <InterfaceTableManagement />} />
+          <Route path="/admin/user-data" component={() => <UserRelatedData />} />
+          <Route path="/admin/system-data" component={() => <SystemRelatedData />} />
           <Route path="/dashboard" component={() => <DailyJobDashboard />} />
           <Route path="/patient-appointments" component={() => <PatientsManagement />} />
           <Route path="/smart-ai-transaction-history" component={() => <SmartAITransactionHistory />} />

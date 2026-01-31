@@ -8,3 +8,10 @@ vite.config.ts.*
 .replit*
 todo
 logs
+.claude
+.vscode
+.idea
+*.log
+.claude
+.replit
+

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'wouter';
-import { Database, Users, UserPlus, Building2, Stethoscope } from 'lucide-react';
+import { Users, FolderOpen, Settings } from 'lucide-react';
 import Header from '@/components/Header';
 
 interface AdminLayoutProps {
@@ -28,34 +28,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
 
   const menuItems = [
     {
-      name: 'Call Interface',
-      path: '/admin/interface-tables',
-      icon: Database,
-      description: 'Manage interface tables'
-    },
-    {
       name: 'User Management',
       path: '/admin/users',
       icon: Users,
       description: 'Manage users and roles'
     },
     {
-      name: 'Patient Management',
-      path: '/admin/patients',
-      icon: UserPlus,
-      description: 'Manage patients by user'
+      name: 'User Related Data',
+      path: '/admin/user-data',
+      icon: FolderOpen,
+      description: 'Patient & call interface data by user'
     },
     {
-      name: 'Payer Management',
-      path: '/admin/payers',
-      icon: Building2,
-      description: 'Manage insurance payers'
-    },
-    {
-      name: 'Provider Management',
-      path: '/admin/providers',
-      icon: Stethoscope,
-      description: 'Manage healthcare providers'
+      name: 'System Related Data',
+      path: '/admin/system-data',
+      icon: Settings,
+      description: 'Payers & providers'
     }
   ];
 
