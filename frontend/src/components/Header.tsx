@@ -12,12 +12,11 @@ interface HeaderProps {
   } | null;
   onLogout?: () => void;
   onLoginClick?: () => void;
-  onInsuranceLoginClick?: () => void;
   onAdminLoginClick?: () => void;
-  mode?: 'b2b' | 'insurance' | 'admin';
+  mode?: 'b2b' | 'admin';
 }
 
-const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onLoginClick, onInsuranceLoginClick, onAdminLoginClick, mode = 'b2b' }) => {
+const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onLoginClick, onAdminLoginClick, mode = 'b2b' }) => {
   const [location, navigate] = useLocation();
   const { stediMode, setStediMode } = useStediApi();
 
@@ -25,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
 
   // Computed equivalent using useMemo - if stediMode is not 'mockup', real data is on
   const isRealDataOn = useMemo(() => {
-    return currentUser?.stediMode !== undefined && currentUser?.stediMode !== 'mockup'
+    return currentUser?.stediMode !== undefined && currentUser?.stediMode !== 'mockup';
   }, [currentUser?.stediMode]); // Dependencies are explicit
 
   const HeaderMenuBtn: React.FC<{ buttonType: "patient" | "dashboard" }> = ({ buttonType }) => {
@@ -41,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
         {buttonLabel}
       </button>
     );
-  }
+  };
 
 
   return (
@@ -74,7 +73,7 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
                 <span className="text-sm font-medium text-slate-900 dark:text-white">AI Center</span>
               </h1>
               <p className="text-slate-500 dark:text-slate-400 text-[10px] font-medium uppercase tracking-wider mt-0.5">
-                {mode === 'admin' ? 'User Management' : 'Insurance Verification'}
+                {mode === 'admin' ? 'User Management' : 'AI Center'}
               </p>
             </div>
           </div>
@@ -90,16 +89,6 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
                   >
                     <span className="material-symbols-outlined text-sm">manage_accounts</span>
                     User Management
-                  </button>
-                </>
-              ) : mode === 'insurance' ? (
-                <>
-                  <button
-                    onClick={() => navigate('/insurance/dashboard')}
-                    className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1.5"
-                  >
-                    <span className="material-symbols-outlined text-sm">dashboard</span>
-                    Call Dashboard
                   </button>
                 </>
               ) : (
@@ -256,16 +245,6 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
               <span>Dental Office</span>
               <span className="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
             </button>
-            {onInsuranceLoginClick && isRealDataOn && (
-              <button
-                onClick={onInsuranceLoginClick}
-                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 group"
-              >
-                <span className="material-symbols-outlined text-sm">phone</span>
-                <span>Insurance Agent</span>
-                <span className="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
-              </button>
-            )}
             {onAdminLoginClick && (
               <button
                 onClick={onAdminLoginClick}

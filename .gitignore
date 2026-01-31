@@ -12,3 +12,6 @@ logs
 .vscode
 .idea
 *.log
+.claude
+.replit
+

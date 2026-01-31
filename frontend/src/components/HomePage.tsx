@@ -5,7 +5,7 @@ import mermaid from 'mermaid';
 
 const HomePage: React.FC = () => {
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-    const [loginUserType, setLoginUserType] = useState<'b2b' | 'insurance' | 'admin'>('b2b');
+    const [loginUserType, setLoginUserType] = useState<'b2b' | 'admin'>('b2b');
     const [showDesktopWarning, setShowDesktopWarning] = useState(false);
     const [showDiagramModal, setShowDiagramModal] = useState(false);
 
@@ -27,7 +27,7 @@ const HomePage: React.FC = () => {
         }
     }, [showDiagramModal]);
 
-    const handleLoginClick = (userType: 'b2b' | 'insurance' | 'admin' = 'b2b') => {
+    const handleLoginClick = (userType: 'b2b' | 'admin' = 'b2b') => {
         // Check if screen size is mobile (width < 768px) - allow tablets and desktop
         if (window.innerWidth < 768) {
             setShowDesktopWarning(true);
@@ -46,7 +46,6 @@ const HomePage: React.FC = () => {
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col font-sans selection:bg-orange-100 dark:selection:bg-orange-900/30">
             <Header
                 onLoginClick={() => handleLoginClick('b2b')}
-                onInsuranceLoginClick={() => handleLoginClick('insurance')}
                 onAdminLoginClick={() => handleLoginClick('admin')}
             />
 

@@ -284,8 +284,8 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
       const verificationScore = Math.round((currentVerifiedFields.length / currentVerificationData.length) * 100);
 
       // Get insurance provider from patient data
-      let insuranceProvider = currentVerificationData.find(r => r.saiCode === 'VF000004')?.aiCallValue || '-';
-      let insuranceRep = 'API System (Stedi)';
+      const insuranceProvider = currentVerificationData.find(r => r.saiCode === 'VF000004')?.aiCallValue || '-';
+      const insuranceRep = 'API System (Stedi)';
 
       const patientNameString = formatPatientName(patient);
 

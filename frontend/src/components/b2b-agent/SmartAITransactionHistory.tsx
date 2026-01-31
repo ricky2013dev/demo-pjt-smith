@@ -700,15 +700,7 @@ Important Notes
         >
           API
         </button>
-        <button
-          onClick={() => setTypeFilter('FAX')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'FAX'
-            ? 'bg-cyan-600 text-white'
-            : 'text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20'
-            }`}
-        >
-          FAX
-        </button>
+
         <button
           onClick={() => setTypeFilter('CALL')}
           className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'CALL'

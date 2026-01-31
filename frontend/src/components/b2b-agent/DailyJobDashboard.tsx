@@ -144,7 +144,7 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
   }, [selectedDate, viewMode, patients]);
 
   const stats = useMemo(() => {
-    let totalJobs = filteredJobs.length;
+    const totalJobs = filteredJobs.length;
     let completedJobs = 0;
     let inProgressJobs = 0;
 
