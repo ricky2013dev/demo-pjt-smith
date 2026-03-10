@@ -8,6 +8,7 @@ import StediApiTester from '@/components/admin/StediApiTester';
 import UserManagement from '@/components/admin/UserManagement';
 import UserRelatedData from '@/components/admin/UserRelatedData';
 import SystemRelatedData from '@/components/admin/SystemRelatedData';
+import PmsIfHistory from '@/components/admin/PmsIfHistory';
 import { StediApiProvider } from '@/context/StediApiContext';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -25,6 +26,7 @@ function App() {
           <Route path="/admin/users" component={() => <UserManagement />} />
           <Route path="/admin/user-data" component={() => <UserRelatedData />} />
           <Route path="/admin/system-data" component={() => <SystemRelatedData />} />
+          <Route path="/admin/pms-if-history" component={() => <PmsIfHistory />} />
           <Route path="/dashboard" component={() => <DailyJobDashboard />} />
           <Route path="/patient-appointments" component={() => <PatientsManagement />} />
           <Route path="/smart-ai-transaction-history" component={() => <SmartAITransactionHistory />} />

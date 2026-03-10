@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'wouter';
-import { Users, FolderOpen, Settings } from 'lucide-react';
+import { Users, FolderOpen, Settings, ArrowLeftRight } from 'lucide-react';
 import Header from '@/components/Header';
 
 interface AdminLayoutProps {
@@ -44,6 +44,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       path: '/admin/system-data',
       icon: Settings,
       description: 'Payers & providers'
+    },
+    {
+      name: 'PMS IF History',
+      path: '/admin/pms-if-history',
+      icon: ArrowLeftRight,
+      description: 'PMS interface incoming records'
     }
   ];
 
