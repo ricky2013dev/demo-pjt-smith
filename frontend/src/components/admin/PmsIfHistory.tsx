@@ -22,6 +22,7 @@ const PmsIfHistory: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<PmsIfRecord | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCurrentUser();
@@ -69,6 +70,23 @@ const PmsIfHistory: React.FC = () => {
     return new Date(dateStr).toLocaleString();
   };
 
+  const deleteRecord = async (id: string) => {
+    if (!confirm('Delete this log file?')) return;
+    setDeletingId(id);
+    try {
+      const response = await fetch(`/api/pms-if/logs/${id}.log`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to delete');
+      setRecords((prev) => prev.filter((r) => r.id !== id));
+    } catch {
+      alert('Failed to delete record');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const formatPayload = (payload: string) => {
     try {
       return JSON.stringify(JSON.parse(payload), null, 2);
@@ -111,7 +129,6 @@ const PmsIfHistory: React.FC = () => {
           <table className="w-full">
             <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Account ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Received At</th>
@@ -121,7 +138,6 @@ const PmsIfHistory: React.FC = () => {
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {records.map((record) => (
                 <tr key={record.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
-                  <td className="px-6 py-4 text-xs text-slate-500 dark:text-slate-400 font-mono">{record.id.slice(0, 8)}...</td>
                   <td className="px-6 py-4 text-sm text-slate-900 dark:text-white">{record.accountId || '-'}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[record.status] ?? 'bg-slate-100 text-slate-600'}`}>
@@ -129,12 +145,19 @@ const PmsIfHistory: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{formatDate(record.createdAt)}</td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right flex items-center justify-end gap-3">
                     <button
                       onClick={() => setSelectedRecord(record)}
                       className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
                     >
                       View
+                    </button>
+                    <button
+                      onClick={() => deleteRecord(record.id)}
+                      disabled={deletingId === record.id}
+                      className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm disabled:opacity-40"
+                    >
+                      {deletingId === record.id ? 'Deleting…' : 'Delete'}
                     </button>
                   </td>
                 </tr>

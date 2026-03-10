@@ -7,9 +7,8 @@ import { join } from 'path';
  */
 export async function logPmsInterface(data: {
   date?: any;
-  customer?: any;
-  insurance?: any;
-  schedule?: any;
+  account?: any;
+  payload?: any;
   [key: string]: any;
 }): Promise<string> {
   try {
@@ -29,15 +28,8 @@ export async function logPmsInterface(data: {
       receivedAt: now.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
       data: {
         date: data.date || null,
-        customer: data.customer || null,
-        insurance: data.insurance || null,
-        schedule: data.schedule || null,
-        ...Object.keys(data).reduce((acc, key) => {
-          if (!['date', 'customer', 'insurance', 'schedule'].includes(key)) {
-            acc[key] = data[key];
-          }
-          return acc;
-        }, {} as Record<string, any>)
+        account: data.account || null,
+        payload: data.payload || null,
       }
     };
 
@@ -83,6 +75,20 @@ export async function getPmsLogs(limit = 100): Promise<string[]> {
     console.error('[PMS-IF] Failed to get log files:', error);
     return [];
   }
+}
+
+/**
+ * Delete a specific log file
+ */
+export async function deletePmsLog(filename: string): Promise<void> {
+  const logsDir = join(process.cwd(), 'logs', 'pms-if');
+  // Prevent path traversal
+  const safe = filename.replace(/[^a-zA-Z0-9._-]/g, '');
+  if (safe !== filename || !filename.endsWith('.log')) {
+    throw new Error('Invalid filename');
+  }
+  const logFilePath = join(logsDir, safe);
+  await fs.unlink(logFilePath);
 }
 
 /**

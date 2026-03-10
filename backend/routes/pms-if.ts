@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { logPmsInterface, getPmsLogs, readPmsLog } from '../pms-logger';
+import { logPmsInterface, getPmsLogs, readPmsLog, deletePmsLog } from '../pms-logger';
 
 const router = Router();
 
@@ -17,45 +17,64 @@ const router = Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - date
+ *               - account
+ *               - payload
  *             properties:
  *               date:
  *                 type: object
  *                 description: Date information from PMS
- *                 example: { "appointmentDate": "2024-03-09", "createdAt": "2024-03-09T10:30:00Z" }
- *               customer:
+ *                 properties:
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *               account:
  *                 type: object
- *                 description: Customer/Patient information
- *                 example: { "name": "John Doe", "phone": "010-1234-5678", "email": "john@example.com" }
- *               insurance:
+ *                 description: Account/practice information
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                   key:
+ *                     type: string
+ *                   accountId:
+ *                     type: string
+ *               payload:
  *                 type: object
- *                 description: Insurance information
- *                 example: { "company": "ABC Insurance", "policyNumber": "POL123456", "groupNumber": "GRP789" }
- *               schedule:
- *                 type: object
- *                 description: Schedule information
- *                 example: { "doctorName": "Dr. Smith", "treatmentType": "Cleaning", "duration": 30 }
+ *                 description: Patient and appointment data
+ *                 properties:
+ *                   customer:
+ *                     type: object
+ *                   insurance:
+ *                     type: object
+ *                   schedule:
+ *                     type: object
  *           examples:
  *             full:
  *               summary: Full PMS Interface Request
  *               value:
  *                 date:
- *                   appointmentDate: "2024-03-09"
  *                   createdAt: "2024-03-09T10:30:00Z"
- *                 customer:
- *                   name: "John Doe"
- *                   phone: "010-1234-5678"
- *                   email: "john@example.com"
- *                   dateOfBirth: "1990-01-01"
- *                 insurance:
- *                   company: "ABC Insurance"
- *                   policyNumber: "POL123456"
- *                   groupNumber: "GRP789"
- *                   subscriberName: "John Doe"
- *                 schedule:
- *                   doctorName: "Dr. Smith"
- *                   treatmentType: "Cleaning"
- *                   duration: 30
- *                   room: "Room 101"
+ *                 account:
+ *                   name: "Dtest"
+ *                   key: "010-1234-5678"
+ *                   accountId: "1234567890"
+ *                 payload:
+ *                   customer:
+ *                     name: "John Doe"
+ *                     phone: "010-1234-5678"
+ *                     email: "john@example.com"
+ *                     dateOfBirth: "1990-01-01"
+ *                   insurance:
+ *                     company: "ABC Insurance"
+ *                     policyNumber: "POL123456"
+ *                     groupNumber: "GRP789"
+ *                     subscriberName: "John Doe"
+ *                   schedule:
+ *                     doctorName: "Dr. Smith"
+ *                     treatmentType: "Cleaning"
+ *                     duration: 30
+ *                     room: "Room 101"
  *     responses:
  *       200:
  *         description: Successfully logged PMS interface call
@@ -89,16 +108,10 @@ const router = Router();
  */
 router.post('/', async (req, res) => {
   try {
-    const { date, customer, insurance, schedule, ...otherData } = req.body;
+    const { date, account, payload } = req.body;
 
     // Log the interface call
-    const logFileName = await logPmsInterface({
-      date,
-      customer,
-      insurance,
-      schedule,
-      ...otherData
-    });
+    const logFileName = await logPmsInterface({ date, account, payload });
 
     res.status(200).json({
       success: true,
@@ -157,7 +170,7 @@ router.get('/history', async (req, res) => {
           const log = await readPmsLog(filename);
           return {
             id: filename.replace('.log', ''),
-            accountId: log.data?.customer?.accountId ?? null,
+            accountId: log.data?.account?.accountId ?? null,
             status: 'received',
             payload: JSON.stringify(log.data),
             createdAt: log.timestamp,
@@ -247,6 +260,20 @@ router.get('/logs/:filename', async (req, res) => {
     res.status(404).json({
       success: false,
       error: 'Log file not found'
+    });
+  }
+});
+
+router.delete('/logs/:filename', async (req, res) => {
+  try {
+    const { filename } = req.params;
+    await deletePmsLog(filename);
+    res.status(200).json({ success: true });
+  } catch (error: any) {
+    const notFound = error?.code === 'ENOENT' || error?.message === 'Invalid filename';
+    res.status(notFound ? 404 : 500).json({
+      success: false,
+      error: notFound ? 'Log file not found' : 'Failed to delete log file',
     });
   }
 });
