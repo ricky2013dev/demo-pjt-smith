@@ -146,6 +146,41 @@ router.post('/', async (req, res) => {
  *                     type: string
  *                   example: ["2024-03-09_10-30-45-123.log", "2024-03-09_09-15-30-456.log"]
  */
+router.get('/history', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 100;
+    const logFiles = await getPmsLogs(limit);
+
+    const records = await Promise.all(
+      logFiles.map(async (filename) => {
+        try {
+          const log = await readPmsLog(filename);
+          return {
+            id: filename.replace('.log', ''),
+            accountId: log.data?.customer?.accountId ?? null,
+            status: 'received',
+            payload: JSON.stringify(log.data),
+            createdAt: log.timestamp,
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      data: records.filter(Boolean),
+    });
+  } catch (error) {
+    console.error('[PMS-IF] Error getting history:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve history',
+    });
+  }
+});
+
 router.get('/logs', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit as string) || 100;
