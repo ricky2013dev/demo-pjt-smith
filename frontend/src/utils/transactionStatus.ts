@@ -35,7 +35,6 @@ export interface Transaction {
 
 export interface VerificationStatus {
   fetchPMS: 'pending' | 'in_progress' | 'completed';
-  apiVerification: 'pending' | 'in_progress' | 'completed';
   aiAnalysisAndCall: 'pending' | 'in_progress' | 'completed';
   saveToPMS: 'pending' | 'in_progress' | 'completed';
 }
@@ -50,7 +49,6 @@ export interface VerificationStatus {
 export function deriveVerificationStatusFromTransactions(transactions: Transaction[]): VerificationStatus {
   const status: VerificationStatus = {
     fetchPMS: 'pending',
-    apiVerification: 'pending',
     aiAnalysisAndCall: 'pending',
     saveToPMS: 'pending',
   };
@@ -75,12 +73,12 @@ export function deriveVerificationStatusFromTransactions(transactions: Transacti
 
       case 'API':
         if (txn.status === 'Waiting') {
-          // API is waiting means Fetch PMS is done
+          // API is waiting means Fetch PMS is done, AI verification in progress
           status.fetchPMS = 'completed';
-          status.apiVerification = 'in_progress';
+          status.aiAnalysisAndCall = 'in_progress';
         } else if (txn.status === 'SUCCESS' || txn.status === 'PARTIAL') {
           status.fetchPMS = 'completed';
-          status.apiVerification = 'completed';
+          status.aiAnalysisAndCall = 'in_progress';
         }
         break;
 
@@ -89,11 +87,9 @@ export function deriveVerificationStatusFromTransactions(transactions: Transacti
         if (txn.status === 'Waiting') {
           // FAX/CALL is waiting means previous steps are done
           status.fetchPMS = 'completed';
-          status.apiVerification = 'completed';
           status.aiAnalysisAndCall = 'in_progress';
         } else if (txn.status === 'SUCCESS' || txn.status === 'PARTIAL') {
           status.fetchPMS = 'completed';
-          status.apiVerification = 'completed';
           status.aiAnalysisAndCall = 'completed';
         }
         break;
@@ -102,12 +98,10 @@ export function deriveVerificationStatusFromTransactions(transactions: Transacti
         if (txn.status === 'Waiting') {
           // Save is waiting means all previous steps are done
           status.fetchPMS = 'completed';
-          status.apiVerification = 'completed';
           status.aiAnalysisAndCall = 'completed';
           status.saveToPMS = 'in_progress';
         } else if (txn.status === 'SUCCESS') {
           status.fetchPMS = 'completed';
-          status.apiVerification = 'completed';
           status.aiAnalysisAndCall = 'completed';
           status.saveToPMS = 'completed';
         }

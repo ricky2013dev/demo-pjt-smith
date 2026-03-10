@@ -49,9 +49,7 @@ ENCRYPTION_KEY=<your-encryption-key>
 
 - HIPAA-compliant patient data management
 - AI-powered insurance verification workflow
-- OCR insurance card scanning
 - Admin panel with role-based access control
-- Real-time verification tracking
 
 ## Tech Stack
 

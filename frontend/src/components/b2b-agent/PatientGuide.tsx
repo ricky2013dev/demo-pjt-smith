@@ -245,16 +245,16 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
         return selectedStatuses.some(selectedStatus => {
           if (selectedStatus === 'not_started') {
             if (!status) return true;
-            const { fetchPMS, apiVerification, aiAnalysisAndCall, saveToPMS } = status;
-            return fetchPMS === 'pending' && apiVerification === 'pending' && aiAnalysisAndCall === 'pending' && saveToPMS === 'pending';
+            const { fetchPMS, aiAnalysisAndCall, saveToPMS } = status;
+            return fetchPMS === 'pending' && aiAnalysisAndCall === 'pending' && saveToPMS === 'pending';
           }
           if (selectedStatus === 'completed') {
             return status?.saveToPMS === 'completed';
           }
           if (selectedStatus === 'in_progress') {
             if (!status) return false;
-            const { fetchPMS, apiVerification, aiAnalysisAndCall, saveToPMS } = status;
-            const isNotStarted = fetchPMS === 'pending' && apiVerification === 'pending' && aiAnalysisAndCall === 'pending' && saveToPMS === 'pending';
+            const { fetchPMS, aiAnalysisAndCall, saveToPMS } = status;
+            const isNotStarted = fetchPMS === 'pending' && aiAnalysisAndCall === 'pending' && saveToPMS === 'pending';
             const isCompleted = saveToPMS === 'completed';
             return !isNotStarted && !isCompleted;
           }
@@ -280,7 +280,7 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
       return { label: VERIFICATION_STATUS_LABELS.NOT_STARTED, color: 'text-slate-600 dark:text-slate-400', percentage: 0 };
     }
 
-    const { fetchPMS, apiVerification, aiAnalysisAndCall, saveToPMS } = effectiveStatus;
+    const { fetchPMS, aiAnalysisAndCall, saveToPMS } = effectiveStatus;
 
     // Fully verified
     if (saveToPMS === 'completed') {
@@ -293,13 +293,7 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
       return { label: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL, color: 'text-orange-600 dark:text-orange-400', percentage: 75 };
     }
     if (aiAnalysisAndCall === 'in_progress') {
-      return { label: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL, color: 'text-blue-600 dark:text-blue-400', percentage: 60 };
-    }
-    if (apiVerification === 'completed') {
-      return { label: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-orange-600 dark:text-orange-400', percentage: 50 };
-    }
-    if (apiVerification === 'in_progress') {
-      return { label: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-blue-600 dark:text-blue-400', percentage: 40 };
+      return { label: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL, color: 'text-blue-600 dark:text-blue-400', percentage: 50 };
     }
     if (fetchPMS === 'completed') {
       return { label: VERIFICATION_STATUS_LABELS.FETCH_PMS, color: 'text-orange-600 dark:text-orange-400', percentage: 25 };

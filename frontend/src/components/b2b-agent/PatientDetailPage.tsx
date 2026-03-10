@@ -124,11 +124,10 @@ const PatientDetailPage: React.FC = () => {
       if (stepFilters.length > 0) {
         const getPatientVerificationStep = (p: Patient) => {
           if (!p.verificationStatus) return 0;
-          const { fetchPMS, apiVerification, aiAnalysisAndCall, saveToPMS } = p.verificationStatus;
+          const { fetchPMS, aiAnalysisAndCall, saveToPMS } = p.verificationStatus;
 
-          if (saveToPMS === 'completed' || saveToPMS === 'in_progress') return 4;
-          if (aiAnalysisAndCall === 'completed' || aiAnalysisAndCall === 'in_progress') return 3;
-          if (apiVerification === 'completed' || apiVerification === 'in_progress') return 2;
+          if (saveToPMS === 'completed' || saveToPMS === 'in_progress') return 3;
+          if (aiAnalysisAndCall === 'completed' || aiAnalysisAndCall === 'in_progress') return 2;
           if (fetchPMS === 'completed' || fetchPMS === 'in_progress') return 1;
           return 0;
         };
@@ -216,7 +215,8 @@ const PatientDetailPage: React.FC = () => {
           name: currentUser.username,
           email: currentUser.email,
           username: currentUser.username,
-          stediMode: currentUser.stediMode
+          stediMode: currentUser.stediMode,
+          role: currentUser.role
         } : null}
         onLogout={handleLogout}
       />

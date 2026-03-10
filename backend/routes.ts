@@ -24,6 +24,7 @@ import { processInsuranceCard } from "./ocr";
 import { auditLog, logPhiAccess, logPhiDecrypt, logAuth, logSecurityViolation } from "./audit";
 import { validateCreatePatient, validateUpdatePatient, validateLogin, sanitizePatientData } from "./validation";
 import { log } from "console";
+import pmsIfRouter from "./routes/pms-if";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -3278,6 +3279,9 @@ export async function registerRoutes(
       res.status(500).json({ error: "Failed to delete message." });
     }
   });
+
+  // PMS Interface routes
+  app.use("/api/pms-if", pmsIfRouter);
 
   return httpServer;
 }

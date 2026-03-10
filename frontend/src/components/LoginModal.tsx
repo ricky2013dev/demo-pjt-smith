@@ -95,7 +95,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, userType = 'b2
                             lock
                         </span>
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Welcome To Smith AI Center</h2>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Welcome To InSpline AI</h2>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">
                         {userType === 'admin' ? 'Admin Portal' : 'B2B Agent Portal'}
                     </p>

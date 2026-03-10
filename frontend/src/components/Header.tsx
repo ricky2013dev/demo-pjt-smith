@@ -9,6 +9,7 @@ interface HeaderProps {
     email: string;
     username: string;
     stediMode?: string;
+    role?: string;
   } | null;
   onLogout?: () => void;
   onLoginClick?: () => void;
@@ -69,11 +70,11 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
             <div>
               <h1 className="flex items-baseline gap-1">
 
-                <span className="font-handwriting tracking-wide rotate-[-0deg] font-bold text-orange-600 dark:text-orange-500 tracking-tight text-lg">Smith</span>
-                <span className="text-sm font-medium text-slate-900 dark:text-white">AI Center</span>
+                <span className="font-handwriting tracking-wide rotate-[-0deg] font-bold text-orange-600 dark:text-orange-500 tracking-tight text-lg">InSpline</span>
+                <span className="text-sm font-medium text-slate-900 dark:text-white">AI</span>
               </h1>
               <p className="text-slate-500 dark:text-slate-400 text-[10px] font-medium uppercase tracking-wider mt-0.5">
-                {mode === 'admin' ? 'User Management' : 'AI Center'}
+                {mode === 'admin' ? 'User Management' : 'Insurance Verification'}
               </p>
             </div>
           </div>
@@ -141,8 +142,8 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
             </div>
 
 
-            {/* Stedi API Menu */}
-            {isRealDataOn && isPatientDetailPage && (
+            {/* Stedi API Menu - Admin only */}
+            {currentUser?.role === 'admin' && isPatientDetailPage && (
               <div className="group relative">
                 {/* Main Button */}
                 <button

@@ -84,21 +84,25 @@ const HomePage: React.FC = () => {
                     <div className="space-y-6">
                         <div className="inline-flex items-center gap-1 px-1 py-0 rounded-full bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800/30 text-orange-600 dark:text-orange-400 text-xs font-medium uppercase tracking-wider mb-4">
                             <span className="w-2 h-1 rounded-full bg-orange-500 animate-pulse"></span>
-                            Next Gen Automation
+                            Autonomous Verification
                         </div>
 
                         <h1 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+               
+                       
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-white dark:via-slate-200 dark:to-slate-400">
-                                Multimodal Intelligence
+                                Powered by{' '}
                             </span>
+                            <span className="font-handwriting text-orange-600 dark:text-orange-500">InSpline</span>
+                            <span className="text-slate-900 dark:text-white"> AI</span>
                             <br />
                             <span className="text-2xl md:text-4xl text-slate-400 dark:text-slate-500 font-normal">
-                                for Complex Workflows
+                                End-to-End Insurance Intelligence
                             </span>
                         </h1>
                     </div>
 
-                    {/* Bridge Visualization - Smith AI Between Dental Office & Insurance */}
+                    {/* Bridge Visualization - InSpline AI Between Dental Office & Insurance */}
                     <div className="relative py-8 px-8 overflow-hidden">
                         {/* Content */}
                         <div className="relative z-10">
@@ -171,7 +175,7 @@ const HomePage: React.FC = () => {
                                             </div>
                                         </div>
                                         <p className="font-bold text-xs uppercase tracking-wide text-center mt-1">
-                                            <span className="text-orange-600 dark:text-orange-500">Smith</span>
+                                            <span className="text-orange-600 dark:text-orange-500">InSpline</span>
                                             <span className="text-slate-900 dark:text-white"> AI</span>
                                         </p>
                                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/30 mt-1">
@@ -263,9 +267,9 @@ const HomePage: React.FC = () => {
                         <div className="relative bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200 dark:border-slate-700 p-6 md:p-8 rounded-xl shadow-sm">
                             <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-300 leading-relaxed font-light">
                                 Our mission is to solve the challenge of repetitive yet complex business tasks through <span className="text-slate-900 dark:text-white font-medium">multimodal intelligence</span>.
-                                By utilizing <span className="text-slate-900 dark:text-white font-medium">AI Analysis and Call</span>,
-                                we decipher intricate operational workflows and interrogate live sources to bridge data gaps, providing a complete,
-                                crystalline view of transactional status and providing <span className="text-orange-600 dark:text-orange-500 font-semibold">100% end-to-end automation</span>.
+                                By utilizing <span className="text-slate-900 dark:text-white font-medium">AI Document Analysis</span>,
+                                we decipher intricate operational workflows and bridge data gaps, providing a complete,
+                                crystalline view of transactional status and delivering <span className="text-orange-600 dark:text-orange-500 font-semibold">100% end-to-end automation</span>.
                             </p>
                         </div>
                     </div>
@@ -273,7 +277,7 @@ const HomePage: React.FC = () => {
                     {/* CTA / Visual Indicator - Formula Style - Clickable */}
                     <div
                         onClick={() => setShowDiagramModal(true)}
-                        className="pt-4 flex justify-center items-center gap-4 flex-wrap cursor-pointer group/workflow hover:scale-105 transition-transform duration-300"
+                        className="relative pt-4 flex justify-center items-center gap-4 flex-wrap cursor-pointer group/workflow hover:scale-105 transition-transform duration-300"
                         title="Click to view detailed workflow diagram"
                     >
                         <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 to-orange-500/10 rounded-3xl opacity-0 group-hover/workflow:opacity-100 transition-opacity duration-300 blur-xl"></div>
@@ -289,18 +293,6 @@ const HomePage: React.FC = () => {
                         </div>
 
                         <div className="text-3xl font-bold text-slate-400 dark:text-slate-600 mt-[-2rem]">
-                            <span className="material-symbols-outlined"> add</span>
-                        </div>
-
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 shadow-md border border-slate-100 dark:border-slate-700 flex items-center justify-center text-blue-500">
-                                <span className="material-symbols-outlined">graphic_eq</span>
-                            </div>
-                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">AI Call Center</span>
-                        </div>
-
-                        <div className="text-3xl font-bold text-slate-400 dark:text-slate-600 mt-[-2rem]">
-
                             <span className="material-symbols-outlined">keyboard_double_arrow_right</span>
                         </div>
                         <div className="flex flex-col items-center gap-2">
@@ -317,7 +309,7 @@ const HomePage: React.FC = () => {
             </main>
 
             <footer className="py-6 text-center text-slate-400 dark:text-slate-600 text-sm">
-                © {new Date().getFullYear()} Smith AI Center. All rights reserved.
+                © {new Date().getFullYear()} InSpline AI. All rights reserved.
             </footer>
 
             <LoginModal isOpen={isLoginModalOpen} onClose={handleCloseLoginModal} userType={loginUserType} />
@@ -356,10 +348,10 @@ const HomePage: React.FC = () => {
                                 <pre className="mermaid text-center">
                                     {`sequenceDiagram
     participant PMS
-    participant SMITH as Smith AI Center
+    participant SMITH as InSpline AI
     participant INS as Insurance Company
 
-    Note over PMS, INS: Smith AI end-to-end automation workflow
+    Note over PMS, INS: InSpline AI end-to-end automation workflow
 
     PMS->>SMITH: Pull Patient schedule Data
 

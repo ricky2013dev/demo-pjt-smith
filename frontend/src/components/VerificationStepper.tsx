@@ -18,9 +18,8 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
     const getVerificationStep = () => {
         if (!status) return 1;
 
-        if (status.saveToPMS === 'completed' || status.saveToPMS === 'in_progress') return 4;
-        if (status.aiAnalysisAndCall === 'completed' || status.aiAnalysisAndCall === 'in_progress') return 3;
-        if (status.apiVerification === 'completed' || status.apiVerification === 'in_progress') return 2;
+        if (status.saveToPMS === 'completed' || status.saveToPMS === 'in_progress') return 3;
+        if (status.aiAnalysisAndCall === 'completed' || status.aiAnalysisAndCall === 'in_progress') return 2;
         if (status.fetchPMS === 'completed') return 2;
         if (status.fetchPMS === 'in_progress') return 1;
         return 1;
@@ -31,7 +30,6 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
     // Define steps configuration
     const steps = [
         { key: 'fetchPMS', icon: 'download', label: VERIFICATION_STATUS_LABELS.FETCH_PMS },
-        { key: 'apiVerification', icon: 'api', label: VERIFICATION_STATUS_LABELS.API_VERIFICATION },
         { key: 'aiAnalysisAndCall', icon: 'smart_toy', label: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL },
         { key: 'saveToPMS', icon: 'save', label: VERIFICATION_STATUS_LABELS.SAVE_TO_PMS },
     ] as const;
@@ -43,7 +41,7 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
     // Render step count text
     const renderStepCount = () => (
         <span className={`font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap ${layout === 'detail' ? 'text-[10px]' : 'text-xs'}`}>
-            Step {currentStep} of 4
+            Step {currentStep} of 3
         </span>
     );
 
@@ -63,9 +61,9 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
             {/* Stepper Visualization */}
             <div className={`relative ${layout === 'detail' ? 'py-1' : ''} flex-1`}>
                 {/* Connector Lines */}
-                {/* We have 4 steps, so 3 connections: 1-2, 2-3, 3-4 */}
-                {/* Positions: 12.5%, 37.5%, 62.5%, 87.5% based on 4 items each taking 25% width */}
-                {[0, 1, 2].map((index) => {
+                {/* We have 3 steps, so 2 connections: 1-2, 2-3 */}
+                {/* Positions: 16.67%, 50%, 83.33% based on 3 items each taking 33.33% width */}
+                {[0, 1].map((index) => {
                     const stepKey = steps[index].key;
                     const isLineActive = isCompleted(stepKey);
 
@@ -75,8 +73,8 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
                             className={`absolute top-4 h-0.5 transition-colors ${isLineActive ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'
                                 }`}
                             style={{
-                                left: `${12.5 + (index * 25)}%`,
-                                width: '25%'
+                                left: `${16.67 + (index * 33.33)}%`,
+                                width: '33.33%'
                             }}
                         />
                     );
@@ -128,7 +126,7 @@ const VerificationStepper: React.FC<VerificationStepperProps> = ({
                         const labelSize = layout === 'detail' ? 'text-[9px]' : 'text-[8px]';
 
                         return (
-                            <div key={step.key} className="flex flex-col items-center" style={{ width: '25%' }}>
+                            <div key={step.key} className="flex flex-col items-center" style={{ width: '33.33%' }}>
                                 <div className={`flex items-center justify-center w-8 h-8 rounded-full ${bgColor} ${textColor} shrink-0 relative z-10 border-2 border-white dark:border-slate-900 transition-colors`}>
                                     <span className={`material-symbols-outlined text-sm ${inProgress ? 'animate-spin' : ''}`}>
                                         {iconName}

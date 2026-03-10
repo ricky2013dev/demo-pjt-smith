@@ -254,7 +254,7 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
         insuranceProvider: '-',
         insuranceRep: '-',
         score: '100%',
-        runBy: 'Smith AI System'
+        runBy: 'InSpline AI System'
       });
     }
 
@@ -271,7 +271,7 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
         insuranceProvider,
         insuranceRep: 'API System',
         score: '92%',
-        runBy: 'Smith AI System'
+        runBy: 'InSpline AI System'
       });
     }
 
@@ -288,7 +288,7 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
         insuranceProvider,
         insuranceRep: 'Document AI',
         score: '85%',
-        runBy: 'Smith AI System'
+        runBy: 'InSpline AI System'
       });
 
       const callStartTime = new Date(job.jobDate.getTime() + 15 * 60000); // 15 minutes after job start
@@ -302,7 +302,7 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
         insuranceProvider,
         insuranceRep: 'Amanda Rodriguez',
         score: '98%',
-        runBy: 'Smith AI System'
+        runBy: 'InSpline AI System'
       });
     }
 
@@ -319,7 +319,7 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
         insuranceProvider: '-',
         insuranceRep: '-',
         score: '100%',
-        runBy: 'Smith AI System'
+        runBy: 'InSpline AI System'
       });
     }
 

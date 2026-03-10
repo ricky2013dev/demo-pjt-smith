@@ -75,28 +75,22 @@ const PatientList: React.FC<PatientListProps> = ({
       return { text: VERIFICATION_STATUS_LABELS.NOT_STARTED, color: 'text-slate-400', step: 0, percentage: 0 };
     }
 
-    const { fetchPMS, apiVerification, aiAnalysisAndCall, saveToPMS } = patient.verificationStatus;
+    const { fetchPMS, aiAnalysisAndCall, saveToPMS } = patient.verificationStatus;
 
     if (saveToPMS === 'completed') {
-      return { text: VERIFICATION_STATUS_LABELS.COMPLETED, color: 'text-status-green', step: 4, percentage: 100 };
+      return { text: VERIFICATION_STATUS_LABELS.COMPLETED, color: 'text-status-green', step: 3, percentage: 100 };
     }
     if (saveToPMS === 'in_progress') {
-      return { text: VERIFICATION_STATUS_LABELS.SAVE_TO_PMS, color: 'text-primary', step: 4, percentage: 90 };
+      return { text: VERIFICATION_STATUS_LABELS.SAVE_TO_PMS, color: 'text-primary', step: 3, percentage: 90 };
     }
     if (aiAnalysisAndCall === 'completed') {
-      return { text: VERIFICATION_STATUS_LABELS.SAVE_TO_PMS, color: 'text-status-orange', step: 3, percentage: 75 };
+      return { text: VERIFICATION_STATUS_LABELS.SAVE_TO_PMS, color: 'text-status-orange', step: 2, percentage: 75 };
     }
     if (aiAnalysisAndCall === 'in_progress') {
-      return { text: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL, color: 'text-primary', step: 3, percentage: 60 };
-    }
-    if (apiVerification === 'completed') {
-      return { text: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL, color: 'text-status-orange', step: 2, percentage: 50 };
-    }
-    if (apiVerification === 'in_progress') {
-      return { text: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-primary', step: 2, percentage: 40 };
+      return { text: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL, color: 'text-primary', step: 2, percentage: 50 };
     }
     if (fetchPMS === 'completed') {
-      return { text: VERIFICATION_STATUS_LABELS.API_VERIFICATION, color: 'text-status-orange', step: 1, percentage: 25 };
+      return { text: VERIFICATION_STATUS_LABELS.AI_ANALYSIS_AND_CALL, color: 'text-status-orange', step: 1, percentage: 25 };
     }
     if (fetchPMS === 'in_progress') {
       return { text: VERIFICATION_STATUS_LABELS.FETCH_PMS, color: 'text-primary', step: 1, percentage: 10 };
@@ -145,14 +139,13 @@ const PatientList: React.FC<PatientListProps> = ({
       return { label: VERIFICATION_STATUS_LABELS.NOT_STARTED, color: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400' };
     }
 
-    const { fetchPMS, apiVerification, aiAnalysisAndCall, saveToPMS } = patient.verificationStatus;
+    const { fetchPMS, aiAnalysisAndCall, saveToPMS } = patient.verificationStatus;
 
     if (saveToPMS === 'completed') {
       return { label: VERIFICATION_STATUS_LABELS.COMPLETED, color: 'bg-status-green/10 text-status-green' };
     }
     if (
       fetchPMS === 'in_progress' ||
-      apiVerification === 'in_progress' ||
       aiAnalysisAndCall === 'in_progress' ||
       saveToPMS === 'in_progress'
     ) {
@@ -160,7 +153,6 @@ const PatientList: React.FC<PatientListProps> = ({
     }
     if (
       fetchPMS === 'completed' ||
-      apiVerification === 'completed' ||
       aiAnalysisAndCall === 'completed'
     ) {
       return { label: VERIFICATION_STATUS_LABELS.PENDING, color: 'bg-status-orange/10 text-status-orange' };

@@ -301,7 +301,7 @@ const CoverageVerificationResults: React.FC<CoverageVerificationResultsProps> = 
         status: 'SUCCESS',
         insuranceProvider,
         insuranceRep,
-        runBy: 'Smith AI System',
+        runBy: 'InSpline AI System',
         verificationScore,
         fetchStatus: 'completed',
         saveStatus: 'completed',

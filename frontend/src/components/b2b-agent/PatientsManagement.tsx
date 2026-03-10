@@ -158,9 +158,6 @@ const PatientsManagement: React.FC = () => {
           treatments: [],
           verificationStatus: {
             fetchPMS: 'pending',
-            documentAnalysis: 'pending',
-            apiVerification: 'pending',
-            callCenter: 'pending',
             aiAnalysisAndCall: 'pending',
             saveToPMS: 'pending'
           }
@@ -203,7 +200,7 @@ const PatientsManagement: React.FC = () => {
         return;
       }
 
-      const { fetchPMS, aiAnalysisAndCall, apiVerification, saveToPMS } = patient.verificationStatus;
+      const { fetchPMS, aiAnalysisAndCall, saveToPMS } = patient.verificationStatus;
 
       // Fully verified
       if (saveToPMS === 'completed') {
@@ -213,7 +210,6 @@ const PatientsManagement: React.FC = () => {
       else if (
         fetchPMS === 'in_progress' ||
         aiAnalysisAndCall === 'in_progress' ||
-        apiVerification === 'in_progress' ||
         saveToPMS === 'in_progress'
       ) {
         inProgress++;
@@ -221,8 +217,7 @@ const PatientsManagement: React.FC = () => {
       // Pending (at least one step completed but not all)
       else if (
         fetchPMS === 'completed' ||
-        aiAnalysisAndCall === 'completed' ||
-        apiVerification === 'completed'
+        aiAnalysisAndCall === 'completed'
       ) {
         pending++;
       }
@@ -307,7 +302,8 @@ const PatientsManagement: React.FC = () => {
           name: currentUser.username,
           email: currentUser.email,
           username: currentUser.username,
-          stediMode: currentUser.stediMode
+          stediMode: currentUser.stediMode,
+          role: currentUser.role
         } : null}
         onLogout={handleLogout}
       />

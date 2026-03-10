@@ -34,7 +34,7 @@ const SmithAICenter: React.FC<SmithAICenterProps> = ({ patient, onClose }) => {
   const [messages, setMessages] = useState<ConversationMessage[]>([
     {
       speaker: 'System',
-      text: `Hello! I'm Smith AI Assistant. I'm ready to help with insurance verification for ${formatPatientName(patient)}. Start Call when you're ready.`,
+      text: `Hello! I'm InSpline AI Assistant. I'm ready to help with insurance verification for ${formatPatientName(patient)}. Start Call when you're ready.`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -346,7 +346,7 @@ const SmithAICenter: React.FC<SmithAICenterProps> = ({ patient, onClose }) => {
       await wait(1000);
 
       // Conversation 1 - Prophylaxis frequency
-      await typeMessage('AI Agent', 'Hello, this is Smith AI calling on behalf of our dental practice. I need to verify insurance benefits for a patient.', 25);
+      await typeMessage('AI Agent', 'Hello, this is InSpline AI calling on behalf of our dental practice. I need to verify insurance benefits for a patient.', 25);
       await wait(1200);
       await typeMessage('Insurance Rep', 'Hello! I can help you with that. Please provide the member ID and date of birth.', 25);
       await wait(800);
@@ -495,7 +495,7 @@ const SmithAICenter: React.FC<SmithAICenterProps> = ({ patient, onClose }) => {
                 <span className="material-symbols-outlined text-2xl text-slate-700 dark:text-slate-300">smart_toy</span>
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Smith AI Center</h2>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">InSpline AI</h2>
                 <p className="text-slate-500 dark:text-slate-400 text-xs">Interactive Insurance Assistant</p>
               </div>
             </div>

@@ -61,6 +61,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   onSavePatient,
 }) => {
   const [showAICenter, setShowAICenter] = useState(false);
+  const [showAgentVerification, setShowAgentVerification] = useState(false);
   const [insuranceSubTab, setInsuranceSubTab] = useState<InsuranceSubTabType>(INSURANCE_SUB_TAB_TYPES.COVERAGE_DETAILS);
 
   // Coverage Verification Results Modal state
@@ -121,7 +122,6 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
       // Mockup Mode or no transactions: use patient's verification status
       return patient.verificationStatus || ({
         fetchPMS: 'pending',
-        apiVerification: 'pending',
         aiAnalysisAndCall: 'pending',
         saveToPMS: 'pending',
       } as VerificationStatus);
@@ -488,44 +488,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
 
           <div className={`flex gap-2 ${patient.id.startsWith('new-') ? 'invisible' : ''}`}>
 
-            {/* Run API Verification */}
-            <button
-              onClick={() => setIsCoverageResultsOpen(true)}
-              className="ml-3 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-medium transition-colors bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700"
-              title="Run API verification (can re-run)"
-            >
-              <span className={`material-symbols-outlined text-base ${effectiveVerificationStatus?.apiVerification === 'completed'
-                ? 'text-green-500'
-                : effectiveVerificationStatus?.apiVerification === 'in_progress'
-                  ? 'text-blue-500'
-                  : ''
-                }`}>
-                {effectiveVerificationStatus?.apiVerification === 'completed' ? 'check_circle' : 'verified_user'}
-              </span>
-              API Verification
-            </button>
-
-            {/* Request Insurance Fax - Hidden when Data Mode is ON */}
-            {/* {(
-              <button
-                onClick={() => {
-                  // Call the global openFaxModal function exposed by SmartAITransactionHistory
-                  if (window.openFaxModal) {
-                    window.openFaxModal();
-                    // Also navigate to the AI Call History tab to show the modal
-                    onTabChange(TAB_TYPES.AI_CALL_HISTORY);
-                  }
-                }}
-                className="ml-3 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-medium transition-colors bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700"
-                title="Request insurance fax document"
-              >
-                <span className="material-symbols-outlined text-base">description</span>
-                Fax Document
-              </button>
-            )} */}
-
-
-            {/* Step  Start AI Call */}
+            {/* Start AI Verification (API + Call) */}
             <button
               onClick={() => setShowAICenter(true)}
               className="ml-3 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-medium transition-colors bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700"
@@ -539,7 +502,16 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 }`}>
                 {effectiveVerificationStatus?.aiAnalysisAndCall === 'completed' ? 'check_circle' : 'smart_toy'}
               </span>
-              AI Live Call
+              Old AI Call
+            </button>
+            {/* Agent AI Verification */}
+            <button
+              onClick={() => setShowAgentVerification(true)}
+              className="ml-3 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-medium transition-colors bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700"
+              title="Use Agent AI Verification"
+            >
+              <span className="material-symbols-outlined text-base">psychology</span>
+              AI Verification(API + Call)
             </button>
           </div>
 
@@ -1404,12 +1376,38 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
         </div>
       )}
 
-      {/* Smith AI Center Modal */}
+      {/* InSpline AI Modal */}
       {showAICenter && (
         <SmithAICenter
           patient={patient}
           onClose={() => setShowAICenter(false)}
         />
+      )}
+
+      {/* Agent AI Verification Modal */}
+      {showAgentVerification && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-5xl h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 dark:border-slate-700 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-indigo-600">psychology</span>
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Agent AI Verification</h2>
+                <span className="text-xs text-slate-400">— Patient ID: {patient.id}</span>
+              </div>
+              <button
+                onClick={() => setShowAgentVerification(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            <iframe
+              src={`https://agent.inspline.com/verify?patientId=${patient.id}`}
+              className="flex-1 w-full rounded-b-xl"
+              title="Agent AI Verification"
+            />
+          </div>
+        </div>
       )}
 
       {/* Coverage Verification Results Modal */}

@@ -306,7 +306,7 @@ const options: swaggerJsdoc.Options = {
       }
     ]
   },
-  apis: ['./backend/routes.ts', './backend/index.ts']
+  apis: ['./backend/routes.ts', './backend/index.ts', './backend/routes/pms-if.ts']
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

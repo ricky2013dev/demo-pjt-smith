@@ -13,7 +13,6 @@
     "birthDate": "1985-03-15",
     "verificationStatus": {
       "fetchPMS": "completed",
-      "apiVerification": "completed",
       "saveToPMS": "completed",
       "aiAnalysisAndCall": "completed"
     },
@@ -161,7 +160,6 @@
     "birthDate": "1978-07-22",
     "verificationStatus": {
       "fetchPMS": "in_progress",
-      "apiVerification": "in_progress",
       "saveToPMS": "pending",
       "aiAnalysisAndCall": "in_progress"
     },
@@ -298,7 +296,7 @@
         "time": "10:15 AM",
         "summary": "Currently verifying pre-authorization for upcoming root canal procedure with Delta Dental. Awaiting final confirmation from insurance representative.",
         "duration": "In Progress",
-        "agent": "Smith AI - Authorization Agent",
+        "agent": "InSpline AI - Authorization Agent",
         "status": "in_progress"
       }
     ]
@@ -317,7 +315,6 @@
     "birthDate": "1992-11-08",
     "verificationStatus": {
       "fetchPMS": "pending",
-      "apiVerification": "pending",
       "saveToPMS": "pending",
       "aiAnalysisAndCall": "pending"
     },
@@ -464,7 +461,7 @@
         "time": "4:00 PM",
         "status": "completed",
         "type": "Regular Checkup",
-        "provider": "Smith AI System"
+        "provider": "InSpline AI System"
       }
     ],
     "treatments": [
@@ -488,7 +485,6 @@
     },
     "verificationStatus": {
       "fetchPMS": "completed",
-      "apiVerification": "pending",
       "saveToPMS": "pending",
       "aiAnalysisAndCall": "completed"
     }
@@ -507,7 +503,6 @@
     "birthDate": "1988-09-12",
     "verificationStatus": {
       "fetchPMS": "in_progress",
-      "apiVerification": "completed",
       "saveToPMS": "pending",
       "aiAnalysisAndCall": "in_progress"
     },
@@ -618,7 +613,7 @@
         "time": "9:30 AM",
         "summary": "Verified patient's Aetna Dental insurance eligibility for upcoming procedures. Confirmed active coverage and deductible status.",
         "duration": "5 min 23 sec",
-        "agent": "Smith AI - Verification Bot",
+        "agent": "InSpline AI - Verification Bot",
         "status": "completed"
       },
       {
@@ -627,7 +622,7 @@
         "time": "2:15 PM",
         "summary": "Contacted insurance provider to verify detailed benefits coverage for preventive and basic procedures. Confirmed 100% preventive and 80% basic coverage.",
         "duration": "8 min 47 sec",
-        "agent": "Smith AI - Benefits Specialist",
+        "agent": "InSpline AI - Benefits Specialist",
         "status": "completed"
       },
       {
@@ -636,7 +631,7 @@
         "time": "11:00 AM",
         "summary": "Submitted pre-authorization request for upcoming dental cleaning and fluoride treatment. Authorization approved with reference number AET-2024-11-001.",
         "duration": "12 min 15 sec",
-        "agent": "Smith AI - Authorization Agent",
+        "agent": "InSpline AI - Authorization Agent",
         "status": "completed"
       },
       {
@@ -645,7 +640,7 @@
         "time": "3:45 PM",
         "summary": "Automated reminder call for upcoming appointment on November 25th. Patient confirmed attendance and requested reminder email.",
         "duration": "2 min 10 sec",
-        "agent": "Smith AI - Scheduler",
+        "agent": "InSpline AI - Scheduler",
         "status": "completed"
       }
     ]
@@ -664,7 +659,6 @@
     "birthDate": "1975-02-18",
     "verificationStatus": {
       "fetchPMS": "pending",
-      "apiVerification": "in_progress",
       "saveToPMS": "pending",
       "aiAnalysisAndCall": "completed"
     },
@@ -783,7 +777,6 @@
     "birthDate": "1995-12-25",
     "verificationStatus": {
       "fetchPMS": "completed",
-      "apiVerification": "pending",
       "saveToPMS": "completed",
       "aiAnalysisAndCall": "in_progress"
     },
@@ -894,7 +887,6 @@
     "birthDate": "1982-04-07",
     "verificationStatus": {
       "fetchPMS": "in_progress",
-      "apiVerification": "pending",
       "saveToPMS": "pending",
       "aiAnalysisAndCall": "in_progress"
     },
@@ -1013,7 +1005,6 @@
     "birthDate": "1970-08-14",
     "verificationStatus": {
       "fetchPMS": "pending",
-      "apiVerification": "completed",
       "saveToPMS": "pending",
       "aiAnalysisAndCall": "pending"
     },
@@ -1152,7 +1143,6 @@
     "birthDate": "2010-03-22",
     "verificationStatus": {
       "fetchPMS": "completed",
-      "apiVerification": "in_progress",
       "saveToPMS": "pending",
       "aiAnalysisAndCall": "completed"
     },
