@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import Breadcrumb from './Breadcrumb';
 import { Patient } from '@/types/patient';
 import { VERIFICATION_STATUS_LABELS } from '@/constants/verificationStatus';
 import { DayPicker } from 'react-day-picker';
@@ -17,20 +18,16 @@ interface PatientGuideProps {
     pending: number;
     notStarted: number;
   };
-  onAddNewPatient?: () => void;
   patients?: Patient[];
   onSelectPatient?: (patientId: string) => void;
-  showAddButton?: boolean;
   currentUser?: { stediMode?: string } | null;
 }
 
 const PatientGuide: React.FC<PatientGuideProps> = ({
   totalPatients: _totalPatients = 0,
   verificationStats: _verificationStats = { verified: 0, inProgress: 0, pending: 0, notStarted: 0 },
-  onAddNewPatient,
   patients = [],
   onSelectPatient,
-  showAddButton = false,
   currentUser = null
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -307,13 +304,14 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
   };
 
   return (
-    <section className="flex flex-1 flex-col bg-slate-50 dark:bg-slate-950 w-full overflow-y-auto font-sans">
+    <section className="flex min-w-0 flex-1 flex-col bg-slate-50 dark:bg-slate-950 overflow-y-auto font-sans">
       <div className="p-6 max-w-[1600px] mx-auto w-full space-y-6">
 
         {/* Header */}
         <div>
+          <Breadcrumb className="mb-2" />
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Patient Appointments
+            Patient List
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Select a patient from the list to initiate the insurance verification process.
@@ -476,16 +474,6 @@ const PatientGuide: React.FC<PatientGuideProps> = ({
                 </Popover.Content>
               </Popover.Portal>
             </Popover.Root>
-
-            {showAddButton && onAddNewPatient && (
-              <button
-                onClick={onAddNewPatient}
-                className="h-11 flex items-center gap-2 px-5 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg font-medium transition-colors whitespace-nowrap"
-              >
-                <span className="material-symbols-outlined text-xl">add</span>
-                <span className="hidden sm:inline">New Patient</span>
-              </button>
-            )}
           </div>
         </div>
 

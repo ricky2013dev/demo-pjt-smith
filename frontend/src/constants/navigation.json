@@ -1,0 +1,51 @@
+{
+  "patientListPath": "/b2b-agent/patient-appointments",
+  "mainMenu": [
+    {
+      "label": "Dashboard",
+      "icon": "dashboard",
+      "path": "/b2b-agent/dashboard"
+    },
+    {
+      "label": "Patient List",
+      "icon": "groups",
+      "path": "/b2b-agent/patient-appointments"
+    },
+    {
+      "label": "Patient Detail",
+      "icon": "account_circle",
+      "path": "/b2b-agent/patient-detail",
+      "requiresPatient": true,
+      "subMenu": [
+        {
+          "tab": "PATIENT_BASIC_INFO",
+          "label": "Basic Info"
+        },
+        {
+          "tab": "INSURANCE",
+          "label": "Insurance Coverage"
+        },
+        {
+          "tab": "APPOINTMENTS",
+          "label": "Appointments"
+        },
+        {
+          "tab": "AI_CALL_HISTORY",
+          "label": "AI Transactions"
+        },
+        {
+          "tab": "TREATMENT_HISTORY",
+          "label": "Treatment History",
+          "adminOnly": true
+        }
+      ]
+    }
+  ],
+  "footerMenu": [
+    {
+      "label": "Create New Patient",
+      "icon": "person_add",
+      "path": "/b2b-agent/create-patient"
+    }
+  ]
+}

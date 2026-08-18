@@ -6,7 +6,6 @@ import {
   Treatment,
   TabType,
   TAB_TYPES,
-  TAB_LABELS,
   InsuranceSubTabType,
   INSURANCE_SUB_TAB_TYPES,
   INSURANCE_SUB_TAB_LABELS,
@@ -24,6 +23,7 @@ import { PRIMARY_BUTTON } from "@/styles/buttonStyles";
 
 import { deriveVerificationStatusFromTransactions, type Transaction, type VerificationStatus } from '@/utils/transactionStatus';
 import VerificationStepper from '@/components/VerificationStepper';
+import Breadcrumb from './Breadcrumb';
 
 interface PatientDetailProps {
   patient: Patient;
@@ -466,9 +466,10 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   const fullName = getFullName();
 
   return (
-    <section key={patient.id} className="hidden w-0 flex-1 flex-col bg-background-light dark:bg-background-dark lg:flex lg:w-[85%] animate-fadeIn">
+    <section key={patient.id} className="flex min-w-0 flex-1 flex-col bg-background-light dark:bg-background-dark animate-fadeIn">
       {/* Profile Header - Compact */}
       <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+        <Breadcrumb activeTab={activeTab} className="mb-2" />
         <div className="flex items-center gap-3 justify-between">
           <div className="rounded-full h-10 w-10 overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800">
             <img
@@ -502,17 +503,17 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 }`}>
                 {effectiveVerificationStatus?.aiAnalysisAndCall === 'completed' ? 'check_circle' : 'smart_toy'}
               </span>
-              Old AI Call
+               AI 
             </button>
             {/* Agent AI Verification */}
-            <button
+            {/* <button
               onClick={() => setShowAgentVerification(true)}
               className="ml-3 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-medium transition-colors bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700"
               title="Use Agent AI Verification"
             >
               <span className="material-symbols-outlined text-base">psychology</span>
-              AI Verification(API + Call)
-            </button>
+              .
+            </button> */}
           </div>
 
           {/* Verification Steps Progress - Compact */}
@@ -525,36 +526,6 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
 
           </div>
         </div>
-      </div>
-
-      {/* Tab Navigation - Clean minimal style */}
-      <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-6 sticky top-0 z-10">
-        <nav aria-label="Tabs" className="flex -mb-px gap-1 overflow-x-auto">
-          {Object.values(TAB_TYPES)
-            .filter(tab => {
-              // Hide Insurance Basic tab since it's merged into Patient Basic
-              if (tab === TAB_TYPES.INSURANCE_INFO) {
-                return false;
-              }
-              // Hide Treatment History tab for non-admin users (keep Appointments visible)
-              if (!isAdmin && tab === TAB_TYPES.TREATMENT_HISTORY) {
-                return false;
-              }
-              return true;
-            })
-            .map((tab) => (
-              <button
-                key={tab}
-                onClick={() => onTabChange(tab)}
-                className={`shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab
-                  ? "text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
-                  }`}
-              >
-                {TAB_LABELS[tab]}
-              </button>
-            ))}
-        </nav>
       </div>
 
       {/* Sub-Tab Navigation - Only visible when Insurance tab is active */}

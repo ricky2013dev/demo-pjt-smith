@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
 import PatientList from './PatientList';
 import PatientDetail from './PatientDetail';
+import SideNav from './SideNav';
 import Header from '@/components/Header';
 import { Patient, FilterType, TabType, TAB_TYPES } from '@/types/patient';
 import patientsDataMockup from '@mockupdata/patients.json';
 import { useStediApi } from '@/context/StediApiContext';
+import {
+  getSelectedPatientId as getStoredPatientId,
+  setSelectedPatientId as storeSelectedPatientId,
+  clearSelectedPatientId,
+} from '@/utils/selectedPatient';
+
+/** "Given Family", as shown in the side nav and breadcrumb. */
+const formatPatientName = (patient: Patient) =>
+  `${patient.name.given.join(' ')} ${patient.name.family}`.trim();
 
 const mockupPatients = Array.isArray(patientsDataMockup) ? patientsDataMockup : (patientsDataMockup as any).default || [];
 
 const PatientDetailPage: React.FC = () => {
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
+  const search = useSearch();
   const { syncWithUser } = useStediApi();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -19,7 +30,7 @@ const PatientDetailPage: React.FC = () => {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeFilters, setActiveFilters] = useState<FilterType[]>([]);
-  const [activeTab, setActiveTab] = useState<TabType>(TAB_TYPES.AI_CALL_HISTORY);
+  const [activeTab, setActiveTab] = useState<TabType>(TAB_TYPES.PATIENT_BASIC_INFO);
 
   useEffect(() => {
     fetchCurrentUser();
@@ -80,25 +91,35 @@ const PatientDetailPage: React.FC = () => {
     }
   };
 
-  // Extract patientId from URL query params
+  // Resolve the patient from the URL, falling back to the one selected earlier
+  // this session. Without a selection there is nothing to show, so send the user
+  // back to the list to pick someone.
   useEffect(() => {
     if (isLoading || patients.length === 0) return;
 
-    const searchParams = new URLSearchParams(location.split('?')[1] || '');
-    const id = searchParams.get('patientId');
+    const searchParams = new URLSearchParams(search);
+    const requestedId = searchParams.get('patientId');
 
-    if (id) {
-      const foundPatient = patients.find(p => p.id === id);
-      if (foundPatient) {
-        setSelectedPatientId(id);
+    // An id we cannot resolve (the dashboard's mockup ids while in database mode,
+    // a stale link) falls back to the patient selected earlier rather than
+    // bouncing the user back to the list.
+    const findById = (id: string | null) => (id ? patients.find(p => p.id === id) : undefined);
+    const foundPatient = findById(requestedId) || findById(getStoredPatientId());
+
+    if (foundPatient) {
+      setSelectedPatientId(foundPatient.id);
+      storeSelectedPatientId(foundPatient.id, formatPatientName(foundPatient));
+
+      // Callers can pick the landing tab, e.g. the dashboard opens AI Transactions
+      const requestedTab = searchParams.get('tab');
+      if (requestedTab && (Object.values(TAB_TYPES) as string[]).includes(requestedTab)) {
+        setActiveTab(requestedTab as TabType);
       }
     } else {
-      // Default to first patient if no patientId is provided
-      if (patients.length > 0) {
-        setSelectedPatientId(patients[0].id);
-      }
+      clearSelectedPatientId();
+      navigate('/b2b-agent/patient-appointments');
     }
-  }, [location, patients, isLoading]);
+  }, [search, patients, isLoading]);
 
   const filteredPatients = React.useMemo(() => {
     return patients.filter(patient => {
@@ -151,6 +172,7 @@ const PatientDetailPage: React.FC = () => {
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      clearSelectedPatientId();
       setSelectedPatientId(null);
       setSearchQuery('');
       setActiveFilters([]);
@@ -223,31 +245,25 @@ const PatientDetailPage: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex flex-1 overflow-hidden">
-        {selectedPatient && (
-          <div className="flex w-full">
-            <PatientList
-              patients={filteredPatients}
-              selectedPatientId={selectedPatientId}
-              searchQuery={searchQuery}
-              activeFilters={activeFilters}
-              onSelectPatient={setSelectedPatientId}
-              onSearchChange={setSearchQuery}
-              onRemoveFilter={handleRemoveFilter}
-              onAddFilter={handleAddFilter}
-              isAdmin={false}
-              onBackToScheduleJobs={handleBackToDashboard}
-            />
+        <SideNav
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          isAdmin={false}
+          patientSelected={!!selectedPatient}
+          patientName={selectedPatient ? formatPatientName(selectedPatient) : undefined}
+          onClearPatient={() => setSelectedPatientId(null)}
+        />
 
-            <PatientDetail
-              patient={selectedPatient}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              isAdmin={false}
-              canEdit={useDatabase}
-              onSavePatient={handleSavePatient}
-              onBackToScheduleJobs={handleBackToDashboard}
-            />
-          </div>
+        {selectedPatient && (
+          <PatientDetail
+            patient={selectedPatient}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            isAdmin={false}
+            canEdit={useDatabase}
+            onSavePatient={handleSavePatient}
+            onBackToScheduleJobs={handleBackToDashboard}
+          />
         )}
       </main>
     </div>

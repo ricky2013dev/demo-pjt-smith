@@ -1,6 +1,7 @@
 import { Router, Route, Switch } from 'wouter';
 import HomePage from '@/components/HomePage';
 import PatientsManagement from '@/components/b2b-agent/PatientsManagement';
+import CreatePatientPage from '@/components/b2b-agent/CreatePatientPage';
 import PatientDetailPage from '@/components/b2b-agent/PatientDetailPage';
 import SmartAITransactionHistory from '@/components/b2b-agent/SmartAITransactionHistory';
 import DailyJobDashboard from '@/components/b2b-agent/DailyJobDashboard';
@@ -21,6 +22,7 @@ function App() {
           <Route path="/b2b-agent/dashboard" component={() => <DailyJobDashboard />} />
           <Route path="/b2b-agent/patient-detail" component={() => <PatientDetailPage />} />
           <Route path="/b2b-agent/patient-appointments" component={() => <PatientsManagement />} />
+          <Route path="/b2b-agent/create-patient" component={() => <CreatePatientPage />} />
           <Route path="/b2b-agent/smart-ai-transaction-history" component={() => <SmartAITransactionHistory />} />
           <Route path="/admin/stedi-api-tester" component={() => <StediApiTester />} />
           <Route path="/admin/users" component={() => <UserManagement />} />

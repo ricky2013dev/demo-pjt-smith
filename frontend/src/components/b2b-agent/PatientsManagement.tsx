@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import PatientGuide from './PatientGuide';
+import SideNav from './SideNav';
 import Header from '@/components/Header';
-import CreatePatientModal from './CreatePatientModal';
 import patientsDataMockup from '@mockupdata/patients.json';
 import type { Patient as PatientType } from '@/types/patient';
 import { useToast } from '@/hooks/use-toast';
 import { useStediApi } from '@/context/StediApiContext';
+import { clearSelectedPatientId } from '@/utils/selectedPatient';
 
 const mockupPatients = Array.isArray(patientsDataMockup) ? patientsDataMockup : (patientsDataMockup as any).default || [];
 
@@ -18,7 +19,6 @@ const PatientsManagement: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [useDatabase, setUseDatabase] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [isFetchingPMS, setIsFetchingPMS] = useState(false);
 
   useEffect(() => {
@@ -79,115 +79,6 @@ const PatientsManagement: React.FC = () => {
     }
   };
 
-  interface CreatePatientFormData {
-    givenName: string;
-    middleName: string;
-    familyName: string;
-    gender: string;
-    birthDate: string;
-    ssn: string;
-    phone: string;
-    email: string;
-    clinicPatientId: string;
-    addressLine1: string;
-    addressLine2: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    insuranceProvider: string;
-    payerId: string;
-    employerName: string;
-    groupNumber: string;
-    subscriberName: string;
-    subscriberId: string;
-    relationship: string;
-    effectiveDate: string;
-    expirationDate: string;
-    appointmentDate: string;
-    appointmentTime: string;
-    appointmentType: string;
-    appointmentProvider: string;
-  }
-
-  const handleCreatePatient = async (formData: CreatePatientFormData) => {
-    try {
-      const response = await fetch('/api/patients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          patient: {
-            givenName: formData.givenName,
-            middleName: formData.middleName,
-            familyName: formData.familyName,
-            gender: formData.gender,
-            birthDate: formData.birthDate,
-            ssn: formData.ssn,
-            clinicPatientId: formData.clinicPatientId,
-            active: true
-          },
-          telecoms: [
-            formData.phone ? { system: 'phone', value: formData.phone } : null,
-            formData.email ? { system: 'email', value: formData.email } : null
-          ].filter(Boolean),
-          addresses: formData.addressLine1 ? [{
-            line1: formData.addressLine1,
-            line2: formData.addressLine2,
-            city: formData.city,
-            state: formData.state,
-            postalCode: formData.postalCode
-          }] : [],
-          insurances: formData.insuranceProvider ? [{
-            provider: formData.insuranceProvider,
-            payerId: formData.payerId,
-            employerName: formData.employerName,
-            groupNumber: formData.groupNumber,
-            subscriberName: formData.subscriberName,
-            subscriberId: formData.subscriberId,
-            relationship: formData.relationship,
-            effectiveDate: formData.effectiveDate,
-            expirationDate: formData.expirationDate
-          }] : [],
-          appointments: formData.appointmentDate && formData.appointmentTime && formData.appointmentType ? [{
-            date: formData.appointmentDate,
-            time: formData.appointmentTime,
-            type: formData.appointmentType,
-            status: 'scheduled',
-            provider: formData.appointmentProvider || 'Dr. Smith'
-          }] : [],
-          treatments: [],
-          verificationStatus: {
-            fetchPMS: 'pending',
-            aiAnalysisAndCall: 'pending',
-            saveToPMS: 'pending'
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create patient');
-      }
-
-      setShowCreateModal(false);
-
-      // Refresh patient list
-      await fetchPatientsFromDatabase();
-
-      toast({
-        variant: "success",
-        title: "Patient created successfully",
-        description: "The new patient has been added to the system.",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "error",
-        title: "Error creating patient",
-        description: error.message,
-      });
-      throw error; // Re-throw to let the modal handle the error state
-    }
-  };
-
   const calculateVerificationStats = () => {
     let verified = 0;
     let inProgress = 0;
@@ -239,6 +130,7 @@ const PatientsManagement: React.FC = () => {
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      clearSelectedPatientId();
       navigate('/');
     } catch (error) {
     }
@@ -310,6 +202,8 @@ const PatientsManagement: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex flex-1 overflow-hidden relative">
+        <SideNav />
+
         {/* Fetch PMS Button - Only show if using database */}
         {/* {useDatabase && (
           <div className="absolute top-4 right-4 z-10 flex gap-3">
@@ -338,19 +232,9 @@ const PatientsManagement: React.FC = () => {
           verificationStats={verificationStats}
           patients={patients}
           onSelectPatient={handleSelectPatient}
-          showAddButton={useDatabase}
-          onAddNewPatient={() => setShowCreateModal(true)}
           currentUser={currentUser}
         />
       </main>
-
-      {/* Create Patient Modal */}
-      <CreatePatientModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSubmit={handleCreatePatient}
-        currentUser={currentUser}
-      />
     </div>
   );
 };

@@ -28,22 +28,6 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
     return currentUser?.stediMode !== undefined && currentUser?.stediMode !== 'mockup';
   }, [currentUser?.stediMode]); // Dependencies are explicit
 
-  const HeaderMenuBtn: React.FC<{ buttonType: "patient" | "dashboard" }> = ({ buttonType }) => {
-    const urlPath = buttonType === "patient" ? "/b2b-agent/patient-appointments" : "/b2b-agent/dashboard";
-    const buttonLabel = buttonType === "patient" ? "Patient Appointments" : "Dashboard";
-
-    return (
-      <button
-        onClick={() => navigate(`${urlPath}`)}
-        className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1.5"
-      >
-        <span className="material-symbols-outlined text-sm">dashboard</span>
-        {buttonLabel}
-      </button>
-    );
-  };
-
-
   return (
     <header className="bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50 px-6 py-3 shrink-0 sticky top-0 z-50">
       <div className="flex items-center justify-between w-full">
@@ -79,26 +63,16 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
             </div>
           </div>
 
-          {/* Navigation Links */}
-          {onLogout && (
+          {/* Navigation Links - b2b navigation lives in the side nav */}
+          {onLogout && mode === 'admin' && (
             <div className="flex items-center gap-2">
-              {mode === 'admin' ? (
-                <>
-                  <button
-                    onClick={() => navigate('/admin/users')}
-                    className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1.5"
-                  >
-                    <span className="material-symbols-outlined text-sm">manage_accounts</span>
-                    User Management
-                  </button>
-                </>
-              ) : (
-                <>
-
-                  {!isRealDataOn && <HeaderMenuBtn buttonType="dashboard" />}
-                  <HeaderMenuBtn buttonType="patient" />
-                </>
-              )}
+              <button
+                onClick={() => navigate('/admin/users')}
+                className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-sm">manage_accounts</span>
+                User Management
+              </button>
             </div>
           )}
         </div>

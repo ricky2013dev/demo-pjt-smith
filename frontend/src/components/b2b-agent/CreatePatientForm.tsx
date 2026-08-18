@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Breadcrumb from './Breadcrumb';
+import { PRIMARY_BUTTON, PRIMARY_BUTTON_DISABLED } from "@/styles/buttonStyles";
 import { PhoneInput, SSNInput, EmailInput, InsuranceProviderSelect } from '@/components/inputs';
 
 // Tab types for the create patient form
@@ -18,7 +20,7 @@ const CREATE_PATIENT_TAB_LABELS: Record<CreatePatientTabType, string> = {
   [CREATE_PATIENT_TAB_TYPES.APPOINTMENT]: 'Appointment',
 };
 
-interface CreatePatientFormData {
+export interface CreatePatientFormData {
   // Basic
   givenName: string;
   middleName: string;
@@ -55,9 +57,8 @@ interface CreatePatientFormData {
   appointmentProvider: string;
 }
 
-interface CreatePatientModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface CreatePatientFormProps {
+  onCancel: () => void;
   onSubmit: (formData: CreatePatientFormData) => Promise<void>;
   currentUser?: { name: string; username: string; email: string } | null;
 }
@@ -109,9 +110,8 @@ const getInitialFormData = (userName?: string): CreatePatientFormData => ({
   appointmentProvider: userName || 'Dr. Smith',
 });
 
-const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
-  isOpen,
-  onClose,
+const CreatePatientForm: React.FC<CreatePatientFormProps> = ({
+  onCancel,
   onSubmit,
   currentUser,
 }) => {
@@ -119,8 +119,6 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
   const [formData, setFormData] = useState<CreatePatientFormData>(getInitialFormData(currentUser?.username || currentUser?.name));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-
-  if (!isOpen) return null;
 
   const handleChange = (field: keyof CreatePatientFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -179,11 +177,11 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
     }
   };
 
-  const handleClose = () => {
+  const handleCancel = () => {
     setFormData(getInitialFormData(currentUser?.username || currentUser?.name));
     setActiveTab(CREATE_PATIENT_TAB_TYPES.BASIC);
     setValidationErrors({});
-    onClose();
+    onCancel();
   };
 
   const fillDummyData = () => {
@@ -224,11 +222,15 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
   const errorClassName = "text-xs text-red-500 mt-1";
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-3xl w-full my-8 flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Patient</h2>
+    <div className="min-w-0 flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-[1400px] mx-auto px-8 py-8 space-y-6">
+        {/* Title */}
+        <div className="flex items-start justify-between">
+          <div>
+            <Breadcrumb className="mb-2" />
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Create New Patient</h1>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Enter the patient's details to add them to the system.</p>
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={fillDummyData}
@@ -237,17 +239,12 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
             >
               <span className="material-symbols-outlined">smart_toy</span>
             </button>
-            <button
-              onClick={handleClose}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
           </div>
         </div>
 
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
         {/* Tab Navigation */}
-        <div className="border-b border-slate-200 dark:border-slate-700 px-6 shrink-0">
+        <div className="border-b border-slate-200 dark:border-slate-700 px-6">
           <nav aria-label="Tabs" className="flex -mb-px gap-1">
             {Object.values(CREATE_PATIENT_TAB_TYPES).map((tab) => (
               <button
@@ -269,19 +266,19 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
         </div>
 
         {/* Form Content */}
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-6">
+        <form onSubmit={handleSubmit} className="flex flex-col">
+          <div className="p-6">
             {/* Basic Tab */}
             {activeTab === CREATE_PATIENT_TAB_TYPES.BASIC && (
               <div className="space-y-4 animate-fadeIn">
-                <div className="col-span-2 bg-slate-100 dark:bg-slate-700/50 rounded-lg p-3 border border-slate-200 dark:border-slate-600">
+                <div className="col-span-full bg-slate-100 dark:bg-slate-700/50 rounded-lg p-3 border border-slate-200 dark:border-slate-600">
                   <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Patient ID</label>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     Auto-generated (e.g., P0000001)
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                   <div>
                     <label className={labelClassName}>First Name *</label>
                     <input
@@ -371,7 +368,7 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
                     id="create-patient-phone"
                   />
 
-                  <div className="col-span-2">
+                  <div className="col-span-full">
                     <EmailInput
                       value={formData.email}
                       onChange={(value) => handleChange('email', value)}
@@ -387,8 +384,8 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
             {/* Address Tab */}
             {activeTab === CREATE_PATIENT_TAB_TYPES.ADDRESS && (
               <div className="space-y-4 animate-fadeIn">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="col-span-full">
                     <label className={labelClassName}>Address Line 1</label>
                     <input
                       type="text"
@@ -399,7 +396,7 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
                     />
                   </div>
 
-                  <div className="col-span-2">
+                  <div className="col-span-full">
                     <label className={labelClassName}>Address Line 2</label>
                     <input
                       type="text"
@@ -433,7 +430,7 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
                     />
                   </div>
 
-                  <div className="col-span-2">
+                  <div className="col-span-full">
                     <label className={labelClassName}>Postal Code</label>
                     <input
                       type="text"
@@ -450,7 +447,7 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
             {/* Insurance Tab */}
             {activeTab === CREATE_PATIENT_TAB_TYPES.INSURANCE && (
               <div className="space-y-4 animate-fadeIn">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                   <div>
                     <InsuranceProviderSelect
                       label="Insurance(Payer)"
@@ -552,7 +549,7 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
             {/* Appointment Tab */}
             {activeTab === CREATE_PATIENT_TAB_TYPES.APPOINTMENT && (
               <div className="space-y-4 animate-fadeIn">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                   <div>
                     <label className={labelClassName}>Appointment Date</label>
                     <input
@@ -609,34 +606,35 @@ const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex gap-3 shrink-0">
+          <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              className="px-8 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className={`${PRIMARY_BUTTON} px-8 py-2.5 justify-center ${isSubmitting ? PRIMARY_BUTTON_DISABLED : ''}`}
             >
               {isSubmitting ? (
                 <>
                   <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
-                  Creating...
+                  Submitting...
                 </>
               ) : (
-                'Create Patient'
+                'Submit'
               )}
-            </button>
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={isSubmitting}
-              className="flex-1 px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
 };
 
-export default CreatePatientModal;
+export default CreatePatientForm;
