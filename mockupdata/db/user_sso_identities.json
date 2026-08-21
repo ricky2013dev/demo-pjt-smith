@@ -1,0 +1,10 @@
+[
+  {
+    "id": "SSO-0001",
+    "userId": "USR-0002",
+    "provider": "google",
+    "email": "dental01.brightsmile@gmail.com",
+    "linkedBy": "USR-0003",
+    "createdAt": "2026-01-12T15:20:00.000Z"
+  }
+]

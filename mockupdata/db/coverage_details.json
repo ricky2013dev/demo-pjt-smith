@@ -1,0 +1,82 @@
+[
+  {
+    "id": "COV-0001",
+    "patientId": "P0000001",
+    "annualMaximum": "2000",
+    "annualUsed": "1470",
+    "deductible": "1500",
+    "deductibleMet": "450"
+  },
+  {
+    "id": "COV-0002",
+    "patientId": "P0000002",
+    "annualMaximum": "1500",
+    "annualUsed": "250",
+    "deductible": "1000",
+    "deductibleMet": "1000"
+  },
+  {
+    "id": "COV-0003",
+    "patientId": "P0000003",
+    "annualMaximum": "2500",
+    "annualUsed": "280",
+    "deductible": "2000",
+    "deductibleMet": "200"
+  },
+  {
+    "id": "COV-0004",
+    "patientId": "P0000004",
+    "annualMaximum": "0",
+    "annualUsed": "0",
+    "deductible": "0",
+    "deductibleMet": "0"
+  },
+  {
+    "id": "COV-0005",
+    "patientId": "P0000005",
+    "annualMaximum": "1800",
+    "annualUsed": "170",
+    "deductible": "1200",
+    "deductibleMet": "800"
+  },
+  {
+    "id": "COV-0006",
+    "patientId": "P0000006",
+    "annualMaximum": "2000",
+    "annualUsed": "280",
+    "deductible": "1500",
+    "deductibleMet": "1500"
+  },
+  {
+    "id": "COV-0007",
+    "patientId": "P0000007",
+    "annualMaximum": "1500",
+    "annualUsed": "300",
+    "deductible": "1000",
+    "deductibleMet": "300"
+  },
+  {
+    "id": "COV-0008",
+    "patientId": "P0000008",
+    "annualMaximum": "2000",
+    "annualUsed": "200",
+    "deductible": "1500",
+    "deductibleMet": "0"
+  },
+  {
+    "id": "COV-0009",
+    "patientId": "P0000009",
+    "annualMaximum": "2200",
+    "annualUsed": "370",
+    "deductible": "1800",
+    "deductibleMet": "1200"
+  },
+  {
+    "id": "COV-0010",
+    "patientId": "P0000010",
+    "annualMaximum": "1500",
+    "annualUsed": "230",
+    "deductible": "800",
+    "deductibleMet": "400"
+  }
+]

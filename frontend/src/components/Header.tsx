@@ -1,16 +1,37 @@
 import React, { useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { useStediApi } from '@/context/StediApiContext';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+
+/** How each role is named and tinted next to the user's name. */
+const ROLE_BADGES: Record<string, { label: string; className: string }> = {
+  admin: { label: 'System Admin', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' },
+  manager: { label: 'Manager', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
+  dental: { label: 'Dental', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
+};
+
+/** What the header shows about the person signed in. */
+interface HeaderUser {
+  name: string;
+  email: string;
+  username: string;
+  stediMode?: string;
+  role?: string;
+  /** Clinic the user belongs to, as returned by /api/auth/verify. */
+  provider?: {
+    id?: string;
+    name: string;
+    npiNumber?: string;
+  } | null;
+}
 
 interface HeaderProps {
   onLogoClick?: () => void;
-  currentUser?: {
-    name: string;
-    email: string;
-    username: string;
-    stediMode?: string;
-    role?: string;
-  } | null;
+  /**
+   * Optional. The header reads the session itself, so a page only passes this
+   * to override what is shown.
+   */
+  currentUser?: Partial<HeaderUser> | null;
   onLogout?: () => void;
   onLoginClick?: () => void;
   onAdminLoginClick?: () => void;
@@ -20,13 +41,55 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onLoginClick, onAdminLoginClick, mode = 'b2b' }) => {
   const [location, navigate] = useLocation();
   const { stediMode, setStediMode } = useStediApi();
+  const { user } = useCurrentUser();
 
   const isPatientDetailPage = location === '/b2b-agent/patient-detail';
 
+  /**
+   * Every page gets the same header: it falls back to the verified session, so
+   * a page that passes nothing still names the signed-in user. Anything a page
+   * does pass wins, field by field.
+   */
+  const activeUser: HeaderUser | null = useMemo(() => {
+    const fromSession: HeaderUser | null = user
+      ? {
+          name: user.username,
+          email: user.email,
+          username: user.username,
+          stediMode: user.stediMode,
+          role: user.role,
+          provider: user.account ? { id: user.account.id, name: user.account.name } : user.provider ?? null,
+        }
+      : null;
+
+    if (!currentUser) return fromSession;
+
+    const overrides = Object.fromEntries(
+      Object.entries(currentUser).filter(([, value]) => value !== undefined)
+    );
+    return { ...(fromSession ?? ({} as HeaderUser)), ...overrides } as HeaderUser;
+  }, [currentUser, user]);
+
   // Computed equivalent using useMemo - if stediMode is not 'mockup', real data is on
   const isRealDataOn = useMemo(() => {
-    return currentUser?.stediMode !== undefined && currentUser?.stediMode !== 'mockup';
-  }, [currentUser?.stediMode]); // Dependencies are explicit
+    return activeUser?.stediMode !== undefined && activeUser?.stediMode !== 'mockup';
+  }, [activeUser?.stediMode]); // Dependencies are explicit
+
+  // Two-letter avatar label, e.g. "dental01" -> "DE", "Jane Doe" -> "JD".
+  const userInitials = useMemo(() => {
+    const source = (activeUser?.name || activeUser?.username || '').trim();
+    if (!source) return '?';
+    const parts = source.split(/[\s._-]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return source.slice(0, 2).toUpperCase();
+  }, [activeUser?.name, activeUser?.username]);
+
+  const clinicName = activeUser?.provider?.name;
+  const roleBadge = activeUser?.role ? ROLE_BADGES[activeUser.role] : undefined;
+  // The system admin has no clinic; saying so beats "no clinic assigned".
+  const affiliation = clinicName || (mode === 'admin' ? 'System administration' : 'No clinic assigned');
 
   return (
     <header className="bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50 px-6 py-3 shrink-0 sticky top-0 z-50">
@@ -116,8 +179,8 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
             </div>
 
 
-            {/* Stedi API Menu - Admin only */}
-            {currentUser?.role === 'admin' && isPatientDetailPage && (
+            {/* Stedi API Menu - clinic manager (and system admin) only */}
+            {(activeUser?.role === 'manager' || activeUser?.role === 'admin') && isPatientDetailPage && (
               <div className="group relative">
                 {/* Main Button */}
                 <button
@@ -185,15 +248,47 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick, currentUser, onLogout, onL
               </div>
             )}
 
-            {/* User Info */}
-            {currentUser && (
-              <div className="text-right">
-                <div className="flex items-center">
-                  <span className={`material-symbols-outlined text-md ${isRealDataOn ? 'text-green-500' : ''}`}>person</span>
-
-                  <span className="text-xs ml-1">{currentUser.name}</span>
+            {/* Signed-in user: profile icon, username and clinic */}
+            {activeUser && (
+              <div
+                className="flex items-center gap-2.5 pl-4 border-l border-slate-200 dark:border-slate-700"
+                title={`${activeUser.name}${roleBadge ? ` — ${roleBadge.label}` : ''}${activeUser.email ? ` (${activeUser.email})` : ''}${clinicName ? ` — ${clinicName}` : ''}`}
+              >
+                <div className="relative shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 border border-slate-300/60 dark:border-slate-600 flex items-center justify-center">
+                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 tracking-wide">
+                      {userInitials}
+                    </span>
+                  </div>
+                  {/* Green dot mirrors the old person-icon tint: real data mode is on. */}
+                  {isRealDataOn && (
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-slate-50 dark:border-slate-900"
+                      title="Real data mode"
+                    />
+                  )}
                 </div>
 
+                <div className="leading-tight min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-semibold text-slate-900 dark:text-white truncate max-w-[180px]">
+                      {activeUser.name}
+                    </span>
+                    {roleBadge && (
+                      <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${roleBadge.className}`}>
+                        {roleBadge.label}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+                    <span className="material-symbols-outlined leading-none" style={{ fontSize: '12px' }}>
+                      {clinicName ? 'domain' : mode === 'admin' ? 'shield_person' : 'domain_disabled'}
+                    </span>
+                    <span className="truncate max-w-[170px]">
+                      {affiliation}
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
 

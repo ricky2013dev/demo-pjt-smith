@@ -1,0 +1,32 @@
+[
+  {
+    "id": "USR-0001",
+    "email": "admin01@inspline.com",
+    "username": "admin01",
+    "password": "Admin@123",
+    "role": "admin",
+    "stediMode": "mockup",
+    "accountId": null,
+    "providerId": null
+  },
+  {
+    "id": "USR-0002",
+    "email": "dental01@inspline.com",
+    "username": "dental01",
+    "password": "Dental@123",
+    "role": "dental",
+    "stediMode": "mockup",
+    "accountId": "ACC-0001",
+    "providerId": "PRV-0001"
+  },
+  {
+    "id": "USR-0003",
+    "email": "manager01@inspline.com",
+    "username": "manager01",
+    "password": "Manager@123",
+    "role": "manager",
+    "stediMode": "mockup",
+    "accountId": "ACC-0001",
+    "providerId": "PRV-0001"
+  }
+]

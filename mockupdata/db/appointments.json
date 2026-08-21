@@ -1,0 +1,200 @@
+[
+  {
+    "id": "APT-0001",
+    "patientId": "P0000001",
+    "date": "2025-12-19",
+    "time": "12:00 PM",
+    "type": "Teeth Cleaning",
+    "status": "scheduled",
+    "provider": "Smith"
+  },
+  {
+    "id": "APT-0002",
+    "patientId": "P0000001",
+    "date": "2025-11-07",
+    "time": "7:30 PM",
+    "type": "Teeth Cleaning",
+    "status": "completed",
+    "provider": "Johnson"
+  },
+  {
+    "id": "APT-0003",
+    "patientId": "P0000001",
+    "date": "2025-10-01",
+    "time": "12:30 PM",
+    "type": "Crown Placement",
+    "status": "completed",
+    "provider": "Smith"
+  },
+  {
+    "id": "APT-0004",
+    "patientId": "P0000002",
+    "date": "2025-12-20",
+    "time": "5:00 PM",
+    "type": "Root Canal",
+    "status": "scheduled",
+    "provider": "Williams"
+  },
+  {
+    "id": "APT-0005",
+    "patientId": "P0000002",
+    "date": "2025-09-14",
+    "time": "4:00 PM",
+    "type": "Filling",
+    "status": "completed",
+    "provider": "Johnson"
+  },
+  {
+    "id": "APT-0006",
+    "patientId": "P0000003",
+    "date": "2025-12-20",
+    "time": "3:30 PM",
+    "type": "Dental Exam",
+    "status": "scheduled",
+    "provider": "Martinez"
+  },
+  {
+    "id": "APT-0007",
+    "patientId": "P0000003",
+    "date": "2025-10-31",
+    "time": "4:30 PM",
+    "type": "Regular Checkup",
+    "status": "completed",
+    "provider": "Smith"
+  },
+  {
+    "id": "APT-0008",
+    "patientId": "P0000004",
+    "date": "2025-12-17",
+    "time": "11:30 AM",
+    "type": "Extraction",
+    "status": "scheduled",
+    "provider": "Dr. Williams"
+  },
+  {
+    "id": "APT-0009",
+    "patientId": "P0000004",
+    "date": "2025-10-04",
+    "time": "4:00 PM",
+    "type": "Regular Checkup",
+    "status": "completed",
+    "provider": "InSpline AI System"
+  },
+  {
+    "id": "APT-0010",
+    "patientId": "P0000005",
+    "date": "2025-12-17",
+    "time": "6:30 PM",
+    "type": "Teeth Cleaning",
+    "status": "scheduled",
+    "provider": "Johnson"
+  },
+  {
+    "id": "APT-0011",
+    "patientId": "P0000005",
+    "date": "2025-11-03",
+    "time": "4:00 PM",
+    "type": "Teeth Cleaning",
+    "status": "completed",
+    "provider": "Martinez"
+  },
+  {
+    "id": "APT-0012",
+    "patientId": "P0000006",
+    "date": "2025-12-20",
+    "time": "6:30 PM",
+    "type": "Crown Placement",
+    "status": "scheduled",
+    "provider": "Williams"
+  },
+  {
+    "id": "APT-0013",
+    "patientId": "P0000006",
+    "date": "2025-08-24",
+    "time": "11:30 AM",
+    "type": "Filling",
+    "status": "completed",
+    "provider": "Smith"
+  },
+  {
+    "id": "APT-0014",
+    "patientId": "P0000007",
+    "date": "2025-12-20",
+    "time": "5:30 PM",
+    "type": "Filling",
+    "status": "scheduled",
+    "provider": "Martinez"
+  },
+  {
+    "id": "APT-0015",
+    "patientId": "P0000007",
+    "date": "2025-09-08",
+    "time": "11:00 AM",
+    "type": "Regular Checkup",
+    "status": "completed",
+    "provider": "Johnson"
+  },
+  {
+    "id": "APT-0016",
+    "patientId": "P0000008",
+    "date": "2025-12-17",
+    "time": "5:30 PM",
+    "type": "Dental Exam",
+    "status": "scheduled",
+    "provider": "Smith"
+  },
+  {
+    "id": "APT-0017",
+    "patientId": "P0000008",
+    "date": "2025-09-04",
+    "time": "3:00 PM",
+    "type": "Teeth Cleaning",
+    "status": "completed",
+    "provider": "Williams"
+  },
+  {
+    "id": "APT-0018",
+    "patientId": "P0000009",
+    "date": "2025-12-20",
+    "time": "6:00 PM",
+    "type": "Bridge Fitting",
+    "status": "scheduled",
+    "provider": "Williams"
+  },
+  {
+    "id": "APT-0019",
+    "patientId": "P0000009",
+    "date": "2025-10-17",
+    "time": "12:30 PM",
+    "type": "Consultation",
+    "status": "completed",
+    "provider": "Williams"
+  },
+  {
+    "id": "APT-0020",
+    "patientId": "P0000009",
+    "date": "2025-11-04",
+    "time": "9:30 AM",
+    "type": "Regular Checkup",
+    "status": "completed",
+    "provider": "Smith"
+  },
+  {
+    "id": "APT-0021",
+    "patientId": "P0000010",
+    "date": "2025-12-17",
+    "time": "5:30 PM",
+    "type": "Dental Exam",
+    "status": "scheduled",
+    "provider": "Johnson"
+  },
+  {
+    "id": "APT-0022",
+    "patientId": "P0000010",
+    "date": "2025-08-21",
+    "time": "6:00 PM",
+    "type": "Sealant Application",
+    "status": "completed",
+    "provider": "Johnson"
+  }
+]

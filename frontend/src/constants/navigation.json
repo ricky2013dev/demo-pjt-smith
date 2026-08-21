@@ -19,7 +19,7 @@
       "subMenu": [
         {
           "tab": "PATIENT_BASIC_INFO",
-          "label": "Basic Info"
+          "label": "Patient Basic Info"
         },
         {
           "tab": "INSURANCE",
@@ -27,16 +27,45 @@
         },
         {
           "tab": "APPOINTMENTS",
-          "label": "Appointments"
+          "label": "Appointments",
+          "hidden": true
         },
         {
           "tab": "AI_CALL_HISTORY",
-          "label": "AI Transactions"
+          "label": "Transaction History"
         },
         {
           "tab": "TREATMENT_HISTORY",
           "label": "Treatment History",
-          "adminOnly": true
+          "managerOnly": true
+        }
+      ]
+    }
+  ],
+  "accountMenu": [
+    {
+      "label": "Clinic Settings",
+      "icon": "settings",
+      "path": "/b2b-agent/account",
+      "authOnly": true,
+      "subMenu": [
+        {
+          "path": "/b2b-agent/account/clinic",
+          "label": "Clinic Profile"
+        },
+        {
+          "path": "/b2b-agent/account/users",
+          "label": "Team Members"
+        },
+        {
+          "path": "/b2b-agent/account/payment",
+          "label": "Payment Setup",
+          "managerOnly": true
+        },
+        {
+          "path": "/b2b-agent/account/payment-history",
+          "label": "Payment History",
+          "managerOnly": true
         }
       ]
     }
@@ -45,7 +74,8 @@
     {
       "label": "Create New Patient",
       "icon": "person_add",
-      "path": "/b2b-agent/create-patient"
+      "path": "/b2b-agent/create-patient",
+      "hidden": true
     }
   ]
 }

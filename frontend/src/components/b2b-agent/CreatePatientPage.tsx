@@ -139,13 +139,6 @@ const CreatePatientPage: React.FC = () => {
       {/* Header */}
       <Header
         onLogoClick={() => navigate('/b2b-agent/patient-appointments')}
-        currentUser={currentUser ? {
-          name: currentUser.username,
-          email: currentUser.email,
-          username: currentUser.username,
-          stediMode: currentUser.stediMode,
-          role: currentUser.role
-        } : null}
         onLogout={handleLogout}
       />
 

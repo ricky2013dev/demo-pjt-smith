@@ -41,12 +41,34 @@ import {
   type InsertPayer,
   providers,
   type Provider,
-  type InsertProvider
+  type InsertProvider,
+  accounts,
+  type Account,
+  type InsertAccount,
+  accountPaymentMethods,
+  accountPayments,
+  type AccountPaymentMethod,
+  type InsertAccountPaymentMethod,
+  type AccountPayment,
+  userSsoIdentities,
+  type UserSsoIdentity
 } from "@shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { db, eq, and } from "./db";
+
 
 export interface IStorage {
+  // Account (clinic) methods
+  getAllAccounts(): Promise<Account[]>;
+  getAccountById(id: string): Promise<Account | undefined>;
+  createAccount(account: InsertAccount): Promise<Account>;
+  updateAccount(id: string, updates: Partial<Omit<Account, 'id'>>): Promise<Account | undefined>;
+  getUsersByAccountId(accountId: string): Promise<User[]>;
+
+  // Account billing methods
+  getPaymentMethodByAccountId(accountId: string): Promise<AccountPaymentMethod | undefined>;
+  savePaymentMethod(accountId: string, updates: Partial<InsertAccountPaymentMethod>): Promise<AccountPaymentMethod>;
+  getPaymentsByAccountId(accountId: string): Promise<AccountPayment[]>;
+
   // User methods
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -56,6 +78,12 @@ export interface IStorage {
   updateUser(id: string, updates: Partial<Omit<User, 'id'>>): Promise<User | undefined>;
   deleteUser(id: string): Promise<boolean>;
   updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined>;
+
+  // Single sign-on identities linked to a login
+  getSsoIdentitiesByUserId(userId: string): Promise<UserSsoIdentity[]>;
+  getSsoIdentityByProviderEmail(provider: string, email: string): Promise<UserSsoIdentity | undefined>;
+  linkSsoIdentity(userId: string, provider: string, email: string, linkedBy: string | null): Promise<UserSsoIdentity>;
+  unlinkSsoIdentity(userId: string, provider: string): Promise<boolean>;
 
   // Patient methods
   createPatient(patient: InsertPatient): Promise<Patient>;
@@ -127,6 +155,83 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Account (clinic) methods
+  async getAllAccounts(): Promise<Account[]> {
+    return await db.select().from(accounts);
+  }
+
+  async getAccountById(id: string): Promise<Account | undefined> {
+    const [account] = await db.select().from(accounts).where(eq(accounts.id, id));
+    return account;
+  }
+
+  async createAccount(account: InsertAccount): Promise<Account> {
+    const [created] = await db.insert(accounts).values(account).returning();
+    return created;
+  }
+
+  async updateAccount(id: string, updates: Partial<Omit<Account, 'id'>>): Promise<Account | undefined> {
+    // Clinic details are user-maintained, so every write stamps its own time.
+    const [account] = await db
+      .update(accounts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(accounts.id, id))
+      .returning();
+    return account;
+  }
+
+  /** Every user signed in under the clinic. */
+  async getUsersByAccountId(accountId: string): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.accountId, accountId));
+  }
+
+  // Account billing methods
+
+  /** The single payment method on file for the clinic, if one was set up. */
+  async getPaymentMethodByAccountId(accountId: string): Promise<AccountPaymentMethod | undefined> {
+    const [method] = await db
+      .select()
+      .from(accountPaymentMethods)
+      .where(eq(accountPaymentMethods.accountId, accountId));
+    return method;
+  }
+
+  /**
+   * Writes the clinic's payment setup, creating the row the first time the
+   * clinic fills the form in. One method per account, so this is an upsert.
+   */
+  async savePaymentMethod(
+    accountId: string,
+    updates: Partial<InsertAccountPaymentMethod>
+  ): Promise<AccountPaymentMethod> {
+    const existing = await this.getPaymentMethodByAccountId(accountId);
+
+    if (!existing) {
+      const [created] = await db
+        .insert(accountPaymentMethods)
+        .values({ ...updates, accountId } as InsertAccountPaymentMethod)
+        .returning();
+      return created;
+    }
+
+    const [saved] = await db
+      .update(accountPaymentMethods)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(accountPaymentMethods.id, existing.id))
+      .returning();
+    return saved;
+  }
+
+  /** Invoice history for the clinic, newest first. */
+  async getPaymentsByAccountId(accountId: string): Promise<AccountPayment[]> {
+    const payments = await db
+      .select()
+      .from(accountPayments)
+      .where(eq(accountPayments.accountId, accountId));
+
+    return payments.sort((a, b) => (a.issuedDate < b.issuedDate ? 1 : a.issuedDate > b.issuedDate ? -1 : 0));
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -164,6 +269,49 @@ export class DatabaseStorage implements IStorage {
   async updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined> {
     const [user] = await db.update(users).set({ password: hashedPassword }).where(eq(users.id, id)).returning();
     return user;
+  }
+
+  // Single sign-on identities
+
+  /** Every provider account linked to a login. */
+  async getSsoIdentitiesByUserId(userId: string): Promise<UserSsoIdentity[]> {
+    return await db.select().from(userSsoIdentities).where(eq(userSsoIdentities.userId, userId));
+  }
+
+  /** The login a provider account signs in as, if anyone has linked it. */
+  async getSsoIdentityByProviderEmail(provider: string, email: string): Promise<UserSsoIdentity | undefined> {
+    const [identity] = await db
+      .select()
+      .from(userSsoIdentities)
+      .where(and(eq(userSsoIdentities.provider, provider), eq(userSsoIdentities.email, email.toLowerCase())));
+    return identity;
+  }
+
+  /**
+   * Links a provider account to a login. One identity per user and provider,
+   * so re-linking replaces the address already on file.
+   */
+  async linkSsoIdentity(
+    userId: string,
+    provider: string,
+    email: string,
+    linkedBy: string | null
+  ): Promise<UserSsoIdentity> {
+    await this.unlinkSsoIdentity(userId, provider);
+
+    const [identity] = await db
+      .insert(userSsoIdentities)
+      .values({ userId, provider, email: email.toLowerCase(), linkedBy })
+      .returning();
+    return identity;
+  }
+
+  async unlinkSsoIdentity(userId: string, provider: string): Promise<boolean> {
+    const removed = await db
+      .delete(userSsoIdentities)
+      .where(and(eq(userSsoIdentities.userId, userId), eq(userSsoIdentities.provider, provider)))
+      .returning();
+    return removed.length > 0;
   }
 
   // Patient methods

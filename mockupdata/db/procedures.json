@@ -1,0 +1,312 @@
+[
+  {
+    "id": "PRC-0001",
+    "coverageId": "COV-0001",
+    "code": "D0120",
+    "name": "Periodic Oral Evaluation",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$50",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0002",
+    "coverageId": "COV-0001",
+    "code": "D1110",
+    "name": "Prophylaxis - Adult",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$120",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0003",
+    "coverageId": "COV-0001",
+    "code": "D2391",
+    "name": "Resin-Based Composite - One Surface",
+    "category": "Basic",
+    "coverage": "80%",
+    "estimatedCost": "$195",
+    "patientPays": "$39"
+  },
+  {
+    "id": "PRC-0004",
+    "coverageId": "COV-0001",
+    "code": "D2740",
+    "name": "Crown - Porcelain/Ceramic",
+    "category": "Major",
+    "coverage": "50%",
+    "estimatedCost": "$1,200",
+    "patientPays": "$600"
+  },
+  {
+    "id": "PRC-0005",
+    "coverageId": "COV-0001",
+    "code": "D3310",
+    "name": "Root Canal - Anterior",
+    "category": "Major",
+    "coverage": "50%",
+    "estimatedCost": "$800",
+    "patientPays": "$400"
+  },
+  {
+    "id": "PRC-0006",
+    "coverageId": "COV-0002",
+    "code": "D0120",
+    "name": "Periodic Oral Evaluation",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$50",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0007",
+    "coverageId": "COV-0002",
+    "code": "D1110",
+    "name": "Prophylaxis - Adult",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$120",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0008",
+    "coverageId": "COV-0002",
+    "code": "D2391",
+    "name": "Resin-Based Composite - One Surface",
+    "category": "Basic",
+    "coverage": "80%",
+    "estimatedCost": "$195",
+    "patientPays": "$39"
+  },
+  {
+    "id": "PRC-0009",
+    "coverageId": "COV-0002",
+    "code": "D3310",
+    "name": "Root Canal - Anterior",
+    "category": "Major",
+    "coverage": "50%",
+    "estimatedCost": "$800",
+    "patientPays": "$400"
+  },
+  {
+    "id": "PRC-0010",
+    "coverageId": "COV-0003",
+    "code": "D0120",
+    "name": "Periodic Oral Evaluation",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$50",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0011",
+    "coverageId": "COV-0003",
+    "code": "D1110",
+    "name": "Prophylaxis - Adult",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$120",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0012",
+    "coverageId": "COV-0003",
+    "code": "D2740",
+    "name": "Crown - Porcelain/Ceramic",
+    "category": "Major",
+    "coverage": "60%",
+    "estimatedCost": "$1,200",
+    "patientPays": "$480"
+  },
+  {
+    "id": "PRC-0013",
+    "coverageId": "COV-0005",
+    "code": "D0120",
+    "name": "Periodic Oral Evaluation",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$50",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0014",
+    "coverageId": "COV-0005",
+    "code": "D1110",
+    "name": "Prophylaxis - Adult",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$120",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0015",
+    "coverageId": "COV-0005",
+    "code": "D2391",
+    "name": "Resin-Based Composite - One Surface",
+    "category": "Basic",
+    "coverage": "80%",
+    "estimatedCost": "$195",
+    "patientPays": "$39"
+  },
+  {
+    "id": "PRC-0016",
+    "coverageId": "COV-0006",
+    "code": "D0120",
+    "name": "Periodic Oral Evaluation",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$50",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0017",
+    "coverageId": "COV-0006",
+    "code": "D2391",
+    "name": "Resin-Based Composite - One Surface",
+    "category": "Basic",
+    "coverage": "80%",
+    "estimatedCost": "$195",
+    "patientPays": "$39"
+  },
+  {
+    "id": "PRC-0018",
+    "coverageId": "COV-0006",
+    "code": "D6010",
+    "name": "Surgical Placement of Implant",
+    "category": "Major",
+    "coverage": "50%",
+    "estimatedCost": "$2,000",
+    "patientPays": "$1,000"
+  },
+  {
+    "id": "PRC-0019",
+    "coverageId": "COV-0007",
+    "code": "D0120",
+    "name": "Periodic Oral Evaluation",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$50",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0020",
+    "coverageId": "COV-0007",
+    "code": "D8080",
+    "name": "Comprehensive Orthodontic Treatment",
+    "category": "Orthodontic",
+    "coverage": "50%",
+    "estimatedCost": "$5,000",
+    "patientPays": "$2,500"
+  },
+  {
+    "id": "PRC-0021",
+    "coverageId": "COV-0008",
+    "code": "D0120",
+    "name": "Periodic Oral Evaluation",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$50",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0022",
+    "coverageId": "COV-0008",
+    "code": "D1110",
+    "name": "Prophylaxis - Adult",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$120",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0023",
+    "coverageId": "COV-0008",
+    "code": "D2391",
+    "name": "Resin-Based Composite - One Surface",
+    "category": "Basic",
+    "coverage": "80%",
+    "estimatedCost": "$195",
+    "patientPays": "$39"
+  },
+  {
+    "id": "PRC-0024",
+    "coverageId": "COV-0009",
+    "code": "D0120",
+    "name": "Periodic Oral Evaluation",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$50",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0025",
+    "coverageId": "COV-0009",
+    "code": "D1110",
+    "name": "Prophylaxis - Adult",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$120",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0026",
+    "coverageId": "COV-0009",
+    "code": "D6242",
+    "name": "Pontic - Porcelain Fused to Metal",
+    "category": "Major",
+    "coverage": "60%",
+    "estimatedCost": "$1,100",
+    "patientPays": "$440"
+  },
+  {
+    "id": "PRC-0027",
+    "coverageId": "COV-0009",
+    "code": "D6750",
+    "name": "Crown - Porcelain Fused to Noble Metal",
+    "category": "Major",
+    "coverage": "60%",
+    "estimatedCost": "$1,250",
+    "patientPays": "$500"
+  },
+  {
+    "id": "PRC-0028",
+    "coverageId": "COV-0010",
+    "code": "D0120",
+    "name": "Periodic Oral Evaluation",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$50",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0029",
+    "coverageId": "COV-0010",
+    "code": "D1120",
+    "name": "Prophylaxis - Child",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$85",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0030",
+    "coverageId": "COV-0010",
+    "code": "D1206",
+    "name": "Topical Fluoride - Child",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$45",
+    "patientPays": "$0"
+  },
+  {
+    "id": "PRC-0031",
+    "coverageId": "COV-0010",
+    "code": "D1351",
+    "name": "Sealant - Per Tooth",
+    "category": "Preventive",
+    "coverage": "100%",
+    "estimatedCost": "$45",
+    "patientPays": "$0"
+  }
+]

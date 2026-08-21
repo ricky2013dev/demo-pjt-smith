@@ -10,6 +10,7 @@ import UserManagement from '@/components/admin/UserManagement';
 import UserRelatedData from '@/components/admin/UserRelatedData';
 import SystemRelatedData from '@/components/admin/SystemRelatedData';
 import PmsIfHistory from '@/components/admin/PmsIfHistory';
+import { AccountManagementPage } from '@/components/account';
 import { StediApiProvider } from '@/context/StediApiContext';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -24,6 +25,11 @@ function App() {
           <Route path="/b2b-agent/patient-appointments" component={() => <PatientsManagement />} />
           <Route path="/b2b-agent/create-patient" component={() => <CreatePatientPage />} />
           <Route path="/b2b-agent/smart-ai-transaction-history" component={() => <SmartAITransactionHistory />} />
+          <Route path="/b2b-agent/account" component={() => <AccountManagementPage />} />
+          <Route path="/b2b-agent/account/clinic" component={() => <AccountManagementPage />} />
+          <Route path="/b2b-agent/account/users" component={() => <AccountManagementPage />} />
+          <Route path="/b2b-agent/account/payment" component={() => <AccountManagementPage />} />
+          <Route path="/b2b-agent/account/payment-history" component={() => <AccountManagementPage />} />
           <Route path="/admin/stedi-api-tester" component={() => <StediApiTester />} />
           <Route path="/admin/users" component={() => <UserManagement />} />
           <Route path="/admin/user-data" component={() => <UserRelatedData />} />

@@ -3,13 +3,134 @@ import { pgTable, text, varchar, boolean, timestamp, integer, decimal } from "dr
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+/**
+ * Account: the clinic a set of users belongs to.
+ *
+ * One account = one dental practice. Users sign in under an account, and the
+ * clinic identity used on insurance transactions (name, NPI, tax ID, address)
+ * is kept here so the practice can maintain it themselves.
+ */
+export const accounts = pgTable("accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  /** Clinic name shown across the app. */
+  name: text("name").notNull(),
+  /** Registered legal entity, when it differs from the clinic name. */
+  legalName: text("legal_name"),
+  npiNumber: text("npi_number"),
+  /** Employer Identification Number (EIN / Tax ID). */
+  taxId: text("tax_id"),
+  phoneNumber: text("phone_number"),
+  faxNumber: text("fax_number"),
+  email: text("email"),
+  website: text("website"),
+  addressLine1: text("address_line1"),
+  addressLine2: text("address_line2"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
+  timezone: text("timezone").default("America/Chicago"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+/**
+ * Payment setup: how the clinic pays its InSpline subscription.
+ *
+ * One row per account. Card and bank numbers are never stored in full — the
+ * processor holds those; we keep the brand and the last four digits so the
+ * clinic can recognise the method on file.
+ */
+export const accountPaymentMethods = pgTable("account_payment_methods", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  accountId: varchar("account_id").notNull().references(() => accounts.id, { onDelete: "cascade" }),
+  /** 'card' | 'ach' — which set of fields below is in use. */
+  methodType: text("method_type").notNull().default("card"),
+  /** Subscription the clinic is billed for. */
+  planName: text("plan_name"),
+  /** 'monthly' | 'annual'. */
+  billingCycle: text("billing_cycle").notNull().default("monthly"),
+  /** Charge the method on file automatically when an invoice is issued. */
+  autoPayEnabled: boolean("auto_pay_enabled").notNull().default(true),
+  /** Card on file — brand and last four only. */
+  cardBrand: text("card_brand"),
+  cardLast4: text("card_last4"),
+  cardExpMonth: text("card_exp_month"),
+  cardExpYear: text("card_exp_year"),
+  cardholderName: text("cardholder_name"),
+  /** Bank account on file (ACH) — last four only. */
+  bankName: text("bank_name"),
+  bankAccountLast4: text("bank_account_last4"),
+  bankAccountType: text("bank_account_type"), // 'checking' | 'savings'
+  bankAccountHolder: text("bank_account_holder"),
+  /** Where invoices and receipts are sent. */
+  billingContactName: text("billing_contact_name"),
+  billingEmail: text("billing_email"),
+  billingPhone: text("billing_phone"),
+  billingAddressLine1: text("billing_address_line1"),
+  billingAddressLine2: text("billing_address_line2"),
+  billingCity: text("billing_city"),
+  billingState: text("billing_state"),
+  billingZipCode: text("billing_zip_code"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+/**
+ * Payment history: one row per invoice raised against the clinic account.
+ */
+export const accountPayments = pgTable("account_payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  accountId: varchar("account_id").notNull().references(() => accounts.id, { onDelete: "cascade" }),
+  invoiceNumber: text("invoice_number").notNull(),
+  description: text("description").notNull(),
+  /** Billing period the invoice covers. */
+  periodStart: text("period_start"),
+  periodEnd: text("period_end"),
+  issuedDate: text("issued_date").notNull(),
+  dueDate: text("due_date"),
+  paidDate: text("paid_date"),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").notNull().default("USD"),
+  /** 'paid' | 'pending' | 'failed' | 'refunded'. */
+  status: text("status").notNull(),
+  /** How it was paid, e.g. "Visa ····4242" — matches the method on file. */
+  paymentMethod: text("payment_method"),
+  /** Processor reference, shown so the clinic can quote it to support. */
+  referenceNumber: text("reference_number"),
+  /** Why a charge failed, when it did. */
+  failureReason: text("failure_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAccountPaymentMethodSchema = createInsertSchema(accountPaymentMethods);
+export const insertAccountPaymentSchema = createInsertSchema(accountPayments);
+
+export type AccountPaymentMethod = typeof accountPaymentMethods.$inferSelect;
+export type InsertAccountPaymentMethod = z.infer<typeof insertAccountPaymentMethodSchema>;
+export type AccountPayment = typeof accountPayments.$inferSelect;
+export type InsertAccountPayment = z.infer<typeof insertAccountPaymentSchema>;
+
+export const insertAccountSchema = createInsertSchema(accounts);
+
+export type Account = typeof accounts.$inferSelect;
+export type InsertAccount = z.infer<typeof insertAccountSchema>;
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role").notNull().default("user"),
+  /**
+   * `admin` is the InSpline system administrator and belongs to no clinic;
+   * `manager` and `dental` are the two clinic roles, and both must have an
+   * `accountId`. Only a manager may edit the clinic's account details.
+   */
+  role: text("role").notNull().default("dental"),
   stediMode: text("stedi_mode").notNull().default("mockup"),
+  /** Clinic the user signs in under. */
+  accountId: varchar("account_id").references(() => accounts.id),
   providerId: varchar("provider_id").references(() => providers.id),
 });
 
@@ -19,11 +140,37 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   role: true,
   stediMode: true,
+  accountId: true,
   providerId: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+/**
+ * Single sign-on identities linked to a login.
+ *
+ * A clinic manager links a Google or Microsoft Teams account to a team member
+ * so that member can sign in with that identity instead of a password. One row
+ * per user and provider; `email` is the address the provider signs them in as,
+ * which need not be their InSpline address.
+ */
+export const userSsoIdentities = pgTable("user_sso_identities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  /** 'google' | 'microsoft'. */
+  provider: text("provider").notNull(),
+  /** The address the provider asserts, stored lowercased. */
+  email: text("email").notNull(),
+  /** The manager who linked it, so the trail outlives their own login. */
+  linkedBy: varchar("linked_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserSsoIdentitySchema = createInsertSchema(userSsoIdentities);
+
+export type UserSsoIdentity = typeof userSsoIdentities.$inferSelect;
+export type InsertUserSsoIdentity = z.infer<typeof insertUserSsoIdentitySchema>;
 
 // Patients table
 export const patients = pgTable("patients", {
@@ -292,6 +439,8 @@ export const insertPayerSchema = createInsertSchema(payers);
 // Providers table
 export const providers = pgTable("providers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  /** Account (clinic) the provider record belongs to. */
+  accountId: varchar("account_id").references(() => accounts.id),
   name: text("name").notNull(),
   npiNumber: text("npi_number").notNull().unique(),
   faxNumber: text("fax_number"),

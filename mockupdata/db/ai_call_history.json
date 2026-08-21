@@ -1,0 +1,79 @@
+[
+  {
+    "id": "AIC-0001",
+    "patientId": "P0000002",
+    "topic": "AI Verification Call - Root Canal Pre-Auth",
+    "date": "2024-11-06",
+    "time": "10:15 AM",
+    "summary": "Currently verifying pre-authorization for upcoming root canal procedure with Delta Dental. Awaiting final confirmation from insurance representative.",
+    "duration": "In Progress",
+    "agent": "InSpline AI - Authorization Agent",
+    "status": "in_progress"
+  },
+  {
+    "id": "AIC-0002",
+    "patientId": "P0000005",
+    "topic": "Insurance Eligibility Verification",
+    "date": "2024-10-15",
+    "time": "9:30 AM",
+    "summary": "Verified patient's Aetna Dental insurance eligibility for upcoming procedures. Confirmed active coverage and deductible status.",
+    "duration": "5 min 23 sec",
+    "agent": "InSpline AI - Verification Bot",
+    "status": "completed"
+  },
+  {
+    "id": "AIC-0003",
+    "patientId": "P0000005",
+    "topic": "Benefits Verification Call",
+    "date": "2024-10-22",
+    "time": "2:15 PM",
+    "summary": "Contacted insurance provider to verify detailed benefits coverage for preventive and basic procedures. Confirmed 100% preventive and 80% basic coverage.",
+    "duration": "8 min 47 sec",
+    "agent": "InSpline AI - Benefits Specialist",
+    "status": "completed"
+  },
+  {
+    "id": "AIC-0004",
+    "patientId": "P0000005",
+    "topic": "Pre-Authorization Request",
+    "date": "2024-11-01",
+    "time": "11:00 AM",
+    "summary": "Submitted pre-authorization request for upcoming dental cleaning and fluoride treatment. Authorization approved with reference number AET-2024-11-001.",
+    "duration": "12 min 15 sec",
+    "agent": "InSpline AI - Authorization Agent",
+    "status": "completed"
+  },
+  {
+    "id": "AIC-0005",
+    "patientId": "P0000005",
+    "topic": "Appointment Reminder Call",
+    "date": "2024-11-20",
+    "time": "3:45 PM",
+    "summary": "Automated reminder call for upcoming appointment on November 25th. Patient confirmed attendance and requested reminder email.",
+    "duration": "2 min 10 sec",
+    "agent": "InSpline AI - Scheduler",
+    "status": "completed"
+  },
+  {
+    "id": "AIC-0006",
+    "patientId": "P0000001",
+    "topic": "AI Verification Call - Annual Benefits Refresh",
+    "date": "2025-11-28",
+    "time": "09:32 AM",
+    "summary": "Confirmed 2026 plan year benefits with Blue Cross Blue Shield. Annual maximum unchanged at $2,000, deductible $1,500 with $450 applied.",
+    "duration": "6m 12s",
+    "agent": "InSpline AI - Benefits Agent",
+    "status": "completed"
+  },
+  {
+    "id": "AIC-0007",
+    "patientId": "P0000003",
+    "topic": "AI Verification Call - Orthodontic Lifetime Maximum",
+    "date": "2025-12-02",
+    "time": "02:05 PM",
+    "summary": "Cigna Dental confirmed a $1,500 orthodontic lifetime maximum with a 12 month waiting period on major services.",
+    "duration": "8m 47s",
+    "agent": "InSpline AI - Authorization Agent",
+    "status": "completed"
+  }
+]

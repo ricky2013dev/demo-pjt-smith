@@ -190,13 +190,6 @@ const PatientsManagement: React.FC = () => {
       {/* Header */}
       <Header
         onLogoClick={handleHeaderClick}
-        currentUser={currentUser ? {
-          name: currentUser.username,
-          email: currentUser.email,
-          username: currentUser.username,
-          stediMode: currentUser.stediMode,
-          role: currentUser.role
-        } : null}
         onLogout={handleLogout}
       />
 

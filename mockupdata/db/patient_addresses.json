@@ -1,0 +1,92 @@
+[
+  {
+    "id": "ADR-0001",
+    "patientId": "P0000001",
+    "line1": "123 Maple Street",
+    "line2": "Apt 4B",
+    "city": "Springfield",
+    "state": "IL",
+    "postalCode": "62701"
+  },
+  {
+    "id": "ADR-0002",
+    "patientId": "P0000002",
+    "line1": "456 Oak Avenue",
+    "line2": null,
+    "city": "Springfield",
+    "state": "IL",
+    "postalCode": "62702"
+  },
+  {
+    "id": "ADR-0003",
+    "patientId": "P0000003",
+    "line1": "789 Pine Road",
+    "line2": null,
+    "city": "Riverside",
+    "state": "CA",
+    "postalCode": "92501"
+  },
+  {
+    "id": "ADR-0004",
+    "patientId": "P0000004",
+    "line1": "321 Elm Street",
+    "line2": null,
+    "city": "Portland",
+    "state": "OR",
+    "postalCode": "97201"
+  },
+  {
+    "id": "ADR-0005",
+    "patientId": "P0000005",
+    "line1": "654 Birch Lane",
+    "line2": null,
+    "city": "Austin",
+    "state": "TX",
+    "postalCode": "78701"
+  },
+  {
+    "id": "ADR-0006",
+    "patientId": "P0000006",
+    "line1": "987 Cedar Court",
+    "line2": null,
+    "city": "Seattle",
+    "state": "WA",
+    "postalCode": "98101"
+  },
+  {
+    "id": "ADR-0007",
+    "patientId": "P0000007",
+    "line1": "147 Willow Drive",
+    "line2": null,
+    "city": "Denver",
+    "state": "CO",
+    "postalCode": "80201"
+  },
+  {
+    "id": "ADR-0008",
+    "patientId": "P0000008",
+    "line1": "258 Spruce Avenue",
+    "line2": null,
+    "city": "Miami",
+    "state": "FL",
+    "postalCode": "33101"
+  },
+  {
+    "id": "ADR-0009",
+    "patientId": "P0000009",
+    "line1": "742 Evergreen Terrace",
+    "line2": null,
+    "city": "Boston",
+    "state": "MA",
+    "postalCode": "02101"
+  },
+  {
+    "id": "ADR-0010",
+    "patientId": "P0000010",
+    "line1": "159 Park Avenue",
+    "line2": null,
+    "city": "Chicago",
+    "state": "IL",
+    "postalCode": "60601"
+  }
+]

@@ -41,234 +41,1073 @@ interface Transaction {
   rawResponse?: string;
 }
 
+// Demo transactions used in mockup mode. Patient ids match mockupdata/patients.json
+// (1001-1010) and the chains mirror each patient's verification status, so every patient in
+// the list has history to show and each status filter has rows to match.
 export const mockData: Transaction[] = [
-  // Patient Data Ready
+  // ---- 1001 — Sarah Jane Johnson ----
   {
-    id: '0',
-    requestId: 'REQ-2025-11-28-0800',
-    type: 'FETCH',
-    method: 'GET /pms/patient/data',
-    startTime: '2025-11-28 08:00:00',
-    endTime: '2025-11-28 08:02:15',
-    duration: '2m 15s',
-    status: 'SUCCESS',
-    patientId: 'P002',
-    patientName: 'Sarah Johnson',
-    insuranceProvider: '-',
-    insuranceRep: '-',
-    runBy: 'InSpline AI System',
-    dataVerified: ['Patient ID', 'Patient Name', 'DOB', 'Contact Info', 'Medical History'],
+    id: "1",
+    requestId: "REQ-20260818-0802-1001",
+    type: "FETCH",
+    method: "GET /pms/patient/data",
+    startTime: "2026-08-18 08:02:07",
+    endTime: "2026-08-18 08:04:48",
+    duration: "2m 41s",
+    status: "SUCCESS",
+    patientId: "1001",
+    patientName: "Sarah Jane Johnson",
+    insuranceProvider: "-",
+    insuranceRep: "-",
+    runBy: "InSpline AI System",
+    dataVerified: ["Patient ID", "Patient Name", "DOB", "Contact Info", "Insurance On File"],
     verificationScore: 100,
-    fetchStatus: 'completed',
-    saveStatus: 'pending',
-    endpoint: 'https://pms.dental.local/api/patient/data',
-    eligibilityCheck: 'Patient record retrieved from PMS',
-    benefitsVerification: 'Data synchronized with local database',
-    coverageDetails: 'Patient active in system',
-    deductibleInfo: 'Initial data fetch completed',
-    transcript: 'Patient data ready. Information retrieved and validated successfully.'
+    fetchStatus: "completed",
+    saveStatus: "completed",
+    endpoint: "https://pms.dental.local/api/patient/data",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-18",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $2,000/year | Plan: Blue Cross Blue Shield | Group: GRP-98765",
+    deductibleInfo: "Deductible: $1,500 | Met: $450",
+    transcript: "FETCH completed for Sarah Jane Johnson. All requested fields verified.",
   },
-  // API SUCCESS
   {
-    id: '1',
-    requestId: 'REQ-2025-11-28-0930',
-    type: 'API',
-    method: 'POST /api/benefits/query',
-    startTime: '2025-11-28 09:30:15',
-    endTime: '2025-11-28 09:31:25',
-    duration: '1m 10s',
-    status: 'SUCCESS',
-    patientId: 'P001',
-    patientName: 'Robert Taylor',
-    insuranceProvider: 'Cigna Dental',
-    insuranceRep: 'API System',
-    runBy: 'InSpline AI System',
-    dataVerified: ['Patient Name', 'Patient SSN', 'Patient Date of Birth', 'Relationship to Subscriber', 'Subscriber Name', 'Subscriber SSN', 'Subscriber Date of Birth', 'Subscriber ID Number', 'Insurance Company', 'Insurer Type - Primary', 'Insurer Type - Secondary', 'Insurance Address', 'Insurance Phone', 'Employer', 'Group Number', 'Effective Date', 'Renewal Month', 'Yearly Maximum', 'Deductible Per Individual', 'Deductible Per Family', 'Deductible Applies To - Preventative', 'Deductible Applies To - Basic', 'Deductible Applies To - Major', 'Preventative Covered At (%)', 'Preventative Waiting Period', 'Preventative Effective Date', 'Bitewing Frequency'],
-    verificationScore: 80,
-    fetchStatus: 'completed',
-    saveStatus: 'completed',
-    responseCode: '200',
-    endpoint: 'https://api.cigna.com/dental/benefits',
-    eligibilityCheck: 'ACTIVE - Policy effective through 12/31/2026. Policy status: active and in good standing. Verification date: 01/21/2025',
-    benefitsVerification: 'Preventive: 100%, Basic: 80%, Major: 50% | Waiting Periods: Preventive - None, Basic - None, Major - 12 months',
-    coverageDetails: 'Annual Maximum: $2,000 | Used: $450 | Remaining: $1,550 | Plan Type: PPO Premium',
-    deductibleInfo: 'Individual Deductible: $50 | Family Deductible: $150 | Deductible Met: $50',
-    rawResponse: '{"verification_id":"VER-2025-001234","timestamp":"2025-01-21T10:30:45Z","patient":{"name":"Michael Robert Anderson","dob":"1978-07-22","member_id":"BCBS123456789"},"insurance":{"carrier":"Blue Cross Blue Shield","group_number":"GRP987654","policy_status":"active","effective_date":"2024-01-01","plan_type":"PPO Premium"},"eligibility":{"active":true,"coverage_status":"verified","verification_date":"2025-01-21"},"benefits":{"annual_maximum":2000,"annual_used":450,"annual_remaining":1550,"deductible":50,"deductible_met":50,"preventive_coverage":"100%","basic_coverage":"80%","major_coverage":"50%","waiting_periods":{"preventive":"none","basic":"none","major":"12 months"}}}'
+    id: "2",
+    requestId: "REQ-20260818-0820-1001",
+    type: "API",
+    method: "POST /api/benefits/query",
+    startTime: "2026-08-18 08:20:14",
+    endTime: "2026-08-18 08:21:55",
+    duration: "1m 41s",
+    status: "SUCCESS",
+    patientId: "1001",
+    patientName: "Sarah Jane Johnson",
+    insuranceProvider: "Blue Cross Blue Shield",
+    insuranceRep: "API System",
+    runBy: "InSpline AI System",
+    dataVerified: ["Subscriber ID", "Group Number", "Plan Status", "Annual Maximum", "Deductible", "Preventive %", "Basic %", "Major %"],
+    verificationScore: 92,
+    fetchStatus: "completed",
+    saveStatus: "completed",
+    responseCode: "200",
+    endpoint: "https://api.blue.com/dental/benefits",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-18",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $2,000/year | Plan: Blue Cross Blue Shield | Group: GRP-98765",
+    deductibleInfo: "Deductible: $1,500 | Met: $450",
+    transcript: "API completed for Sarah Jane Johnson. All requested fields verified.",
   },
-  // FAX DOCUMENT ANALYSIS
   {
-    id: '2',
-    requestId: 'REQ-2025-11-28-0915',
-    type: 'FAX',
-    method: 'FAX /fax/document-analysis',
-    startTime: '2025-11-28 09:15:30',
-    endTime: '2025-11-28 09:20:55',
-    duration: '5m 25s',
-    status: 'SUCCESS',
-    patientId: 'P002',
-    patientName: 'Sarah Johnson',
-    insuranceProvider: 'Cigna Dental',
-    insuranceRep: 'Fax System',
-    runBy: 'InSpline AI System',
-    dataVerified: ['Member ID', 'Patient Name', 'Plan Name', 'Effective Date', 'Coverage', 'Deductible', 'Annual Maximum'],
-    verificationScore: 30,
-    fetchStatus: 'completed',
-    saveStatus: 'completed',
-    eligibilityCheck: 'ACTIVE - Policy effective through 12/31/2025',
-    benefitsVerification: 'Preventive: 100%, Basic: 80%, Major: 50%',
-    coverageDetails: 'Annual Maximum: $2,000 | Used: $0 | Remaining: $2,000',
-    deductibleInfo: 'Individual Deductible: $50 | Met: $0',
-    transcript: 'Fax document analysis completed successfully. Insurance information extracted and verified from fax document.'
-  },
-  // CALL SUCCESS
-  {
-    id: '3',
-    requestId: 'REQ-2025-11-28-1045',
-    type: 'CALL',
-    method: 'VOICE /ai-agent/verify',
-    startTime: '2025-11-28 10:45:22',
-    endTime: '2025-11-28 11:33:22',
-    duration: '48m 0s',
-    status: 'SUCCESS',
-    patientId: 'P002',
-    patientName: 'Sarah Johnson',
-    insuranceProvider: 'Cigna Dental',
-    insuranceRep: 'Amanda Rodriguez',
-    runBy: 'InSpline AI System',
-    dataVerified: ['Eligibility', 'Benefits', 'Coverage Limits', 'Deductibles'],
+    id: "3",
+    requestId: "REQ-20260818-1045-1001",
+    type: "CALL",
+    method: "VOICE /ai-agent/verify",
+    startTime: "2026-08-18 10:45:21",
+    endTime: "2026-08-18 11:33:02",
+    duration: "48m 41s",
+    status: "SUCCESS",
+    patientId: "1001",
+    patientName: "Sarah Jane Johnson",
+    insuranceProvider: "Blue Cross Blue Shield",
+    insuranceRep: "Terrence Bell",
+    runBy: "InSpline AI System",
+    dataVerified: ["Eligibility", "Benefits", "Coverage Limits", "Deductibles", "Waiting Periods"],
     verificationScore: 100,
-    fetchStatus: 'completed',
-    saveStatus: 'pending',
-    phoneNumber: '1-800-555-0188',
+    fetchStatus: "completed",
+    saveStatus: "completed",
+    phoneNumber: "1-800-555-0103",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-18",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $2,000/year | Plan: Blue Cross Blue Shield | Group: GRP-98765",
+    deductibleInfo: "Deductible: $1,500 | Met: $450",
+    transcript: "CALL completed for Sarah Jane Johnson. All requested fields verified.",
     callHistory: [
       {
-        timestamp: '10:45:22',
-        speaker: 'AI',
-        message: 'Good morning, this is Smith Dental verification system. I am calling to verify dental insurance benefits for patient Sarah Johnson.',
-        type: 'question'
+        timestamp: "10:45:22",
+        speaker: "AI",
+        message: "Good morning, this is the InSpline verification agent calling on behalf of Bright Smile Dental Group to verify benefits for Sarah Jane Johnson.",
+        type: "question",
       },
       {
-        timestamp: '10:45:35',
-        speaker: 'InsuranceRep',
-        message: 'Good morning, this is Amanda from Cigna Dental. I can help you with that. May I have the member ID or policy number?',
-        type: 'answer'
+        timestamp: "10:45:39",
+        speaker: "InsuranceRep",
+        message: "This is Terrence Bell with Blue Cross Blue Shield. I can help with that — may I have the subscriber ID and date of birth?",
+        type: "answer",
       },
       {
-        timestamp: '10:45:50',
-        speaker: 'AI',
-        message: 'Thank you. The member ID is CIG-4567890 and the patient date of birth is March 15, 1990.',
-        type: 'confirmation'
+        timestamp: "10:45:56",
+        speaker: "AI",
+        message: "Subscriber ID is 123456789, group number GRP-98765.",
+        type: "confirmation",
       },
       {
-        timestamp: '10:46:10',
-        speaker: 'InsuranceRep',
-        message: 'I have Sarah Johnson in our system. Policy is active and in good standing. What information do you need to verify?',
-        type: 'answer'
+        timestamp: "10:46:13",
+        speaker: "InsuranceRep",
+        message: "Thank you, I have the member on file. What would you like to verify today?",
+        type: "answer",
       },
       {
-        timestamp: '10:46:25',
-        speaker: 'AI',
-        message: 'We need a comprehensive benefits verification. Can you confirm the policy effective dates and annual maximum?',
-        type: 'question'
+        timestamp: "10:46:30",
+        speaker: "AI",
+        message: "Annual maximum, remaining benefit, deductible status and the coverage tiers, please.",
+        type: "question",
       },
       {
-        timestamp: '10:46:45',
-        speaker: 'InsuranceRep',
-        message: 'Policy effective dates are January 1, 2025 through December 31, 2026. Annual maximum is $2,000 per calendar year.',
-        type: 'answer'
+        timestamp: "10:46:47",
+        speaker: "InsuranceRep",
+        message: "Annual maximum is $2,000/year, deductible $1,500 with $450 met. Preventive 100%, basic 80%, major 50%.",
+        type: "answer",
       },
       {
-        timestamp: '10:47:05',
-        speaker: 'AI',
-        message: 'How much of the annual maximum has been used?',
-        type: 'question'
+        timestamp: "10:47:04",
+        speaker: "AI",
+        message: "That matches what we have on file. Thank you for your time.",
+        type: "confirmation",
       },
       {
-        timestamp: '10:47:20',
-        speaker: 'InsuranceRep',
-        message: 'None has been used. The full $2,000 is still available.',
-        type: 'answer'
+        timestamp: "10:47:21",
+        speaker: "System",
+        message: "Call completed. All requested fields verified. Status: SUCCESS",
+        type: "note",
       },
-      {
-        timestamp: '10:47:35',
-        speaker: 'AI',
-        message: 'What is the individual deductible?',
-        type: 'question'
-      },
-      {
-        timestamp: '10:47:50',
-        speaker: 'InsuranceRep',
-        message: 'Individual deductible is $50 per calendar year and has not been met.',
-        type: 'answer'
-      },
-      {
-        timestamp: '10:48:10',
-        speaker: 'AI',
-        message: 'Can you provide coverage percentages for preventive, basic, and major services?',
-        type: 'question'
-      },
-      {
-        timestamp: '10:48:35',
-        speaker: 'InsuranceRep',
-        message: 'Preventive is covered at 100% with no deductible. Basic is 80% after deductible. Major is 50% after deductible.',
-        type: 'answer'
-      },
-      {
-        timestamp: '10:49:00',
-        speaker: 'AI',
-        message: 'Thank you. Let me confirm: Policy active through 12/31/2026, annual max $2,000 (unused), deductible $50 (not met), Preventive 100%, Basic 80%, Major 50%. Is that correct?',
-        type: 'confirmation'
-      },
-      {
-        timestamp: '10:49:20',
-        speaker: 'InsuranceRep',
-        message: 'Yes, that is absolutely correct. Is there anything else you need?',
-        type: 'answer'
-      },
-      {
-        timestamp: '10:49:35',
-        speaker: 'AI',
-        message: 'No, that covers everything we needed. Thank you for your assistance.',
-        type: 'confirmation'
-      },
-      {
-        timestamp: '10:49:45',
-        speaker: 'System',
-        message: 'Call completed successfully. All required information verified. Status: SUCCESS',
-        type: 'note'
-      }
     ],
-    transcript: 'Complete verification successful for patient Sarah Johnson. All benefits verified.',
-    benefitsVerification: 'Preventive: 100%, Basic: 80%, Major: 50%',
-    coverageDetails: 'Annual Maximum: $2,000 | Used: $0 | Remaining: $2,000',
-    deductibleInfo: 'Individual Deductible: $50 | Met: $0'
   },
-  // Verification Completed
   {
-    id: '4',
-    requestId: 'REQ-2025-11-28-1135',
-    type: 'SAVE',
-    method: 'POST /pms/patient/save',
-    startTime: '2025-11-28 11:35:00',
-    endTime: '2025-11-28 11:36:30',
-    duration: '1m 30s',
-    status: 'SUCCESS',
-    patientId: 'P002',
-    patientName: 'Sarah Johnson',
-    insuranceProvider: '-',
-    insuranceRep: '-',
-    runBy: 'InSpline AI System',
-    dataVerified: ['Verified Data', 'Insurance Benefits', 'Coverage Details', 'Deductible Info', 'Eligibility Status'],
+    id: "4",
+    requestId: "REQ-20260818-1140-1001",
+    type: "SAVE",
+    method: "POST /pms/patient/save",
+    startTime: "2026-08-18 11:40:28",
+    endTime: "2026-08-18 11:41:09",
+    duration: "1m 41s",
+    status: "SUCCESS",
+    patientId: "1001",
+    patientName: "Sarah Jane Johnson",
+    insuranceProvider: "-",
+    insuranceRep: "-",
+    runBy: "InSpline AI System",
+    dataVerified: ["Verified Data", "Insurance Benefits", "Coverage Details", "Deductible Info"],
     verificationScore: 100,
-    fetchStatus: 'completed',
-    saveStatus: 'completed',
-    endpoint: 'https://pms.dental.local/api/patient/save',
-    eligibilityCheck: 'All verification data saved to PMS',
-    benefitsVerification: 'Insurance benefits synchronized with PMS',
-    coverageDetails: 'Coverage details updated in patient record',
-    deductibleInfo: 'Deductible information recorded in system',
-    transcript: 'Verification completed successfully. All verified information has been synchronized with the patient management system.'
-  }
+    fetchStatus: "completed",
+    saveStatus: "completed",
+    endpoint: "https://pms.dental.local/api/patient/save",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-18",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $2,000/year | Plan: Blue Cross Blue Shield | Group: GRP-98765",
+    deductibleInfo: "Deductible: $1,500 | Met: $450",
+    transcript: "SAVE completed for Sarah Jane Johnson. All requested fields verified.",
+  },
+  // ---- 1002 — Michael Robert Anderson ----
+  {
+    id: "5",
+    requestId: "REQ-20260819-0905-1002",
+    type: "FETCH",
+    method: "GET /pms/patient/data",
+    startTime: "2026-08-19 09:05:35",
+    endTime: "2026-08-19 09:09:16",
+    duration: "4m 41s",
+    status: "PARTIAL",
+    patientId: "1002",
+    patientName: "Michael Robert Anderson",
+    insuranceProvider: "-",
+    insuranceRep: "-",
+    runBy: "InSpline AI System",
+    dataVerified: ["Patient ID", "Patient Name", "DOB", "Contact Info", "Insurance On File"],
+    verificationScore: 60,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    endpoint: "https://pms.dental.local/api/patient/data",
+    errorMessage: "Carrier returned an incomplete benefit set; re-run required for the missing fields.",
+    eligibilityCheck: "ACTIVE — eligibility confirmed, benefit detail incomplete",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: not returned",
+    coverageDetails: "Annual Maximum: $1,500/year | Remaining benefit not returned by carrier",
+    deductibleInfo: "Deductible: $1,000 | Met: not returned",
+    transcript: "FETCH finished with partial data for Michael Robert Anderson. Missing fields queued for a follow-up run.",
+  },
+  {
+    id: "6",
+    requestId: "REQ-20260819-0930-1002",
+    type: "API",
+    method: "POST /api/benefits/query",
+    startTime: "2026-08-19 09:30:42",
+    endTime: "2026-08-19 09:31:23",
+    duration: "0m 12s",
+    status: "FAILED",
+    patientId: "1002",
+    patientName: "Michael Robert Anderson",
+    insuranceProvider: "Delta Dental",
+    insuranceRep: "API System",
+    runBy: "InSpline AI System",
+    dataVerified: [],
+    verificationScore: 0,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    responseCode: "503",
+    endpoint: "https://api.delta.com/dental/benefits",
+    errorMessage: "Carrier endpoint returned 503 Service Unavailable after 3 retries.",
+    eligibilityCheck: "Not verified",
+    benefitsVerification: "Not verified",
+    coverageDetails: "Not verified",
+    deductibleInfo: "Not verified",
+    transcript: "API failed for Michael Robert Anderson. See the error message for detail.",
+  },
+  {
+    id: "7",
+    requestId: "REQ-20260819-1315-1002",
+    type: "CALL",
+    method: "VOICE /ai-agent/verify",
+    startTime: "2026-08-19 13:15:49",
+    endTime: "2026-08-19 13:37:30",
+    duration: "22m 41s",
+    status: "PARTIAL",
+    patientId: "1002",
+    patientName: "Michael Robert Anderson",
+    insuranceProvider: "Delta Dental",
+    insuranceRep: "Samuel Ortiz",
+    runBy: "InSpline AI System",
+    dataVerified: ["Eligibility", "Benefits", "Coverage Limits", "Deductibles", "Waiting Periods"],
+    verificationScore: 48,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    phoneNumber: "1-800-555-0107",
+    errorMessage: "Carrier returned an incomplete benefit set; re-run required for the missing fields.",
+    eligibilityCheck: "ACTIVE — eligibility confirmed, benefit detail incomplete",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: not returned",
+    coverageDetails: "Annual Maximum: $1,500/year | Remaining benefit not returned by carrier",
+    deductibleInfo: "Deductible: $1,000 | Met: not returned",
+    transcript: "CALL finished with partial data for Michael Robert Anderson. Missing fields queued for a follow-up run.",
+    callHistory: [
+      {
+        timestamp: "10:45:22",
+        speaker: "AI",
+        message: "Good morning, this is the InSpline verification agent calling on behalf of Bright Smile Dental Group to verify benefits for Michael Robert Anderson.",
+        type: "question",
+      },
+      {
+        timestamp: "10:45:39",
+        speaker: "InsuranceRep",
+        message: "This is Samuel Ortiz with Delta Dental. I can help with that — may I have the subscriber ID and date of birth?",
+        type: "answer",
+      },
+      {
+        timestamp: "10:45:56",
+        speaker: "AI",
+        message: "Subscriber ID is 987654321, group number GRP-54321.",
+        type: "confirmation",
+      },
+      {
+        timestamp: "10:46:13",
+        speaker: "InsuranceRep",
+        message: "Thank you, I have the member on file. What would you like to verify today?",
+        type: "answer",
+      },
+      {
+        timestamp: "10:46:30",
+        speaker: "AI",
+        message: "Annual maximum, remaining benefit, deductible status and the coverage tiers, please.",
+        type: "question",
+      },
+      {
+        timestamp: "10:46:47",
+        speaker: "InsuranceRep",
+        message: "Let me pull that up — please hold while I check the benefit detail.",
+        type: "hold",
+      },
+      {
+        timestamp: "10:47:04",
+        speaker: "System",
+        message: "Hold exceeded 14 minutes; carrier line disconnected before benefits were read back.",
+        type: "note",
+      },
+      {
+        timestamp: "10:47:21",
+        speaker: "System",
+        message: "Call ended early. Partial data captured. Status: PARTIAL",
+        type: "note",
+      },
+    ],
+  },
+  // ---- 1003 — Emily Rose Martinez ----
+  {
+    id: "8",
+    requestId: "REQ-20260819-1112-1003",
+    type: "API",
+    method: "POST /api/benefits/query",
+    startTime: "2026-08-19 11:12:56",
+    endTime: "2026-08-19 11:13:37",
+    duration: "0m 12s",
+    status: "FAILED",
+    patientId: "1003",
+    patientName: "Emily Rose Martinez",
+    insuranceProvider: "Cigna Dental",
+    insuranceRep: "API System",
+    runBy: "InSpline AI System",
+    dataVerified: [],
+    verificationScore: 0,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    responseCode: "503",
+    endpoint: "https://api.cigna.com/dental/benefits",
+    errorMessage: "Carrier endpoint returned 503 Service Unavailable after 3 retries.",
+    eligibilityCheck: "Not verified",
+    benefitsVerification: "Not verified",
+    coverageDetails: "Not verified",
+    deductibleInfo: "Not verified",
+    transcript: "API failed for Emily Rose Martinez. See the error message for detail.",
+  },
+  // ---- 1004 — David Lee Thompson ----
+  {
+    id: "9",
+    requestId: "REQ-20260817-0755-1004",
+    type: "FETCH",
+    method: "GET /pms/patient/data",
+    startTime: "2026-08-17 07:55:03",
+    endTime: "2026-08-17 07:58:44",
+    duration: "3m 41s",
+    status: "SUCCESS",
+    patientId: "1004",
+    patientName: "David Lee Thompson",
+    insuranceProvider: "-",
+    insuranceRep: "-",
+    runBy: "InSpline AI System",
+    dataVerified: ["Patient ID", "Patient Name", "DOB", "Contact Info", "Insurance On File"],
+    verificationScore: 100,
+    fetchStatus: "completed",
+    saveStatus: "pending",
+    endpoint: "https://pms.dental.local/api/patient/data",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-17",
+    benefitsVerification: "Preventive: N/A, Basic: N/A, Major: N/A",
+    coverageDetails: "Annual Maximum: N/A | Plan: Not on file | Group: -",
+    deductibleInfo: "Deductible: N/A | Met: $0",
+    transcript: "FETCH completed for David Lee Thompson. All requested fields verified.",
+  },
+  {
+    id: "10",
+    requestId: "REQ-20260817-0830-1004",
+    type: "API",
+    method: "POST /api/benefits/query",
+    startTime: "2026-08-17 08:30:10",
+    endTime: "2026-08-17 08:31:51",
+    duration: "0m 12s",
+    status: "FAILED",
+    patientId: "1004",
+    patientName: "David Lee Thompson",
+    insuranceProvider: "Not on file",
+    insuranceRep: "API System",
+    runBy: "InSpline AI System",
+    dataVerified: [],
+    verificationScore: 0,
+    fetchStatus: "completed",
+    saveStatus: "pending",
+    responseCode: "503",
+    endpoint: "https://api.not.com/dental/benefits",
+    errorMessage: "Carrier endpoint returned 503 Service Unavailable after 3 retries.",
+    eligibilityCheck: "Not verified",
+    benefitsVerification: "Not verified",
+    coverageDetails: "Not verified",
+    deductibleInfo: "Not verified",
+    transcript: "API failed for David Lee Thompson. See the error message for detail.",
+  },
+  {
+    id: "11",
+    requestId: "REQ-20260817-1405-1004",
+    type: "CALL",
+    method: "VOICE /ai-agent/verify",
+    startTime: "2026-08-17 14:05:17",
+    endTime: "2026-08-17 14:36:58",
+    duration: "31m 41s",
+    status: "SUCCESS",
+    patientId: "1004",
+    patientName: "David Lee Thompson",
+    insuranceProvider: "Not on file",
+    insuranceRep: "Terrence Bell",
+    runBy: "InSpline AI System",
+    dataVerified: ["Eligibility", "Benefits", "Coverage Limits", "Deductibles", "Waiting Periods"],
+    verificationScore: 100,
+    fetchStatus: "completed",
+    saveStatus: "pending",
+    phoneNumber: "1-800-555-0111",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-17",
+    benefitsVerification: "Preventive: N/A, Basic: N/A, Major: N/A",
+    coverageDetails: "Annual Maximum: N/A | Plan: Not on file | Group: -",
+    deductibleInfo: "Deductible: N/A | Met: $0",
+    transcript: "CALL completed for David Lee Thompson. All requested fields verified.",
+    callHistory: [
+      {
+        timestamp: "10:45:22",
+        speaker: "AI",
+        message: "Good morning, this is the InSpline verification agent calling on behalf of Bright Smile Dental Group to verify benefits for David Lee Thompson.",
+        type: "question",
+      },
+      {
+        timestamp: "10:45:39",
+        speaker: "InsuranceRep",
+        message: "This is Terrence Bell with Not on file. I can help with that — may I have the subscriber ID and date of birth?",
+        type: "answer",
+      },
+      {
+        timestamp: "10:45:56",
+        speaker: "AI",
+        message: "Subscriber ID is -, group number -.",
+        type: "confirmation",
+      },
+      {
+        timestamp: "10:46:13",
+        speaker: "InsuranceRep",
+        message: "Thank you, I have the member on file. What would you like to verify today?",
+        type: "answer",
+      },
+      {
+        timestamp: "10:46:30",
+        speaker: "AI",
+        message: "Annual maximum, remaining benefit, deductible status and the coverage tiers, please.",
+        type: "question",
+      },
+      {
+        timestamp: "10:46:47",
+        speaker: "InsuranceRep",
+        message: "Annual maximum is N/A, deductible N/A with $0 met. Preventive N/A, basic N/A, major N/A.",
+        type: "answer",
+      },
+      {
+        timestamp: "10:47:04",
+        speaker: "AI",
+        message: "That matches what we have on file. Thank you for your time.",
+        type: "confirmation",
+      },
+      {
+        timestamp: "10:47:21",
+        speaker: "System",
+        message: "Call completed. All requested fields verified. Status: SUCCESS",
+        type: "note",
+      },
+    ],
+  },
+  // ---- 1005 — Jennifer Ann Williams ----
+  {
+    id: "12",
+    requestId: "REQ-20260820-0840-1005",
+    type: "FETCH",
+    method: "GET /pms/patient/data",
+    startTime: "2026-08-20 08:40:24",
+    endTime: "2026-08-20 08:45:05",
+    duration: "5m 41s",
+    status: "PARTIAL",
+    patientId: "1005",
+    patientName: "Jennifer Ann Williams",
+    insuranceProvider: "-",
+    insuranceRep: "-",
+    runBy: "InSpline AI System",
+    dataVerified: ["Patient ID", "Patient Name", "DOB", "Contact Info", "Insurance On File"],
+    verificationScore: 60,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    endpoint: "https://pms.dental.local/api/patient/data",
+    errorMessage: "Carrier returned an incomplete benefit set; re-run required for the missing fields.",
+    eligibilityCheck: "ACTIVE — eligibility confirmed, benefit detail incomplete",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: not returned",
+    coverageDetails: "Annual Maximum: $1,800/year | Remaining benefit not returned by carrier",
+    deductibleInfo: "Deductible: $1,200 | Met: not returned",
+    transcript: "FETCH finished with partial data for Jennifer Ann Williams. Missing fields queued for a follow-up run.",
+  },
+  {
+    id: "13",
+    requestId: "REQ-20260820-0910-1005",
+    type: "API",
+    method: "POST /api/benefits/query",
+    startTime: "2026-08-20 09:10:31",
+    endTime: "2026-08-20 09:12:12",
+    duration: "2m 41s",
+    status: "PARTIAL",
+    patientId: "1005",
+    patientName: "Jennifer Ann Williams",
+    insuranceProvider: "Aetna Dental",
+    insuranceRep: "API System",
+    runBy: "InSpline AI System",
+    dataVerified: ["Subscriber ID", "Group Number", "Plan Status", "Annual Maximum", "Deductible", "Preventive %", "Basic %", "Major %"],
+    verificationScore: 55,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    responseCode: "206",
+    endpoint: "https://api.aetna.com/dental/benefits",
+    errorMessage: "Carrier returned an incomplete benefit set; re-run required for the missing fields.",
+    eligibilityCheck: "ACTIVE — eligibility confirmed, benefit detail incomplete",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: not returned",
+    coverageDetails: "Annual Maximum: $1,800/year | Remaining benefit not returned by carrier",
+    deductibleInfo: "Deductible: $1,200 | Met: not returned",
+    transcript: "API finished with partial data for Jennifer Ann Williams. Missing fields queued for a follow-up run.",
+  },
+  {
+    id: "14",
+    requestId: "REQ-20260820-1002-1005",
+    type: "FAX",
+    method: "FAX /fax/document-analysis",
+    startTime: "2026-08-20 10:02:38",
+    endTime: "2026-08-20 10:08:19",
+    duration: "6m 41s",
+    status: "SUCCESS",
+    patientId: "1005",
+    patientName: "Jennifer Ann Williams",
+    insuranceProvider: "Aetna Dental",
+    insuranceRep: "Fax System",
+    runBy: "InSpline AI System",
+    dataVerified: ["Member ID", "Plan Name", "Effective Date", "Coverage", "Annual Maximum"],
+    verificationScore: 85,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-20",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $1,800/year | Plan: Aetna Dental | Group: GRP-33333",
+    deductibleInfo: "Deductible: $1,200 | Met: $800",
+    transcript: "FAX completed for Jennifer Ann Williams. All requested fields verified.",
+  },
+  // ---- 1006 — Christopher James Davis ----
+  {
+    id: "15",
+    requestId: "REQ-20260818-1520-1006",
+    type: "API",
+    method: "POST /api/benefits/query",
+    startTime: "2026-08-18 15:20:45",
+    endTime: "2026-08-18 15:21:26",
+    duration: "1m 41s",
+    status: "SUCCESS",
+    patientId: "1006",
+    patientName: "Christopher James Davis",
+    insuranceProvider: "Guardian Dental",
+    insuranceRep: "API System",
+    runBy: "InSpline AI System",
+    dataVerified: ["Subscriber ID", "Group Number", "Plan Status", "Annual Maximum", "Deductible", "Preventive %", "Basic %", "Major %"],
+    verificationScore: 92,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    responseCode: "200",
+    endpoint: "https://api.guardian.com/dental/benefits",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-18",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $2,000/year | Plan: Guardian Dental | Group: GRP-99999",
+    deductibleInfo: "Deductible: $1,500 | Met: $1,500",
+    transcript: "API completed for Christopher James Davis. All requested fields verified.",
+  },
+  {
+    id: "16",
+    requestId: "REQ-20260818-1600-1006",
+    type: "CALL",
+    method: "VOICE /ai-agent/verify",
+    startTime: "2026-08-18 16:00:52",
+    endTime: "2026-08-18 16:27:33",
+    duration: "27m 41s",
+    status: "SUCCESS",
+    patientId: "1006",
+    patientName: "Christopher James Davis",
+    insuranceProvider: "Guardian Dental",
+    insuranceRep: "Amanda Rodriguez",
+    runBy: "InSpline AI System",
+    dataVerified: ["Eligibility", "Benefits", "Coverage Limits", "Deductibles", "Waiting Periods"],
+    verificationScore: 100,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    phoneNumber: "1-800-555-0116",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-18",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $2,000/year | Plan: Guardian Dental | Group: GRP-99999",
+    deductibleInfo: "Deductible: $1,500 | Met: $1,500",
+    transcript: "CALL completed for Christopher James Davis. All requested fields verified.",
+    callHistory: [
+      {
+        timestamp: "10:45:22",
+        speaker: "AI",
+        message: "Good morning, this is the InSpline verification agent calling on behalf of Bright Smile Dental Group to verify benefits for Christopher James Davis.",
+        type: "question",
+      },
+      {
+        timestamp: "10:45:39",
+        speaker: "InsuranceRep",
+        message: "This is Amanda Rodriguez with Guardian Dental. I can help with that — may I have the subscriber ID and date of birth?",
+        type: "answer",
+      },
+      {
+        timestamp: "10:45:56",
+        speaker: "AI",
+        message: "Subscriber ID is 888999000, group number GRP-99999.",
+        type: "confirmation",
+      },
+      {
+        timestamp: "10:46:13",
+        speaker: "InsuranceRep",
+        message: "Thank you, I have the member on file. What would you like to verify today?",
+        type: "answer",
+      },
+      {
+        timestamp: "10:46:30",
+        speaker: "AI",
+        message: "Annual maximum, remaining benefit, deductible status and the coverage tiers, please.",
+        type: "question",
+      },
+      {
+        timestamp: "10:46:47",
+        speaker: "InsuranceRep",
+        message: "Annual maximum is $2,000/year, deductible $1,500 with $1,500 met. Preventive 100%, basic 80%, major 50%.",
+        type: "answer",
+      },
+      {
+        timestamp: "10:47:04",
+        speaker: "AI",
+        message: "That matches what we have on file. Thank you for your time.",
+        type: "confirmation",
+      },
+      {
+        timestamp: "10:47:21",
+        speaker: "System",
+        message: "Call completed. All requested fields verified. Status: SUCCESS",
+        type: "note",
+      },
+    ],
+  },
+  // ---- 1007 — Amanda Grace Brown ----
+  {
+    id: "17",
+    requestId: "REQ-20260820-0815-1007",
+    type: "FETCH",
+    method: "GET /pms/patient/data",
+    startTime: "2026-08-20 08:15:59",
+    endTime: "2026-08-20 08:17:40",
+    duration: "2m 41s",
+    status: "SUCCESS",
+    patientId: "1007",
+    patientName: "Amanda Grace Brown",
+    insuranceProvider: "-",
+    insuranceRep: "-",
+    runBy: "InSpline AI System",
+    dataVerified: ["Patient ID", "Patient Name", "DOB", "Contact Info", "Insurance On File"],
+    verificationScore: 100,
+    fetchStatus: "completed",
+    saveStatus: "completed",
+    endpoint: "https://pms.dental.local/api/patient/data",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-20",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $1,500/year | Plan: Humana Dental | Group: GRP-66666",
+    deductibleInfo: "Deductible: $1,000 | Met: $300",
+    transcript: "FETCH completed for Amanda Grace Brown. All requested fields verified.",
+  },
+  {
+    id: "18",
+    requestId: "REQ-20260820-0845-1007",
+    type: "API",
+    method: "POST /api/benefits/query",
+    startTime: "2026-08-20 08:45:06",
+    endTime: "2026-08-20 08:46:47",
+    duration: "1m 41s",
+    status: "SUCCESS",
+    patientId: "1007",
+    patientName: "Amanda Grace Brown",
+    insuranceProvider: "Humana Dental",
+    insuranceRep: "API System",
+    runBy: "InSpline AI System",
+    dataVerified: ["Subscriber ID", "Group Number", "Plan Status", "Annual Maximum", "Deductible", "Preventive %", "Basic %", "Major %"],
+    verificationScore: 92,
+    fetchStatus: "completed",
+    saveStatus: "completed",
+    responseCode: "200",
+    endpoint: "https://api.humana.com/dental/benefits",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-20",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $1,500/year | Plan: Humana Dental | Group: GRP-66666",
+    deductibleInfo: "Deductible: $1,000 | Met: $300",
+    transcript: "API completed for Amanda Grace Brown. All requested fields verified.",
+  },
+  {
+    id: "19",
+    requestId: "REQ-20260820-1130-1007",
+    type: "CALL",
+    method: "VOICE /ai-agent/verify",
+    startTime: "2026-08-20 11:30:13",
+    endTime: "2026-08-20 11:49:54",
+    duration: "19m 41s",
+    status: "PARTIAL",
+    patientId: "1007",
+    patientName: "Amanda Grace Brown",
+    insuranceProvider: "Humana Dental",
+    insuranceRep: "Terrence Bell",
+    runBy: "InSpline AI System",
+    dataVerified: ["Eligibility", "Benefits", "Coverage Limits", "Deductibles", "Waiting Periods"],
+    verificationScore: 48,
+    fetchStatus: "completed",
+    saveStatus: "completed",
+    phoneNumber: "1-800-555-0119",
+    errorMessage: "Carrier returned an incomplete benefit set; re-run required for the missing fields.",
+    eligibilityCheck: "ACTIVE — eligibility confirmed, benefit detail incomplete",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: not returned",
+    coverageDetails: "Annual Maximum: $1,500/year | Remaining benefit not returned by carrier",
+    deductibleInfo: "Deductible: $1,000 | Met: not returned",
+    transcript: "CALL finished with partial data for Amanda Grace Brown. Missing fields queued for a follow-up run.",
+    callHistory: [
+      {
+        timestamp: "10:45:22",
+        speaker: "AI",
+        message: "Good morning, this is the InSpline verification agent calling on behalf of Bright Smile Dental Group to verify benefits for Amanda Grace Brown.",
+        type: "question",
+      },
+      {
+        timestamp: "10:45:39",
+        speaker: "InsuranceRep",
+        message: "This is Terrence Bell with Humana Dental. I can help with that — may I have the subscriber ID and date of birth?",
+        type: "answer",
+      },
+      {
+        timestamp: "10:45:56",
+        speaker: "AI",
+        message: "Subscriber ID is 444555666, group number GRP-66666.",
+        type: "confirmation",
+      },
+      {
+        timestamp: "10:46:13",
+        speaker: "InsuranceRep",
+        message: "Thank you, I have the member on file. What would you like to verify today?",
+        type: "answer",
+      },
+      {
+        timestamp: "10:46:30",
+        speaker: "AI",
+        message: "Annual maximum, remaining benefit, deductible status and the coverage tiers, please.",
+        type: "question",
+      },
+      {
+        timestamp: "10:46:47",
+        speaker: "InsuranceRep",
+        message: "Let me pull that up — please hold while I check the benefit detail.",
+        type: "hold",
+      },
+      {
+        timestamp: "10:47:04",
+        speaker: "System",
+        message: "Hold exceeded 14 minutes; carrier line disconnected before benefits were read back.",
+        type: "note",
+      },
+      {
+        timestamp: "10:47:21",
+        speaker: "System",
+        message: "Call ended early. Partial data captured. Status: PARTIAL",
+        type: "note",
+      },
+    ],
+  },
+  {
+    id: "20",
+    requestId: "REQ-20260820-1210-1007",
+    type: "SAVE",
+    method: "POST /pms/patient/save",
+    startTime: "2026-08-20 12:10:20",
+    endTime: "2026-08-20 12:12:01",
+    duration: "2m 41s",
+    status: "SUCCESS",
+    patientId: "1007",
+    patientName: "Amanda Grace Brown",
+    insuranceProvider: "-",
+    insuranceRep: "-",
+    runBy: "InSpline AI System",
+    dataVerified: ["Verified Data", "Insurance Benefits", "Coverage Details", "Deductible Info"],
+    verificationScore: 100,
+    fetchStatus: "completed",
+    saveStatus: "completed",
+    endpoint: "https://pms.dental.local/api/patient/save",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-20",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $1,500/year | Plan: Humana Dental | Group: GRP-66666",
+    deductibleInfo: "Deductible: $1,000 | Met: $300",
+    transcript: "SAVE completed for Amanda Grace Brown. All requested fields verified.",
+  },
+  // ---- 1008 — Robert William Garcia ----
+  {
+    id: "21",
+    requestId: "REQ-20260819-1020-1008",
+    type: "FETCH",
+    method: "GET /pms/patient/data",
+    startTime: "2026-08-19 10:20:27",
+    endTime: "2026-08-19 10:26:08",
+    duration: "6m 41s",
+    status: "PARTIAL",
+    patientId: "1008",
+    patientName: "Robert William Garcia",
+    insuranceProvider: "-",
+    insuranceRep: "-",
+    runBy: "InSpline AI System",
+    dataVerified: ["Patient ID", "Patient Name", "DOB", "Contact Info", "Insurance On File"],
+    verificationScore: 60,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    endpoint: "https://pms.dental.local/api/patient/data",
+    errorMessage: "Carrier returned an incomplete benefit set; re-run required for the missing fields.",
+    eligibilityCheck: "ACTIVE — eligibility confirmed, benefit detail incomplete",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: not returned",
+    coverageDetails: "Annual Maximum: $2,000/year | Remaining benefit not returned by carrier",
+    deductibleInfo: "Deductible: $1,500 | Met: not returned",
+    transcript: "FETCH finished with partial data for Robert William Garcia. Missing fields queued for a follow-up run.",
+  },
+  {
+    id: "22",
+    requestId: "REQ-20260819-1105-1008",
+    type: "FAX",
+    method: "FAX /fax/document-analysis",
+    startTime: "2026-08-19 11:05:34",
+    endTime: "2026-08-19 11:06:15",
+    duration: "0m 12s",
+    status: "FAILED",
+    patientId: "1008",
+    patientName: "Robert William Garcia",
+    insuranceProvider: "United Healthcare Dental",
+    insuranceRep: "Fax System",
+    runBy: "InSpline AI System",
+    dataVerified: [],
+    verificationScore: 0,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    errorMessage: "Fax transmission failed: no answer at the carrier fax line after 5 attempts.",
+    eligibilityCheck: "Not verified",
+    benefitsVerification: "Not verified",
+    coverageDetails: "Not verified",
+    deductibleInfo: "Not verified",
+    transcript: "FAX failed for Robert William Garcia. See the error message for detail.",
+  },
+  {
+    id: "23",
+    requestId: "REQ-20260819-1545-1008",
+    type: "API",
+    method: "POST /api/benefits/query",
+    startTime: "2026-08-19 15:45:41",
+    endTime: "2026-08-19 15:47:22",
+    duration: "2m 41s",
+    status: "PARTIAL",
+    patientId: "1008",
+    patientName: "Robert William Garcia",
+    insuranceProvider: "United Healthcare Dental",
+    insuranceRep: "API System",
+    runBy: "InSpline AI System",
+    dataVerified: ["Subscriber ID", "Group Number", "Plan Status", "Annual Maximum", "Deductible", "Preventive %", "Basic %", "Major %"],
+    verificationScore: 55,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    responseCode: "206",
+    endpoint: "https://api.united.com/dental/benefits",
+    errorMessage: "Carrier returned an incomplete benefit set; re-run required for the missing fields.",
+    eligibilityCheck: "ACTIVE — eligibility confirmed, benefit detail incomplete",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: not returned",
+    coverageDetails: "Annual Maximum: $2,000/year | Remaining benefit not returned by carrier",
+    deductibleInfo: "Deductible: $1,500 | Met: not returned",
+    transcript: "API finished with partial data for Robert William Garcia. Missing fields queued for a follow-up run.",
+  },
+  // ---- 1009 — Patricia Lynn Miller ----
+  {
+    id: "24",
+    requestId: "REQ-20260816-0948-1009",
+    type: "API",
+    method: "POST /api/benefits/query",
+    startTime: "2026-08-16 09:48:48",
+    endTime: "2026-08-16 09:49:29",
+    duration: "0m 12s",
+    status: "FAILED",
+    patientId: "1009",
+    patientName: "Patricia Lynn Miller",
+    insuranceProvider: "Anthem Blue Cross",
+    insuranceRep: "API System",
+    runBy: "InSpline AI System",
+    dataVerified: [],
+    verificationScore: 0,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    responseCode: "503",
+    endpoint: "https://api.anthem.com/dental/benefits",
+    errorMessage: "Carrier endpoint returned 503 Service Unavailable after 3 retries.",
+    eligibilityCheck: "Not verified",
+    benefitsVerification: "Not verified",
+    coverageDetails: "Not verified",
+    deductibleInfo: "Not verified",
+    transcript: "API failed for Patricia Lynn Miller. See the error message for detail.",
+  },
+  {
+    id: "25",
+    requestId: "REQ-20260816-1322-1009",
+    type: "FAX",
+    method: "FAX /fax/document-analysis",
+    startTime: "2026-08-16 13:22:55",
+    endTime: "2026-08-16 13:30:36",
+    duration: "8m 41s",
+    status: "PARTIAL",
+    patientId: "1009",
+    patientName: "Patricia Lynn Miller",
+    insuranceProvider: "Anthem Blue Cross",
+    insuranceRep: "Fax System",
+    runBy: "InSpline AI System",
+    dataVerified: ["Member ID", "Plan Name", "Effective Date", "Coverage", "Annual Maximum"],
+    verificationScore: 40,
+    fetchStatus: "pending",
+    saveStatus: "pending",
+    errorMessage: "Carrier returned an incomplete benefit set; re-run required for the missing fields.",
+    eligibilityCheck: "ACTIVE — eligibility confirmed, benefit detail incomplete",
+    benefitsVerification: "Preventive: 100%, Basic: 85%, Major: not returned",
+    coverageDetails: "Annual Maximum: $2,200/year | Remaining benefit not returned by carrier",
+    deductibleInfo: "Deductible: $1,800 | Met: not returned",
+    transcript: "FAX finished with partial data for Patricia Lynn Miller. Missing fields queued for a follow-up run.",
+  },
+  // ---- 1010 — James Alexander Wilson ----
+  {
+    id: "26",
+    requestId: "REQ-20260820-0748-1010",
+    type: "FETCH",
+    method: "GET /pms/patient/data",
+    startTime: "2026-08-20 07:48:02",
+    endTime: "2026-08-20 07:50:43",
+    duration: "2m 41s",
+    status: "SUCCESS",
+    patientId: "1010",
+    patientName: "James Alexander Wilson",
+    insuranceProvider: "-",
+    insuranceRep: "-",
+    runBy: "InSpline AI System",
+    dataVerified: ["Patient ID", "Patient Name", "DOB", "Contact Info", "Insurance On File"],
+    verificationScore: 100,
+    fetchStatus: "completed",
+    saveStatus: "pending",
+    endpoint: "https://pms.dental.local/api/patient/data",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-20",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $1,500/year | Plan: Cigna Dental | Group: GRP-22222",
+    deductibleInfo: "Deductible: $800 | Met: $400",
+    transcript: "FETCH completed for James Alexander Wilson. All requested fields verified.",
+  },
+  {
+    id: "27",
+    requestId: "REQ-20260820-0905-1010",
+    type: "API",
+    method: "POST /api/benefits/query",
+    startTime: "2026-08-20 09:05:09",
+    endTime: "2026-08-20 09:06:50",
+    duration: "1m 41s",
+    status: "SUCCESS",
+    patientId: "1010",
+    patientName: "James Alexander Wilson",
+    insuranceProvider: "Cigna Dental",
+    insuranceRep: "API System",
+    runBy: "InSpline AI System",
+    dataVerified: ["Subscriber ID", "Group Number", "Plan Status", "Annual Maximum", "Deductible", "Preventive %", "Basic %", "Major %"],
+    verificationScore: 92,
+    fetchStatus: "completed",
+    saveStatus: "pending",
+    responseCode: "200",
+    endpoint: "https://api.cigna.com/dental/benefits",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-20",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $1,500/year | Plan: Cigna Dental | Group: GRP-22222",
+    deductibleInfo: "Deductible: $800 | Met: $400",
+    transcript: "API completed for James Alexander Wilson. All requested fields verified.",
+  },
+  {
+    id: "28",
+    requestId: "REQ-20260820-1045-1010",
+    type: "CALL",
+    method: "VOICE /ai-agent/verify",
+    startTime: "2026-08-20 10:45:16",
+    endTime: "2026-08-20 11:29:57",
+    duration: "44m 41s",
+    status: "SUCCESS",
+    patientId: "1010",
+    patientName: "James Alexander Wilson",
+    insuranceProvider: "Cigna Dental",
+    insuranceRep: "Priya Raman",
+    runBy: "InSpline AI System",
+    dataVerified: ["Eligibility", "Benefits", "Coverage Limits", "Deductibles", "Waiting Periods"],
+    verificationScore: 100,
+    fetchStatus: "completed",
+    saveStatus: "pending",
+    phoneNumber: "1-800-555-0128",
+    eligibilityCheck: "ACTIVE — policy in good standing, verified 2026-08-20",
+    benefitsVerification: "Preventive: 100%, Basic: 80%, Major: 50%",
+    coverageDetails: "Annual Maximum: $1,500/year | Plan: Cigna Dental | Group: GRP-22222",
+    deductibleInfo: "Deductible: $800 | Met: $400",
+    transcript: "CALL completed for James Alexander Wilson. All requested fields verified.",
+    callHistory: [
+      {
+        timestamp: "10:45:22",
+        speaker: "AI",
+        message: "Good morning, this is the InSpline verification agent calling on behalf of Bright Smile Dental Group to verify benefits for James Alexander Wilson.",
+        type: "question",
+      },
+      {
+        timestamp: "10:45:39",
+        speaker: "InsuranceRep",
+        message: "This is Priya Raman with Cigna Dental. I can help with that — may I have the subscriber ID and date of birth?",
+        type: "answer",
+      },
+      {
+        timestamp: "10:45:56",
+        speaker: "AI",
+        message: "Subscriber ID is 333444555, group number GRP-22222.",
+        type: "confirmation",
+      },
+      {
+        timestamp: "10:46:13",
+        speaker: "InsuranceRep",
+        message: "Thank you, I have the member on file. What would you like to verify today?",
+        type: "answer",
+      },
+      {
+        timestamp: "10:46:30",
+        speaker: "AI",
+        message: "Annual maximum, remaining benefit, deductible status and the coverage tiers, please.",
+        type: "question",
+      },
+      {
+        timestamp: "10:46:47",
+        speaker: "InsuranceRep",
+        message: "Annual maximum is $1,500/year, deductible $800 with $400 met. Preventive 100%, basic 80%, major 50%.",
+        type: "answer",
+      },
+      {
+        timestamp: "10:47:04",
+        speaker: "AI",
+        message: "That matches what we have on file. Thank you for your time.",
+        type: "confirmation",
+      },
+      {
+        timestamp: "10:47:21",
+        speaker: "System",
+        message: "Call completed. All requested fields verified. Status: SUCCESS",
+        type: "note",
+      },
+    ],
+  },
+];
+
+type StatusFilter = 'ALL' | Transaction['status'];
+
+/** Status filter chips: label, icon and the colours used when selected. */
+const STATUS_FILTERS: Array<{
+  key: Transaction['status'];
+  label: string;
+  icon: string;
+  activeClass: string;
+  idleClass: string;
+}> = [
+  {
+    key: 'SUCCESS',
+    label: 'Success',
+    icon: 'check_circle',
+    activeClass: 'bg-green-600 text-white',
+    idleClass: 'text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20',
+  },
+  {
+    key: 'PARTIAL',
+    label: 'Partial',
+    icon: 'error',
+    activeClass: 'bg-yellow-500 text-white',
+    idleClass: 'text-yellow-700 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20',
+  },
+  {
+    key: 'FAILED',
+    label: 'Failed',
+    icon: 'cancel',
+    activeClass: 'bg-red-600 text-white',
+    idleClass: 'text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20',
+  },
 ];
 
 type FaxStep = 'idle' | 'step1' | 'step2' | 'step3' | 'completed';
@@ -288,7 +1127,7 @@ interface SmartAITransactionHistoryProps {
 
 const SmartAITransactionHistory: React.FC<SmartAITransactionHistoryProps> = ({ patientId, refreshTrigger }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [typeFilter, setTypeFilter] = useState<'ALL' | 'API' | 'CALL' | 'FAX'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [activeDetailTab, setActiveDetailTab] = useState<{ [key: string]: string }>({});
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -650,11 +1489,14 @@ Important Notes
     return parts.length > 0 ? parts : text;
   };
 
-  // Filter data based on selected filters
-  const filteredData = transactions.filter(transaction => {
-    const typeMatch = typeFilter === 'ALL' || transaction.type === typeFilter;
-    return typeMatch;
-  });
+  // Filter data based on the selected status
+  const filteredData = transactions.filter(
+    transaction => statusFilter === 'ALL' || transaction.status === statusFilter
+  );
+
+  // Count shown on each chip: how many rows that status would keep.
+  const countByStatus = (status: Transaction['status'] | 'ALL') =>
+    transactions.filter(t => status === 'ALL' || t.status === status).length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -680,64 +1522,69 @@ Important Notes
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-1 px-4 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
-        {/* Type Filters */}
-        <button
-          onClick={() => setTypeFilter('ALL')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'ALL'
-            ? 'bg-slate-900 dark:bg-slate-700 text-white'
-            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-        >
-          ALL
-        </button>
-        <button
-          onClick={() => setTypeFilter('API')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'API'
-            ? 'bg-blue-600 text-white'
-            : 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
-            }`}
-        >
-          API
-        </button>
-
-        <button
-          onClick={() => setTypeFilter('CALL')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${typeFilter === 'CALL'
-            ? 'bg-purple-600 text-white'
-            : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
-            }`}
-        >
-          CALL
-        </button>
-
-        {/* Clear Filters */}
-        {typeFilter !== 'ALL' && (
+      <div className="px-4 py-2.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="w-12 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            Status
+          </span>
           <button
-            onClick={() => {
-              setTypeFilter('ALL');
-            }}
-            className="px-2 py-0.5 rounded text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-1"
+            onClick={() => setStatusFilter('ALL')}
+            className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors flex items-center gap-1 ${statusFilter === 'ALL'
+              ? 'bg-slate-900 dark:bg-slate-700 text-white'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
           >
-            Clear
+            ALL
+            <span className={`px-1 rounded-full text-[9px] ${statusFilter === 'ALL' ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-800'}`}>
+              {countByStatus('ALL')}
+            </span>
           </button>
-        )}
+          {STATUS_FILTERS.map(option => {
+            const isSelected = statusFilter === option.key;
+            return (
+              <button
+                key={option.key}
+                onClick={() => setStatusFilter(isSelected ? 'ALL' : option.key)}
+                aria-pressed={isSelected}
+                className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors flex items-center gap-1 ${isSelected ? option.activeClass : option.idleClass
+                  }`}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>{option.icon}</span>
+                {option.label}
+                <span className={`px-1 rounded-full text-[9px] ${isSelected ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-800'}`}>
+                  {countByStatus(option.key)}
+                </span>
+              </button>
+            );
+          })}
 
-        {/* Results Count */}
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={fetchTransactions}
-            disabled={loading}
-            className="px-2 py-0.5 rounded text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 disabled:opacity-50"
-            title="Refresh transactions"
-          >
-            <span className={`material-symbols-outlined text-sm ${loading ? 'animate-spin' : ''}`}>refresh</span>
-            Refresh
-          </button>
-          <div className="text-[10px] text-slate-500 dark:text-slate-400">
-            {filteredData.length} of {transactions.length}
+          {statusFilter !== 'ALL' && (
+            <button
+              onClick={() => setStatusFilter('ALL')}
+              className="ml-1 px-2 py-0.5 rounded text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>filter_alt_off</span>
+              Clear
+            </button>
+          )}
+
+          {/* Refresh + result count */}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={fetchTransactions}
+              disabled={loading}
+              className="px-2 py-0.5 rounded text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 disabled:opacity-50"
+              title="Refresh transactions"
+            >
+              <span className={`material-symbols-outlined text-sm ${loading ? 'animate-spin' : ''}`}>refresh</span>
+              Refresh
+            </button>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">
+              {filteredData.length} of {transactions.length}
+            </div>
           </div>
         </div>
+
       </div>
 
       <div className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
@@ -836,7 +1683,7 @@ Important Notes
                       >
                         Transaction Summary
                       </button>
-                      {transaction.status === 'SUCCESS' && transaction.callHistory && transaction.callHistory.length > 0 ? (
+                      {transaction.callHistory && transaction.callHistory.length > 0 ? (
                         <button
                           onClick={() => setDetailTab(transaction.id, 'callHistory')}
                           className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${(activeDetailTab[transaction.id] || 'action') === 'callHistory'

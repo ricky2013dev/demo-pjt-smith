@@ -1,0 +1,35 @@
+[
+  {
+    "id": "PRV-0001",
+    "accountId": "ACC-0001",
+    "name": "Bright Smile Dental Group",
+    "npiNumber": "1999999984",
+    "faxNumber": "(512) 555-0142",
+    "phoneNumber": "(512) 555-0100",
+    "address": "1200 Congress Ave, Suite 300, Austin, TX 78701",
+    "taxNumber": "74-3011882",
+    "createdAt": "2025-01-06T09:00:00.000Z"
+  },
+  {
+    "id": "PRV-0002",
+    "accountId": "ACC-0002",
+    "name": "Riverside Family Dentistry",
+    "npiNumber": "1861345572",
+    "faxNumber": "(312) 555-0177",
+    "phoneNumber": "(312) 555-0110",
+    "address": "455 Riverside Dr, Chicago, IL 60601",
+    "taxNumber": "36-4520918",
+    "createdAt": "2025-01-06T09:05:00.000Z"
+  },
+  {
+    "id": "PRV-0003",
+    "accountId": "ACC-0003",
+    "name": "Lakeview Orthodontics",
+    "npiNumber": "1730294857",
+    "faxNumber": "(206) 555-0198",
+    "phoneNumber": "(206) 555-0120",
+    "address": "88 Lakeview Blvd, Seattle, WA 98109",
+    "taxNumber": "91-2277340",
+    "createdAt": "2025-01-06T09:10:00.000Z"
+  }
+]

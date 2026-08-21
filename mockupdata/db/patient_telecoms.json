@@ -1,0 +1,116 @@
+[
+  {
+    "id": "TEL-0001",
+    "patientId": "P0000001",
+    "system": "phone",
+    "value": "(555) 123-4567"
+  },
+  {
+    "id": "TEL-0002",
+    "patientId": "P0000001",
+    "system": "email",
+    "value": "sarah.johnson@email.com"
+  },
+  {
+    "id": "TEL-0003",
+    "patientId": "P0000002",
+    "system": "phone",
+    "value": "(555) 234-5678"
+  },
+  {
+    "id": "TEL-0004",
+    "patientId": "P0000002",
+    "system": "email",
+    "value": "m.anderson@email.com"
+  },
+  {
+    "id": "TEL-0005",
+    "patientId": "P0000003",
+    "system": "phone",
+    "value": "(555) 345-6789"
+  },
+  {
+    "id": "TEL-0006",
+    "patientId": "P0000003",
+    "system": "email",
+    "value": "emily.martinez@email.com"
+  },
+  {
+    "id": "TEL-0007",
+    "patientId": "P0000004",
+    "system": "phone",
+    "value": "(555) 456-7890"
+  },
+  {
+    "id": "TEL-0008",
+    "patientId": "P0000005",
+    "system": "phone",
+    "value": "(555) 567-8901"
+  },
+  {
+    "id": "TEL-0009",
+    "patientId": "P0000005",
+    "system": "email",
+    "value": "j.williams@email.com"
+  },
+  {
+    "id": "TEL-0010",
+    "patientId": "P0000006",
+    "system": "phone",
+    "value": "(555) 678-9012"
+  },
+  {
+    "id": "TEL-0011",
+    "patientId": "P0000006",
+    "system": "email",
+    "value": "chris.davis@email.com"
+  },
+  {
+    "id": "TEL-0012",
+    "patientId": "P0000007",
+    "system": "phone",
+    "value": "(555) 789-0123"
+  },
+  {
+    "id": "TEL-0013",
+    "patientId": "P0000007",
+    "system": "email",
+    "value": "amanda.brown@email.com"
+  },
+  {
+    "id": "TEL-0014",
+    "patientId": "P0000008",
+    "system": "phone",
+    "value": "(555) 890-1234"
+  },
+  {
+    "id": "TEL-0015",
+    "patientId": "P0000008",
+    "system": "email",
+    "value": "robert.garcia@email.com"
+  },
+  {
+    "id": "TEL-0016",
+    "patientId": "P0000009",
+    "system": "phone",
+    "value": "(555) 901-2345"
+  },
+  {
+    "id": "TEL-0017",
+    "patientId": "P0000009",
+    "system": "email",
+    "value": "patricia.miller@email.com"
+  },
+  {
+    "id": "TEL-0018",
+    "patientId": "P0000010",
+    "system": "phone",
+    "value": "(555) 012-3456"
+  },
+  {
+    "id": "TEL-0019",
+    "patientId": "P0000010",
+    "system": "email",
+    "value": "jwilson.parent@email.com"
+  }
+]

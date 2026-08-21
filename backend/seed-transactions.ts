@@ -1,6 +1,6 @@
-import { db } from "./db";
+import { db, eq } from "./db";
 import { transactions, callCommunications, transactionDataVerified, patients, patientTelecoms, patientAddresses, verificationStatuses, users } from "@shared/schema";
-import { eq } from "drizzle-orm";
+
 
 // Sample transaction data for patient P000001 (test01lee)
 const sampleTransactions = [

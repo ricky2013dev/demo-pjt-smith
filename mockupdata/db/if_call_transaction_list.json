@@ -1,0 +1,40 @@
+[
+  {
+    "id": "IFT-0001",
+    "transactionId": "TXN-0007",
+    "requestId": "REQ-2025-12-02-1400",
+    "patientId": "P0000003",
+    "patientName": "Emily Martinez",
+    "insuranceProvider": "Cigna Dental",
+    "policyNumber": "POL-5567123",
+    "groupNumber": "GRP-11223",
+    "subscriberId": "456789123",
+    "phoneNumber": "(800) 555-0181",
+    "startTime": "2025-12-02 14:00:00",
+    "endTime": null,
+    "duration": null,
+    "status": "Waiting",
+    "insuranceRep": null,
+    "transcript": null,
+    "createdAt": "2025-12-02T14:00:00.000Z"
+  },
+  {
+    "id": "IFT-0002",
+    "transactionId": "TXN-0005",
+    "requestId": "REQ-2025-11-29-1130",
+    "patientId": "P0000002",
+    "patientName": "Michael Anderson",
+    "insuranceProvider": "Delta Dental",
+    "policyNumber": "POL-3390881",
+    "groupNumber": "GRP-45678",
+    "subscriberId": "987654321",
+    "phoneNumber": "(800) 555-0193",
+    "startTime": "2025-11-29 11:30:00",
+    "endTime": "2025-11-29 11:42:31",
+    "duration": "12m 31s",
+    "status": "SUCCESS",
+    "insuranceRep": "Karen M.",
+    "transcript": "AI agent reached Delta Dental representative Karen M. and confirmed major services coverage and waiting period status.",
+    "createdAt": "2025-11-29T11:42:31.000Z"
+  }
+]

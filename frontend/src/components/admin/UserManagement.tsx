@@ -7,6 +7,8 @@ interface User {
   username: string;
   role: string;
   stediMode: string;
+  accountId: string | null;
+  accountName?: string | null;
   providerId: string | null;
   providerName?: string | null;
   npiNumber?: string | null;
@@ -17,9 +19,30 @@ interface Provider {
   name: string;
 }
 
+/** Clinic account a user signs in under. */
+interface Account {
+  id: string;
+  name: string;
+}
+
+/** Clinic roles sit under an account; `admin` is the InSpline system administrator. */
+const isClinicRole = (role: string) => role === 'manager' || role === 'dental';
+
+/** A blank create form; also what the modals reset to. */
+const EMPTY_FORM = {
+  email: '',
+  username: '',
+  password: '',
+  role: 'dental',
+  stediMode: 'mockup',
+  accountId: '',
+  providerId: '',
+};
+
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -36,19 +59,13 @@ const UserManagement: React.FC = () => {
     }));
   };
 
-  const [formData, setFormData] = useState({
-    email: '',
-    username: '',
-    password: '',
-    role: 'dental',
-    stediMode: 'mockup',
-    providerId: ''
-  });
+  const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
   useEffect(() => {
     fetchCurrentUser();
     fetchUsers();
     fetchProviders();
+    fetchAccounts();
   }, []);
 
   const fetchCurrentUser = async () => {
@@ -73,6 +90,17 @@ const UserManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch providers', error);
+    }
+  };
+
+  const fetchAccounts = async () => {
+    try {
+      const response = await fetch('/api/accounts', { credentials: 'include' });
+      if (response.ok) {
+        setAccounts(await response.json());
+      }
+    } catch (error) {
+      console.error('Failed to fetch accounts', error);
     }
   };
 
@@ -105,6 +133,7 @@ const UserManagement: React.FC = () => {
         body: JSON.stringify({
           ...formData,
           stediMode: formData.stediMode || 'mockup',
+          accountId: formData.accountId || null,
           providerId: formData.providerId || null
         })
       });
@@ -115,7 +144,7 @@ const UserManagement: React.FC = () => {
       }
 
       setShowCreateModal(false);
-      setFormData({ email: '', username: '', password: '', role: 'dental', stediMode: 'mockup', providerId: '' });
+      setFormData({ ...EMPTY_FORM });
       fetchUsers();
     } catch (err: any) {
       setError(err.message);
@@ -136,6 +165,7 @@ const UserManagement: React.FC = () => {
           username: formData.username,
           role: formData.role,
           stediMode: formData.stediMode || 'mockup',
+          accountId: formData.accountId || null,
           providerId: formData.providerId || null
         })
       });
@@ -147,7 +177,7 @@ const UserManagement: React.FC = () => {
 
       setShowEditModal(false);
       setSelectedUser(null);
-      setFormData({ email: '', username: '', password: '', role: 'dental', stediMode: 'mockup', providerId: '' });
+      setFormData({ ...EMPTY_FORM });
       fetchUsers();
     } catch (err: any) {
       setError(err.message);
@@ -193,7 +223,7 @@ const UserManagement: React.FC = () => {
 
       setShowPasswordModal(false);
       setSelectedUser(null);
-      setFormData({ email: '', username: '', password: '', role: 'dental', stediMode: 'mockup', providerId: '' });
+      setFormData({ ...EMPTY_FORM });
     } catch (err: any) {
       setError(err.message);
     }
@@ -207,6 +237,7 @@ const UserManagement: React.FC = () => {
       password: '',
       role: user.role,
       stediMode: user.stediMode || 'mockup',
+      accountId: user.accountId || '',
       providerId: user.providerId || ''
     });
     setShowEditModal(true);
@@ -239,7 +270,7 @@ const UserManagement: React.FC = () => {
       headerActions={
         <button
           onClick={() => {
-            setFormData({ email: '', username: '', password: '', role: 'dental', stediMode: 'mockup', providerId: '' });
+            setFormData({ ...EMPTY_FORM });
             setShowCreateModal(true);
           }}
           className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
@@ -271,6 +302,7 @@ const UserManagement: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Username</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Account</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Provider</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">NPI Number</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stedi Mode</th>
@@ -284,11 +316,14 @@ const UserManagement: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">{user.username}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.role === 'admin' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                      user.role === 'dental' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                        'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      user.role === 'manager' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+                        'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                       }`}>
-                      {user.role}
+                      {user.role === 'admin' ? 'system admin' : user.role}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                    {user.accountName || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                     {user.providerName || '-'}
@@ -391,12 +426,17 @@ const UserManagement: React.FC = () => {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
                 <select
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  // Switching to the system role drops the clinic the form held.
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    role: e.target.value,
+                    accountId: isClinicRole(e.target.value) ? formData.accountId : '',
+                  })}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
                 >
-                  <option value="dental">Dental</option>
-                  <option value="insurance">Insurance</option>
-                  <option value="admin">Admin</option>
+                  <option value="dental">Dental (clinic)</option>
+                  <option value="manager">Manager (clinic)</option>
+                  <option value="admin">System Admin</option>
                 </select>
               </div>
               <div>
@@ -410,6 +450,30 @@ const UserManagement: React.FC = () => {
                   <option value="test-data">Test Data (John Doe)</option>
                   <option value="real-data">Real Data (Live API)</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Account (clinic){isClinicRole(formData.role) && <span className="text-red-500"> *</span>}
+                </label>
+                <select
+                  value={formData.accountId}
+                  onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+                  required={isClinicRole(formData.role)}
+                  disabled={!isClinicRole(formData.role)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400"
+                >
+                  <option value="">Select an account...</option>
+                  {accounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                  {isClinicRole(formData.role)
+                    ? 'Manager and dental users belong to one clinic.'
+                    : 'System admins are not part of a clinic.'}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Provider (optional)</label>
@@ -476,12 +540,17 @@ const UserManagement: React.FC = () => {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
                 <select
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  // Switching to the system role drops the clinic the form held.
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    role: e.target.value,
+                    accountId: isClinicRole(e.target.value) ? formData.accountId : '',
+                  })}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
                 >
-                  <option value="dental">Dental</option>
-                  <option value="insurance">Insurance</option>
-                  <option value="admin">Admin</option>
+                  <option value="dental">Dental (clinic)</option>
+                  <option value="manager">Manager (clinic)</option>
+                  <option value="admin">System Admin</option>
                 </select>
               </div>
               <div>
@@ -495,6 +564,30 @@ const UserManagement: React.FC = () => {
                   <option value="test-data">Test Data (John Doe)</option>
                   <option value="real-data">Real Data (Live API)</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Account (clinic){isClinicRole(formData.role) && <span className="text-red-500"> *</span>}
+                </label>
+                <select
+                  value={formData.accountId}
+                  onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+                  required={isClinicRole(formData.role)}
+                  disabled={!isClinicRole(formData.role)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400"
+                >
+                  <option value="">Select an account...</option>
+                  {accounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                  {isClinicRole(formData.role)
+                    ? 'Manager and dental users belong to one clinic.'
+                    : 'System admins are not part of a clinic.'}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Provider (optional)</label>

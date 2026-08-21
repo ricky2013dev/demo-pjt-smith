@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'wouter';
 import { TabType } from '@/types/patient';
-import { MAIN_MENU, FOOTER_MENU } from '@/constants/navigation';
+import { findMenuItemByPath } from '@/constants/navigation';
 
 interface BreadcrumbProps {
   /** Appends the matching Patient Detail sub-menu label, when the page has tabs. */
@@ -13,13 +13,14 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ activeTab, className = '' }) =>
   const [location] = useLocation();
 
   const path = location.split('?')[0];
-  const item = [...MAIN_MENU, ...FOOTER_MENU].find(menuItem => menuItem.path === path);
+  const item = findMenuItemByPath(path);
 
   if (!item) return null;
 
+  // Tab pages name their open tab; page-based sections name the sub-page itself.
   const subItem = activeTab
     ? item.subMenu?.find(sub => sub.tab === activeTab)
-    : undefined;
+    : item.subMenu?.find(sub => sub.path === path);
 
   return (
     <nav

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db, eq, inArray } from "./db";
 import {
   transactions,
   transactionDataVerified,
@@ -13,7 +13,7 @@ import {
   coverageByCode,
   insurances
 } from "@shared/schema";
-import { eq, inArray } from "drizzle-orm";
+
 import bcrypt from "bcryptjs";
 import axios from "axios";
 import { readFileSync } from "fs";
@@ -21,8 +21,8 @@ import { join } from "path";
 import { encrypt, decrypt, maskSensitiveData } from "./crypto";
 import multer from "multer";
 import { processInsuranceCard } from "./ocr";
-import { auditLog, logPhiAccess, logPhiDecrypt, logAuth, logSecurityViolation } from "./audit";
-import { validateCreatePatient, validateUpdatePatient, validateLogin, sanitizePatientData } from "./validation";
+import { auditLog, logPhiAccess, logPhiDecrypt, logPhiView, logAuth, logSecurityViolation } from "./audit";
+import { validateCreatePatient, validateUpdatePatient, validateLogin, validateUpdateAccount, validateUpdatePaymentSetup, validateUpdateTeamMember, validateLinkSsoIdentity, sanitizePatientData, sanitizeString, USER_ROLES, isClinicRole } from "./validation";
 import { log } from "console";
 import pmsIfRouter from "./routes/pms-if";
 
@@ -30,6 +30,27 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  /**
+   * Loads the clinic (account) a user belongs to, in the shape the auth
+   * responses and the Account Management page share. Returns null when the
+   * user has not been assigned to one yet.
+   */
+  const getAccountSummary = async (accountId: string | null | undefined) => {
+    if (!accountId) return null;
+    const account = await storage.getAccountById(accountId);
+    if (!account) return null;
+    return {
+      id: account.id,
+      name: account.name,
+      npiNumber: account.npiNumber,
+      taxId: account.taxId,
+      phoneNumber: account.phoneNumber,
+      city: account.city,
+      state: account.state,
+      status: account.status,
+    };
+  };
 
   // Authentication routes
   /**
@@ -111,6 +132,10 @@ export async function registerRoutes(
       (req.session as any).userId = user.id;
       (req.session as any).userRole = user.role;
       (req.session as any).userEmail = user.email;
+      (req.session as any).accountId = user.accountId;
+
+      // Clinic the user signs in under, shown in the header and Account Management
+      const accountInfo = await getAccountSummary(user.accountId);
 
       // Fetch provider info if user has a provider assigned
       let providerInfo = null;
@@ -137,6 +162,8 @@ export async function registerRoutes(
           email: user.email,
           role: user.role,
           stediMode: user.stediMode,
+          accountId: user.accountId,
+          account: accountInfo,
           providerId: user.providerId,
           provider: providerInfo
         }
@@ -144,6 +171,123 @@ export async function registerRoutes(
     } catch (error: any) {
       auditLog('ERROR', { action: 'login', success: false, errorMessage: error.message }, req);
       res.status(500).json({ error: "Failed to login. Please try again." });
+    }
+  });
+
+  /**
+   * Display names for the mock single sign-on providers, used in error copy
+   * and audit entries.
+   */
+  const SSO_PROVIDER_LABELS: Record<string, string> = {
+    google: 'Google',
+    microsoft: 'Microsoft Teams',
+  };
+
+  /**
+   * @openapi
+   * /api/auth/sso/mock:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Mock single sign-on (demo only)
+   *     description: >
+   *       Simulates a Google or Microsoft Teams sign-in for both B2B agent and
+   *       admin users. No identity-provider token is verified - the selected
+   *       account email is matched against an existing user record and a normal
+   *       session is established. The caller decides where to route the user
+   *       based on the returned role.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - email
+   *               - provider
+   *             properties:
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 example: dental01@inspline.com
+   *               provider:
+   *                 type: string
+   *                 enum: [google, microsoft]
+   *                 example: google
+   *     responses:
+   *       200:
+   *         description: Mock sign-in successful
+   *       400:
+   *         description: Email or provider missing/invalid
+   *       401:
+   *         description: No account matches the selected identity
+   */
+  app.post("/api/auth/sso/mock", async (req, res) => {
+    try {
+      const provider = typeof req.body?.provider === 'string' ? req.body.provider.trim().toLowerCase() : '';
+      if (!SSO_PROVIDER_LABELS[provider]) {
+        return res.status(400).json({ error: "Unsupported sign-in provider" });
+      }
+      const providerLabel = SSO_PROVIDER_LABELS[provider];
+
+      const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        return res.status(400).json({ error: `A ${providerLabel} account email is required` });
+      }
+
+      // A manager can link a provider account to a team member, so an identity
+      // linked for this provider wins; otherwise the address has to be the
+      // user's own InSpline address.
+      const linked = await storage.getSsoIdentityByProviderEmail(provider, email);
+      const user = linked
+        ? await storage.getUser(linked.userId)
+        : await storage.getUserByEmail(email);
+
+      if (!user) {
+        logAuth('AUTH_LOGIN_FAILURE', email, false, req, `Mock ${providerLabel} sign-in: no matching user`);
+        return res.status(401).json({ error: `No InSpline account is linked to this ${providerLabel} account` });
+      }
+
+      (req.session as any).userId = user.id;
+      (req.session as any).userRole = user.role;
+      (req.session as any).userEmail = user.email;
+      (req.session as any).authProvider = `${provider}-mock`;
+      (req.session as any).accountId = user.accountId;
+
+      const accountInfo = await getAccountSummary(user.accountId);
+
+      let providerInfo = null;
+      if (user.providerId) {
+        const dentalProvider = await storage.getProviderById(user.providerId);
+        if (dentalProvider) {
+          providerInfo = {
+            id: dentalProvider.id,
+            name: dentalProvider.name,
+            npiNumber: dentalProvider.npiNumber
+          };
+          (req.session as any).npiNumber = dentalProvider.npiNumber;
+        }
+      }
+
+      logAuth('AUTH_LOGIN_SUCCESS', email, true, req);
+
+      res.json({
+        success: true,
+        authProvider: provider,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          stediMode: user.stediMode,
+          accountId: user.accountId,
+          account: accountInfo,
+          providerId: user.providerId,
+          provider: providerInfo
+        }
+      });
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'sso-mock-login', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to sign in. Please try again." });
     }
   });
 
@@ -249,6 +393,8 @@ export async function registerRoutes(
           role: user.role,
           username: user.username,
           stediMode: user.stediMode,
+          accountId: user.accountId,
+          account: await getAccountSummary(user.accountId),
           providerId: user.providerId,
           provider: providerInfo
         }
@@ -266,6 +412,656 @@ export async function registerRoutes(
     }
     next();
   };
+
+  // Middleware to check authentication
+  const requireAuth = (req: any, res: any, next: any) => {
+    const userId = req.session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    next();
+  };
+
+  /* ---------------------------------------------------------------- */
+  /* Account (clinic) management                                       */
+  /* ---------------------------------------------------------------- */
+
+  /**
+   * Clinic details are maintained by the account's manager. Dental users read
+   * them; the system admin has no clinic of its own and never reaches here.
+   */
+  const requireAccountManager = (req: any, res: any, next: any) => {
+    if (req.session?.userRole !== 'manager') {
+      return res.status(403).json({ error: "Only a clinic manager can change clinic information" });
+    }
+    next();
+  };
+
+  /** The clinic's own team is the manager's to maintain. */
+  const requireTeamManager = (req: any, res: any, next: any) => {
+    if (req.session?.userRole !== 'manager') {
+      return res.status(403).json({ error: "Only a clinic manager can change team members" });
+    }
+    next();
+  };
+
+  /** Fields the clinic may maintain itself, in form order. */
+  const ACCOUNT_EDITABLE_FIELDS = [
+    'name', 'legalName', 'npiNumber', 'taxId',
+    'phoneNumber', 'faxNumber', 'email', 'website',
+    'addressLine1', 'addressLine2', 'city', 'state', 'zipCode', 'timezone',
+  ] as const;
+
+  /**
+   * Resolves the account of the signed-in user, re-reading it from the user
+   * record so a session opened before an assignment still works.
+   */
+  const resolveAccountId = async (req: any): Promise<string | null> => {
+    const sessionAccountId = req.session?.accountId;
+    if (sessionAccountId) return sessionAccountId;
+
+    const user = await storage.getUser(req.session?.userId);
+    if (!user?.accountId) return null;
+
+    req.session.accountId = user.accountId;
+    return user.accountId;
+  };
+
+  /**
+   * @openapi
+   * /api/account:
+   *   get:
+   *     tags:
+   *       - Account Management
+   *     summary: Get the signed-in user's clinic account
+   *     responses:
+   *       200:
+   *         description: The account record
+   *       401:
+   *         description: Not authenticated
+   *       404:
+   *         description: The user is not assigned to an account
+   */
+  app.get("/api/account", requireAuth, async (req, res) => {
+    try {
+      const accountId = await resolveAccountId(req);
+      if (!accountId) {
+        return res.status(404).json({ error: "No clinic account is assigned to this user" });
+      }
+
+      const account = await storage.getAccountById(accountId);
+      if (!account) {
+        return res.status(404).json({ error: "Account not found" });
+      }
+
+      res.json(account);
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'get-account', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to load account" });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/account:
+   *   put:
+   *     tags:
+   *       - Account Management
+   *     summary: Update the signed-in user's clinic information
+   *     description: >
+   *       Updates the clinic name, identifiers (NPI, tax ID), contact details
+   *       and address. Only the caller's own account can be updated, and only
+   *       by a user with the `manager` role.
+   *     responses:
+   *       200:
+   *         description: The updated account record
+   *       400:
+   *         description: Validation failed
+   *       401:
+   *         description: Not authenticated
+   *       403:
+   *         description: The caller is not a clinic manager
+   *       404:
+   *         description: The user is not assigned to an account
+   */
+  app.put("/api/account", requireAuth, requireAccountManager, async (req, res) => {
+    try {
+      const accountId = await resolveAccountId(req);
+      if (!accountId) {
+        return res.status(404).json({ error: "No clinic account is assigned to this user" });
+      }
+
+      const validation = validateUpdateAccount(req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          error: "Invalid clinic information",
+          details: validation.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      // Only the maintainable fields are written, sanitized against XSS.
+      const updates: Record<string, string> = {};
+      for (const field of ACCOUNT_EDITABLE_FIELDS) {
+        const value = (validation.data as Record<string, unknown>)[field];
+        if (value === undefined) continue;
+        updates[field] = sanitizeString(String(value));
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No clinic fields to update" });
+      }
+
+      const account = await storage.updateAccount(accountId, updates);
+      if (!account) {
+        return res.status(404).json({ error: "Account not found" });
+      }
+
+      auditLog('ADMIN_ACTION', {
+        action: 'update-account',
+        resourceType: 'account',
+        resourceId: accountId,
+        fields: Object.keys(updates),
+      }, req);
+
+      res.json(account);
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'update-account', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to update clinic information" });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/account/users:
+   *   get:
+   *     tags:
+   *       - Account Management
+   *     summary: List the users belonging to the signed-in user's account
+   *     responses:
+   *       200:
+   *         description: Users of the account, without password hashes
+   *       401:
+   *         description: Not authenticated
+   *       404:
+   *         description: The user is not assigned to an account
+   */
+  app.get("/api/account/users", requireAuth, async (req, res) => {
+    try {
+      const accountId = await resolveAccountId(req);
+      if (!accountId) {
+        return res.status(404).json({ error: "No clinic account is assigned to this user" });
+      }
+
+      const accountUsers = await storage.getUsersByAccountId(accountId);
+
+      // Each member carries the provider accounts linked to their login, so the
+      // Team Members table can show how they sign in.
+      const withIdentities = await Promise.all(
+        accountUsers.map(async ({ password, ...user }) => ({
+          ...user,
+          ssoIdentities: (await storage.getSsoIdentitiesByUserId(user.id)).map((identity) => ({
+            provider: identity.provider,
+            email: identity.email,
+            createdAt: identity.createdAt,
+          })),
+        }))
+      );
+
+      res.json(withIdentities);
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'list-account-users', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to load account users" });
+    }
+  });
+
+  /**
+   * Resolves the team member a manager is acting on, refusing anyone outside
+   * the caller's own clinic. Returns null once it has answered the request.
+   */
+  const resolveTeamMember = async (req: any, res: any) => {
+    const accountId = await resolveAccountId(req);
+    if (!accountId) {
+      res.status(404).json({ error: "No clinic account is assigned to this user" });
+      return null;
+    }
+
+    const member = await storage.getUser(req.params.id);
+    if (!member || member.accountId !== accountId) {
+      res.status(404).json({ error: "Team member not found on this clinic" });
+      return null;
+    }
+
+    return member;
+  };
+
+  /**
+   * @openapi
+   * /api/account/users/{id}:
+   *   put:
+   *     tags:
+   *       - Account Management
+   *     summary: Update a team member on the signed-in user's clinic
+   *     description: >
+   *       Managers maintain their own team: the member's name, email address
+   *       and clinic role. The data mode stays with the InSpline administrator,
+   *       and a manager cannot change their own role - that would risk leaving
+   *       the clinic with no manager at all.
+   *     responses:
+   *       200:
+   *         description: The updated team member
+   *       400:
+   *         description: Validation failed, or the email/name is already taken
+   *       401:
+   *         description: Not authenticated
+   *       403:
+   *         description: The caller is not a clinic manager
+   *       404:
+   *         description: The member does not belong to the caller's clinic
+   */
+  app.put("/api/account/users/:id", requireAuth, requireTeamManager, async (req, res) => {
+    try {
+      const member = await resolveTeamMember(req, res);
+      if (!member) return;
+
+      const validation = validateUpdateTeamMember(req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          error: "Invalid team member details",
+          details: validation.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      const data = validation.data;
+      const updates: Record<string, string> = {};
+
+      if (data.username !== undefined) {
+        const username = sanitizeString(data.username);
+        const taken = await storage.getUserByUsername(username);
+        if (taken && taken.id !== member.id) {
+          return res.status(400).json({
+            error: "That name is already in use",
+            details: [{ field: 'username', message: 'Another login already uses this name' }],
+          });
+        }
+        updates.username = username;
+      }
+
+      if (data.email !== undefined) {
+        const email = sanitizeString(data.email).toLowerCase();
+        const taken = await storage.getUserByEmail(email);
+        if (taken && taken.id !== member.id) {
+          return res.status(400).json({
+            error: "That email address is already in use",
+            details: [{ field: 'email', message: 'Another login already uses this email address' }],
+          });
+        }
+        updates.email = email;
+      }
+
+      if (data.role !== undefined && data.role !== member.role) {
+        // Managers keep their own role: dropping it could leave the clinic
+        // without anyone able to maintain its account.
+        if (member.id === (req.session as any)?.userId) {
+          return res.status(400).json({
+            error: "You cannot change your own role",
+            details: [{ field: 'role', message: 'Ask another manager, or the InSpline administrator, to change this' }],
+          });
+        }
+        updates.role = data.role;
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No team member fields to update" });
+      }
+
+      const updated = await storage.updateUser(member.id, updates);
+      if (!updated) {
+        return res.status(404).json({ error: "Team member not found on this clinic" });
+      }
+
+      auditLog('ADMIN_ACTION', {
+        action: 'update-team-member',
+        resourceType: 'user',
+        resourceId: member.id,
+        fields: Object.keys(updates),
+      }, req);
+
+      const { password, ...safeUser } = updated;
+      res.json({
+        ...safeUser,
+        ssoIdentities: (await storage.getSsoIdentitiesByUserId(member.id)).map((identity) => ({
+          provider: identity.provider,
+          email: identity.email,
+          createdAt: identity.createdAt,
+        })),
+      });
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'update-team-member', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to update team member" });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/account/users/{id}/sso:
+   *   post:
+   *     tags:
+   *       - Account Management
+   *     summary: Link a Google or Microsoft Teams account to a team member
+   *     description: >
+   *       Lets the member sign in with that provider account instead of a
+   *       password. One identity per member and provider - linking again
+   *       replaces the address on file. An identity already linked to a
+   *       different login is refused, so two people cannot share one.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [provider, email]
+   *             properties:
+   *               provider:
+   *                 type: string
+   *                 enum: [google, microsoft]
+   *               email:
+   *                 type: string
+   *                 format: email
+   *     responses:
+   *       200:
+   *         description: The linked identity
+   *       400:
+   *         description: Validation failed, or the identity belongs to someone else
+   *       401:
+   *         description: Not authenticated
+   *       403:
+   *         description: The caller is not a clinic manager
+   *       404:
+   *         description: The member does not belong to the caller's clinic
+   */
+  app.post("/api/account/users/:id/sso", requireAuth, requireTeamManager, async (req, res) => {
+    try {
+      const member = await resolveTeamMember(req, res);
+      if (!member) return;
+
+      const validation = validateLinkSsoIdentity(req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          error: "Invalid sign-in account",
+          details: validation.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      const { provider } = validation.data;
+      const email = sanitizeString(validation.data.email).toLowerCase();
+
+      // An identity signs one person in, so it cannot be shared.
+      const claimed = await storage.getSsoIdentityByProviderEmail(provider, email);
+      if (claimed && claimed.userId !== member.id) {
+        return res.status(400).json({
+          error: `That ${SSO_PROVIDER_LABELS[provider]} account is already linked to another login`,
+          details: [{ field: 'email', message: 'Choose an account that is not already in use' }],
+        });
+      }
+
+      const identity = await storage.linkSsoIdentity(member.id, provider, email, (req.session as any)?.userId ?? null);
+
+      auditLog('ADMIN_ACTION', {
+        action: 'link-sso-identity',
+        resourceType: 'user-sso-identity',
+        resourceId: member.id,
+        details: { provider },
+      }, req);
+
+      res.json({ provider: identity.provider, email: identity.email, createdAt: identity.createdAt });
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'link-sso-identity', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to link the sign-in account" });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/account/users/{id}/sso/{provider}:
+   *   delete:
+   *     tags:
+   *       - Account Management
+   *     summary: Unlink a provider account from a team member
+   *     description: >
+   *       The member can no longer sign in with that provider; their InSpline
+   *       email and password are untouched.
+   *     responses:
+   *       200:
+   *         description: The identity was unlinked
+   *       400:
+   *         description: Unsupported provider
+   *       401:
+   *         description: Not authenticated
+   *       403:
+   *         description: The caller is not a clinic manager
+   *       404:
+   *         description: The member, or the link, does not exist
+   */
+  app.delete("/api/account/users/:id/sso/:provider", requireAuth, requireTeamManager, async (req, res) => {
+    try {
+      const member = await resolveTeamMember(req, res);
+      if (!member) return;
+
+      const provider = String(req.params.provider).toLowerCase();
+      if (!SSO_PROVIDER_LABELS[provider]) {
+        return res.status(400).json({ error: "Unsupported sign-in provider" });
+      }
+
+      const unlinked = await storage.unlinkSsoIdentity(member.id, provider);
+      if (!unlinked) {
+        return res.status(404).json({ error: `No ${SSO_PROVIDER_LABELS[provider]} account is linked to this member` });
+      }
+
+      auditLog('ADMIN_ACTION', {
+        action: 'unlink-sso-identity',
+        resourceType: 'user-sso-identity',
+        resourceId: member.id,
+        details: { provider },
+      }, req);
+
+      res.json({ success: true, provider });
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'unlink-sso-identity', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to unlink the sign-in account" });
+    }
+  });
+
+  /* ---------------------------------------------------------------- */
+  /* Account billing (payment setup + payment history)                 */
+  /* ---------------------------------------------------------------- */
+
+  /** Billing is the manager's to read and maintain; dental users never see it. */
+  const requireBillingManager = (req: any, res: any, next: any) => {
+    if (req.session?.userRole !== 'manager') {
+      return res.status(403).json({ error: "Only a clinic manager can access clinic billing" });
+    }
+    next();
+  };
+
+  /** Fields the clinic may maintain on its payment setup, in form order. */
+  const PAYMENT_SETUP_FIELDS = [
+    'methodType', 'planName', 'billingCycle',
+    'cardBrand', 'cardLast4', 'cardExpMonth', 'cardExpYear', 'cardholderName',
+    'bankName', 'bankAccountLast4', 'bankAccountType', 'bankAccountHolder',
+    'billingContactName', 'billingEmail', 'billingPhone',
+    'billingAddressLine1', 'billingAddressLine2', 'billingCity', 'billingState', 'billingZipCode',
+  ] as const;
+
+  /**
+   * @openapi
+   * /api/account/payment-method:
+   *   get:
+   *     tags:
+   *       - Account Management
+   *     summary: Get the payment method on file for the signed-in user's clinic
+   *     description: >
+   *       Billing is the manager's to see and maintain, so dental users are
+   *       refused. Card and bank numbers are never stored in full: the response
+   *       carries the brand and the last four digits only.
+   *     responses:
+   *       200:
+   *         description: The payment setup, or null when none has been set up yet
+   *       401:
+   *         description: Not authenticated
+   *       403:
+   *         description: The caller is not a clinic manager
+   *       404:
+   *         description: The user is not assigned to an account
+   */
+  app.get("/api/account/payment-method", requireAuth, requireBillingManager, async (req, res) => {
+    try {
+      const accountId = await resolveAccountId(req);
+      if (!accountId) {
+        return res.status(404).json({ error: "No clinic account is assigned to this user" });
+      }
+
+      const paymentMethod = await storage.getPaymentMethodByAccountId(accountId);
+      res.json(paymentMethod ?? null);
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'get-payment-method', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to load payment setup" });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/account/payment-method:
+   *   put:
+   *     tags:
+   *       - Account Management
+   *     summary: Save the clinic's payment setup
+   *     description: >
+   *       Creates the payment method on first save and updates it afterwards.
+   *       Only a clinic manager may change billing details. Full card and bank
+   *       numbers are rejected — send the last four digits only.
+   *     responses:
+   *       200:
+   *         description: The saved payment setup
+   *       400:
+   *         description: Validation failed
+   *       401:
+   *         description: Not authenticated
+   *       403:
+   *         description: The caller is not a clinic manager
+   *       404:
+   *         description: The user is not assigned to an account
+   */
+  app.put("/api/account/payment-method", requireAuth, requireBillingManager, async (req, res) => {
+    try {
+      const accountId = await resolveAccountId(req);
+      if (!accountId) {
+        return res.status(404).json({ error: "No clinic account is assigned to this user" });
+      }
+
+      const validation = validateUpdatePaymentSetup(req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          error: "Invalid payment setup",
+          details: validation.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      const data = validation.data as Record<string, unknown>;
+      const updates: Record<string, unknown> = {};
+      for (const field of PAYMENT_SETUP_FIELDS) {
+        const value = data[field];
+        if (value === undefined) continue;
+        updates[field] = sanitizeString(String(value));
+      }
+      if (typeof data.autoPayEnabled === 'boolean') {
+        updates.autoPayEnabled = data.autoPayEnabled;
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No payment fields to update" });
+      }
+
+      const paymentMethod = await storage.savePaymentMethod(accountId, updates);
+
+      // Billing details are account-level, not PHI, but they are worth a trail.
+      auditLog('ADMIN_ACTION', {
+        action: 'update-payment-method',
+        resourceType: 'account-payment-method',
+        resourceId: accountId,
+        fields: Object.keys(updates),
+      }, req);
+
+      res.json(paymentMethod);
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'update-payment-method', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to save payment setup" });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/account/payments:
+   *   get:
+   *     tags:
+   *       - Account Management
+   *     summary: List the clinic's invoices, newest first
+   *     description: Manager-only, like the payment setup it bills against.
+   *     responses:
+   *       200:
+   *         description: Payment history for the account
+   *       401:
+   *         description: Not authenticated
+   *       403:
+   *         description: The caller is not a clinic manager
+   *       404:
+   *         description: The user is not assigned to an account
+   */
+  app.get("/api/account/payments", requireAuth, requireBillingManager, async (req, res) => {
+    try {
+      const accountId = await resolveAccountId(req);
+      if (!accountId) {
+        return res.status(404).json({ error: "No clinic account is assigned to this user" });
+      }
+
+      res.json(await storage.getPaymentsByAccountId(accountId));
+    } catch (error: any) {
+      auditLog('ERROR', { action: 'list-account-payments', success: false, errorMessage: error.message }, req);
+      res.status(500).json({ error: "Failed to load payment history" });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/accounts:
+   *   get:
+   *     tags:
+   *       - Account Management
+   *     summary: List every clinic account (admin only)
+   *     responses:
+   *       200:
+   *         description: All accounts
+   *       403:
+   *         description: Admin access required
+   */
+  app.get("/api/accounts", requireAdmin, async (_req, res) => {
+    try {
+      res.json(await storage.getAllAccounts());
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch accounts" });
+    }
+  });
 
   // Get all payers
   app.get("/api/payers", async (_req, res) => {
@@ -406,6 +1202,26 @@ export async function registerRoutes(
     }
   });
 
+  /**
+   * Checks a role/account pairing: clinic roles (`manager`, `dental`) need an
+   * existing account, the system `admin` role must not carry one. Returns an
+   * error message, or null when the pairing is valid.
+   */
+  const validateRoleAssignment = async (role: string, accountId?: string | null): Promise<string | null> => {
+    if (!USER_ROLES.includes(role as any)) {
+      return `Role must be one of: ${USER_ROLES.join(', ')}`;
+    }
+
+    if (!isClinicRole(role)) return null;
+
+    if (!accountId) {
+      return "A clinic account is required for manager and dental users";
+    }
+
+    const account = await storage.getAccountById(accountId);
+    return account ? null : "Account not found";
+  };
+
   // User management routes (admin only)
   /**
    * @openapi
@@ -448,15 +1264,19 @@ export async function registerRoutes(
     try {
       const users = await storage.getAllUsers();
       const providers = await storage.getAllProviders();
+      const accounts = await storage.getAllAccounts();
 
       // Create a map for quick lookup
       const providerMap = new Map(providers.map(p => [p.id, p]));
+      const accountMap = new Map(accounts.map(a => [a.id, a]));
 
-      // Don't send passwords to the client and add provider details
+      // Don't send passwords to the client and add provider/account details
       const safeUsers = users.map(({ password, ...user }) => {
         const provider = user.providerId ? providerMap.get(user.providerId) : null;
+        const account = user.accountId ? accountMap.get(user.accountId) : null;
         return {
           ...user,
+          accountName: account?.name || null,
           providerName: provider?.name || null,
           npiNumber: provider?.npiNumber || null
         };
@@ -535,10 +1355,15 @@ export async function registerRoutes(
    */
   app.post("/api/users", requireAdmin, async (req, res) => {
     try {
-      const { email, username, password, role, stediMode, providerId } = req.body;
+      const { email, username, password, role, stediMode, accountId, providerId } = req.body;
 
       if (!email || !username || !password || !role) {
         return res.status(400).json({ error: "Email, username, password, and role are required" });
+      }
+
+      const roleError = await validateRoleAssignment(role, accountId);
+      if (roleError) {
+        return res.status(400).json({ error: roleError });
       }
 
       // Check if email already exists
@@ -560,7 +1385,9 @@ export async function registerRoutes(
         password: hashedPassword,
         role,
         stediMode: stediMode || "mockup",
-        providerId: providerId || null
+        // Only clinic roles belong to an account; a system admin never does.
+        accountId: isClinicRole(role) ? accountId : null,
+        providerId: isClinicRole(role) ? (providerId || null) : null
       });
 
       const { password: _, ...safeUser } = user;
@@ -573,7 +1400,7 @@ export async function registerRoutes(
   app.put("/api/users/:id", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const { email, username, role, stediMode, providerId } = req.body;
+      const { email, username, role, stediMode, accountId, providerId } = req.body;
 
       // Check if trying to update to existing email
       if (email) {
@@ -591,12 +1418,28 @@ export async function registerRoutes(
         }
       }
 
+      // The role decides whether an account may be attached, so both are
+      // checked against the values the user will end up with.
+      const existing = await storage.getUser(id);
+      if (!existing) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const nextRole = role || existing.role;
+      const nextAccountId = accountId !== undefined ? accountId : existing.accountId;
+
+      const roleError = await validateRoleAssignment(nextRole, nextAccountId);
+      if (roleError) {
+        return res.status(400).json({ error: roleError });
+      }
+
       const updates: any = {};
       if (email) updates.email = email;
       if (username) updates.username = username;
       if (role) updates.role = role;
       if (stediMode !== undefined) updates.stediMode = stediMode;
-      if (providerId !== undefined) updates.providerId = providerId;
+      updates.accountId = isClinicRole(nextRole) ? nextAccountId : null;
+      if (providerId !== undefined) updates.providerId = isClinicRole(nextRole) ? providerId : null;
 
       const user = await storage.updateUser(id, updates);
       if (!user) {
@@ -716,15 +1559,6 @@ export async function registerRoutes(
       res.status(500).json({ error: "Failed to fetch patients" });
     }
   });
-
-  // Middleware to check authentication
-  const requireAuth = (req: any, res: any, next: any) => {
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    next();
-  };
 
   // Configure multer for insurance card file uploads (in-memory only, HIPAA compliant)
   const upload = multer({
@@ -1879,6 +2713,11 @@ export async function registerRoutes(
       // Verify patient belongs to current user
       const userId = (req.session as any)?.userId;
       if (patient.userId !== userId) {
+        logSecurityViolation('Unauthorized insurance decrypt attempt', req, {
+          attemptedPatientId: id,
+          insuranceId,
+          field,
+        });
         return res.status(403).json({ error: "Access denied" });
       }
 
@@ -1889,6 +2728,9 @@ export async function registerRoutes(
       if (!insurance) {
         return res.status(404).json({ error: "Insurance not found" });
       }
+
+      // HIPAA Audit: Log sensitive data decryption (required for compliance)
+      logPhiDecrypt(id, field, req, { insuranceId });
 
       // Decrypt the requested field
       let decryptedValue = null;
@@ -1922,6 +2764,57 @@ export async function registerRoutes(
     } catch (error) {
       res.status(500).json({ error: "Failed to decrypt insurance data" });
     }
+  });
+
+  /**
+   * @openapi
+   * /api/audit/phi-view:
+   *   post:
+   *     tags:
+   *       - Patients
+   *     summary: Record a sensitive field being revealed on screen
+   *     description: >
+   *       Reveals that decrypt server-side are audited by the decrypt endpoints.
+   *       This records the rest - values the client already held and unmasked on
+   *       its own - so every time a human reads PHI there is a log line for it.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [patientId, field]
+   *             properties:
+   *               patientId:
+   *                 type: string
+   *               field:
+   *                 type: string
+   *               insuranceId:
+   *                 type: string
+   *               source:
+   *                 type: string
+   *                 description: How the value reached the screen, e.g. "fallback" or "local".
+   *     responses:
+   *       204:
+   *         description: Logged
+   *       400:
+   *         description: Missing patientId or field
+   */
+  app.post("/api/audit/phi-view", requireAuth, async (req, res) => {
+    const { patientId, field, insuranceId, source } = req.body ?? {};
+
+    if (!patientId || !field) {
+      return res.status(400).json({ error: "patientId and field are required" });
+    }
+
+    // The client reports what it revealed; it never reports a value, only that a
+    // reveal happened and which field it was.
+    logPhiView(String(patientId), String(field), req, {
+      insuranceId: insuranceId ? String(insuranceId) : undefined,
+      source: source ? String(source) : 'client',
+    });
+
+    res.status(204).end();
   });
 
   // OCR endpoint for insurance card scanning
@@ -2626,7 +3519,7 @@ export async function registerRoutes(
   });
 
   // Load dental codes
-  const dentalCodesPath = join(process.cwd(), "frontend", "mockupdata", "common_dental_cdt_codes.json");
+  const dentalCodesPath = join(process.cwd(), "mockupdata", "common_dental_cdt_codes.json");
   const dentalCodes = JSON.parse(readFileSync(dentalCodesPath, "utf-8"));
 
   const STEDI_API_KEY = process.env.STEDI_API_KEY;

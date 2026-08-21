@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
-import LoginModal from '@/components/LoginModal';
+import { LoginModal } from '@/components/auth';
 import mermaid from 'mermaid';
 
 const HomePage: React.FC = () => {

@@ -59,8 +59,8 @@ const options: swaggerJsdoc.Options = {
             },
             role: {
               type: 'string',
-              enum: ['admin', 'dental', 'insurance'],
-              description: 'User role'
+              enum: ['admin', 'manager', 'dental'],
+              description: 'User role - admin is the system administrator (no clinic); manager and dental are clinic roles'
             },
             stediMode: {
               type: 'string',

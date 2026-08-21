@@ -1,6 +1,8 @@
 import React, { useRef, useState } from "react";
 import { Patient } from '@/types/patient';
 import { InsuranceProviderSelect } from '@/components/inputs';
+import { SensitiveDataField } from '@/components/sensitive-data';
+import { maskSensitiveData } from '@/services/sensitiveDataService';
 import verificationData from "@mockupdata/verificationData.json";
 // import availityService from "../services/availityService"; // Not currently used
 
@@ -103,8 +105,6 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
   };
 
   const [formData] = useState(isNewPatient ? emptyFormData : verificationData);
-  const [showPatientSSN, setShowPatientSSN] = useState(false);
-  const [showSubscriberSSN, setShowSubscriberSSN] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<{ [key: string]: boolean }>({
     patient: false,
     subscriber: false,
@@ -238,11 +238,6 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
       .join(' ');
     const family = capitalizeWord(patient.name.family);
     return `${given} ${family}`.trim();
-  };
-
-  const maskSSN = (_ssn: string) => {
-    // Hide all digits
-    return '***-**-****';
   };
 
   const handlePrint = () => {
@@ -929,13 +924,6 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
               ) : (
                 <>
                   <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 bg-white dark:bg-slate-900 text-sm"
-                  >
-                    <span className="material-symbols-outlined text-base">edit</span>
-                    Edit
-                  </button>
-                  <button
                     onClick={handleExportCSV}
                     className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 bg-white dark:bg-slate-900 text-sm"
                   >
@@ -991,31 +979,25 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Patient SSN
                   </label>
-                  <div className="relative">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        className="w-full px-3 py-2 pr-10 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                        value={editedFormData.patientSSN}
-                        onChange={(e) => handleFieldChange('patientSSN', e.target.value)}
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.patientSSN}
+                      onChange={(e) => handleFieldChange('patientSSN', e.target.value)}
+                    />
+                  ) : (
+                    <div className="px-3 py-2">
+                      <SensitiveDataField
+                        patientId={patient.id}
+                        fieldName="ssn"
+                        maskedValue={maskSensitiveData(formData.patientSSN, 'ssn')}
+                        label="Patient SSN"
+                        isEncrypted
+                        fallbackValue={formData.patientSSN}
                       />
-                    ) : (
-                      <>
-                        <p className="w-full px-3 py-2 pr-10 text-slate-900 dark:text-white">
-                          {showPatientSSN ? formData.patientSSN : maskSSN(formData.patientSSN)}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setShowPatientSSN(!showPatientSSN)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                        >
-                          <span className="material-symbols-outlined text-lg">
-                            {showPatientSSN ? 'visibility_off' : 'visibility'}
-                          </span>
-                        </button>
-                      </>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -1029,7 +1011,16 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
                       onChange={(e) => handleFieldChange('patientDOB', e.target.value)}
                     />
                   ) : (
-                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{patient.birthDate}</p>
+                    <div className="px-3 py-2">
+                      <SensitiveDataField
+                        patientId={patient.id}
+                        fieldName="birthDate"
+                        maskedValue={maskSensitiveData(patient.birthDate, 'date')}
+                        label="Patient DOB"
+                        isEncrypted
+                        fallbackValue={patient.birthDate}
+                      />
+                    </div>
                   )}
                 </div>
                 <div>
@@ -1066,31 +1057,26 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Subscriber SSN
                   </label>
-                  <div className="relative">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        className="w-full px-3 py-2 pr-10 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                        value={editedFormData.subscriberSSN}
-                        onChange={(e) => handleFieldChange('subscriberSSN', e.target.value)}
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={editedFormData.subscriberSSN}
+                      onChange={(e) => handleFieldChange('subscriberSSN', e.target.value)}
+                    />
+                  ) : (
+                    <div className="px-3 py-2">
+                      <SensitiveDataField
+                        patientId={patient.id}
+                        fieldName="subscriberSsn"
+                        maskedValue={maskSensitiveData(formData.subscriberSSN, 'ssn')}
+                        label="Subscriber SSN"
+                        isEncrypted
+                        fallbackValue={formData.subscriberSSN}
+                        localOnly
                       />
-                    ) : (
-                      <>
-                        <p className="w-full px-3 py-2 pr-10 text-slate-900 dark:text-white">
-                          {showSubscriberSSN ? formData.subscriberSSN : maskSSN(formData.subscriberSSN)}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setShowSubscriberSSN(!showSubscriberSSN)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                        >
-                          <span className="material-symbols-outlined text-lg">
-                            {showSubscriberSSN ? 'visibility_off' : 'visibility'}
-                          </span>
-                        </button>
-                      </>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -1104,7 +1090,17 @@ const VerificationForm: React.FC<VerificationFormProps> = ({ patient }) => {
                       onChange={(e) => handleFieldChange('subscriberDOB', e.target.value)}
                     />
                   ) : (
-                    <p className="w-full px-3 py-2 text-slate-900 dark:text-white">{formData.subscriberDOB}</p>
+                    <div className="px-3 py-2">
+                      <SensitiveDataField
+                        patientId={patient.id}
+                        fieldName="subscriberBirthDate"
+                        maskedValue={maskSensitiveData(formData.subscriberDOB, 'date')}
+                        label="Subscriber DOB"
+                        isEncrypted
+                        fallbackValue={formData.subscriberDOB}
+                        localOnly
+                      />
+                    </div>
                   )}
                 </div>
                 <div>

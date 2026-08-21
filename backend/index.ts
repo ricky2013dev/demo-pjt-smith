@@ -6,8 +6,7 @@ import { createServer } from "http";
 import session from "express-session";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./swagger";
-import connectPgSimple from "connect-pg-simple";
-import pg from "pg";
+import createMemoryStore from "memorystore";
 import crypto from "crypto";
 import { auditLog } from "./audit";
 
@@ -73,18 +72,14 @@ declare module "http" {
   }
 }
 
-// Setup PostgreSQL session store for production persistence
-const PgSession = connectPgSimple(session);
-const pgPool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+// The app runs on the in-memory mockup database, so sessions live in memory too.
+const MemoryStore = createMemoryStore(session);
 
 app.use(
   session({
-    store: new PgSession({
-      pool: pgPool,
-      tableName: "user_sessions",
-      createTableIfMissing: true,
+    store: new MemoryStore({
+      // Prune expired sessions once a day
+      checkPeriod: 1000 * 60 * 60 * 24,
     }),
     // HIPAA Security: Use crypto-generated secret if not provided (dev only)
     secret: SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
@@ -152,8 +147,13 @@ app.use((req, res, next) => {
 
 import { seedPayers } from "./seed-payers";
 import { seedProviders } from "./seed-providers";
+import { initMockDb } from "./db";
 
 (async () => {
+  const mockDbStats = initMockDb();
+  const seededRows = Object.values(mockDbStats).reduce((total, count) => total + count, 0);
+  console.log(`Mockup database ready: ${seededRows} rows across ${Object.keys(mockDbStats).length} tables.`);
+
   await seedPayers();
   await seedProviders();
   await registerRoutes(httpServer, app);

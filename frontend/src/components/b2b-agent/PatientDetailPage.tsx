@@ -233,13 +233,6 @@ const PatientDetailPage: React.FC = () => {
       {/* Header */}
       <Header
         onLogoClick={() => navigate('/b2b-agent/patient-appointments')}
-        currentUser={currentUser ? {
-          name: currentUser.username,
-          email: currentUser.email,
-          username: currentUser.username,
-          stediMode: currentUser.stediMode,
-          role: currentUser.role
-        } : null}
         onLogout={handleLogout}
       />
 
@@ -248,7 +241,6 @@ const PatientDetailPage: React.FC = () => {
         <SideNav
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          isAdmin={false}
           patientSelected={!!selectedPatient}
           patientName={selectedPatient ? formatPatientName(selectedPatient) : undefined}
           onClearPatient={() => setSelectedPatientId(null)}

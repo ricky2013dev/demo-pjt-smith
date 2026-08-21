@@ -1,0 +1,107 @@
+[
+  {
+    "id": "PAY-0001",
+    "payerId": "60054",
+    "name": "Aetna Dental",
+    "phoneNumber": "(800) 555-0154",
+    "faxNumber": "(800) 555-0155"
+  },
+  {
+    "id": "PAY-0002",
+    "payerId": "AMERI",
+    "name": "Ameritas Dental",
+    "phoneNumber": "(800) 555-0161",
+    "faxNumber": "(800) 555-0162"
+  },
+  {
+    "id": "PAY-0003",
+    "payerId": "84056",
+    "name": "Blue Cross Blue Shield of Texas (Dental)",
+    "phoneNumber": "(800) 555-0171",
+    "faxNumber": "(800) 555-0172"
+  },
+  {
+    "id": "PAY-0004",
+    "payerId": "00040",
+    "name": "Blue Cross Blue Shield",
+    "phoneNumber": "(800) 555-0175",
+    "faxNumber": "(800) 555-0176"
+  },
+  {
+    "id": "PAY-0005",
+    "payerId": "00060",
+    "name": "Anthem Blue Cross",
+    "phoneNumber": "(800) 555-0178",
+    "faxNumber": "(800) 555-0179"
+  },
+  {
+    "id": "PAY-0006",
+    "payerId": "PNMDV",
+    "name": "Cigna Dental",
+    "phoneNumber": "(800) 555-0181",
+    "faxNumber": "(800) 555-0182"
+  },
+  {
+    "id": "PAY-0007",
+    "payerId": "52158",
+    "name": "Delta Dental Insurance Co",
+    "phoneNumber": "(800) 555-0191",
+    "faxNumber": "(800) 555-0192"
+  },
+  {
+    "id": "PAY-0008",
+    "payerId": "94276",
+    "name": "Delta Dental",
+    "phoneNumber": "(800) 555-0193",
+    "faxNumber": "(800) 555-0194"
+  },
+  {
+    "id": "PAY-0009",
+    "payerId": "39046",
+    "name": "Guardian Dental",
+    "phoneNumber": "(800) 555-0201",
+    "faxNumber": "(800) 555-0202"
+  },
+  {
+    "id": "PAY-0010",
+    "payerId": "93693",
+    "name": "Humana Dental",
+    "phoneNumber": "(800) 555-0211",
+    "faxNumber": "(800) 555-0212"
+  },
+  {
+    "id": "PAY-0011",
+    "payerId": "11180",
+    "name": "MetLife Dental",
+    "phoneNumber": "(800) 555-0221",
+    "faxNumber": "(800) 555-0222"
+  },
+  {
+    "id": "PAY-0012",
+    "payerId": "66035",
+    "name": "Principal Financial Group (Dental)",
+    "phoneNumber": "(800) 555-0231",
+    "faxNumber": "(800) 555-0232"
+  },
+  {
+    "id": "PAY-0013",
+    "payerId": "65083",
+    "name": "United Concordia",
+    "phoneNumber": "(800) 555-0241",
+    "faxNumber": "(800) 555-0242"
+  },
+  {
+    "id": "PAY-0014",
+    "payerId": "52133",
+    "name": "UnitedHealthcare Dental",
+    "phoneNumber": "(800) 555-0251",
+    "faxNumber": "(800) 555-0252"
+  },
+  {
+    "id": "PAY-0015",
+    "payerId": "87726",
+    "name": "United Healthcare Dental",
+    "phoneNumber": "(800) 555-0253",
+    "faxNumber": "(800) 555-0254"
+  }
+]

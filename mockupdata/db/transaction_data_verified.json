@@ -1,0 +1,62 @@
+[
+  {
+    "id": "TDV-0001",
+    "transactionId": "TXN-0002",
+    "item": "Policy status: Active"
+  },
+  {
+    "id": "TDV-0002",
+    "transactionId": "TXN-0002",
+    "item": "Annual maximum: $2,000"
+  },
+  {
+    "id": "TDV-0003",
+    "transactionId": "TXN-0002",
+    "item": "Annual used: $1,470"
+  },
+  {
+    "id": "TDV-0004",
+    "transactionId": "TXN-0002",
+    "item": "Deductible: $1,500 (met $450)"
+  },
+  {
+    "id": "TDV-0005",
+    "transactionId": "TXN-0002",
+    "item": "Preventive coverage: 100%"
+  },
+  {
+    "id": "TDV-0006",
+    "transactionId": "TXN-0002",
+    "item": "Basic coverage: 80%"
+  },
+  {
+    "id": "TDV-0007",
+    "transactionId": "TXN-0002",
+    "item": "Major coverage: 50%"
+  },
+  {
+    "id": "TDV-0008",
+    "transactionId": "TXN-0005",
+    "item": "Major coverage: 50%"
+  },
+  {
+    "id": "TDV-0009",
+    "transactionId": "TXN-0005",
+    "item": "Major waiting period satisfied: 03/2025"
+  },
+  {
+    "id": "TDV-0010",
+    "transactionId": "TXN-0005",
+    "item": "Call reference: DD-2025-889231"
+  },
+  {
+    "id": "TDV-0011",
+    "transactionId": "TXN-0006",
+    "item": "Subscriber ID matched insurance card"
+  },
+  {
+    "id": "TDV-0012",
+    "transactionId": "TXN-0006",
+    "item": "Group number matched insurance card"
+  }
+]

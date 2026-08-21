@@ -169,6 +169,166 @@ export const updatePatientSchema = z.object({
   addresses: z.array(addressSchema).optional(),
 });
 
+/**
+ * User roles.
+ *
+ * `admin` is the InSpline system administrator: it manages users and system
+ * data from the admin portal and belongs to no clinic. `manager` and `dental`
+ * are the clinic roles and always sit under an account; only a manager may
+ * edit the clinic's own details.
+ */
+export const USER_ROLES = ['admin', 'manager', 'dental'] as const;
+export type UserRole = typeof USER_ROLES[number];
+
+/** The roles that belong to a clinic account. */
+export const CLINIC_ROLES: UserRole[] = ['manager', 'dental'];
+
+export const isClinicRole = (role: unknown): role is 'manager' | 'dental' =>
+  CLINIC_ROLES.includes(role as UserRole);
+
+// Account (clinic) update schema
+//
+// Every field is optional so the form can send a partial update; empty strings
+// are kept (they clear an optional field) but trimmed by the sanitizer.
+const optionalText = (max: number) => z.string().max(max).optional();
+
+export const updateAccountSchema = z.object({
+  name: z.string().min(1, 'Clinic name is required').max(255).optional(),
+  legalName: optionalText(255),
+  npiNumber: z.preprocess(
+    (val) => (typeof val === 'string' ? val.replace(/\s/g, '') : val),
+    z.string().max(20).optional().refine(
+      (val) => !val || /^\d{10}$/.test(val),
+      { message: 'NPI must be 10 digits' }
+    )
+  ),
+  taxId: z.string().max(20).optional().refine(
+    (val) => !val || /^\d{2}-?\d{7}$/.test(val.trim()),
+    { message: 'Tax ID must be in XX-XXXXXXX format' }
+  ),
+  phoneNumber: z.string().max(30).optional().refine(
+    (val) => !val || phoneRegex.test(val),
+    { message: 'Phone number contains invalid characters' }
+  ),
+  faxNumber: z.string().max(30).optional().refine(
+    (val) => !val || phoneRegex.test(val),
+    { message: 'Fax number contains invalid characters' }
+  ),
+  email: z.string().max(255).optional().refine(
+    (val) => !val || z.string().email().safeParse(val).success,
+    { message: 'Email address is not valid' }
+  ),
+  website: optionalText(255),
+  addressLine1: optionalText(255),
+  addressLine2: optionalText(255),
+  city: optionalText(100),
+  state: optionalText(50),
+  zipCode: z.string().max(15).optional().refine(
+    (val) => !val || /^\d{5}(-\d{4})?$/.test(val.trim()),
+    { message: 'ZIP code must be 12345 or 12345-6789' }
+  ),
+  timezone: optionalText(64),
+});
+
+// Account payment setup schema
+//
+// How the clinic pays its subscription. Full card / bank numbers are never
+// accepted here — the processor holds those, and only the brand and the last
+// four digits are kept so the clinic can recognise the method on file.
+const last4 = (label: string) =>
+  z.string().max(4, `${label} must be the last 4 digits only`).optional().refine(
+    (val) => !val || /^\d{4}$/.test(val),
+    { message: `${label} must be the last 4 digits` }
+  );
+
+export const updatePaymentSetupSchema = z.object({
+  methodType: z.enum(['card', 'ach'], { errorMap: () => ({ message: 'Choose a card or a bank account' }) }).optional(),
+  planName: optionalText(120),
+  billingCycle: z.enum(['monthly', 'annual'], { errorMap: () => ({ message: 'Billing cycle must be monthly or annual' }) }).optional(),
+  autoPayEnabled: z.boolean().optional(),
+
+  cardBrand: optionalText(40),
+  cardLast4: last4('Card number'),
+  cardExpMonth: z.string().max(2).optional().refine(
+    (val) => !val || /^(0[1-9]|1[0-2])$/.test(val),
+    { message: 'Expiry month must be 01–12' }
+  ),
+  cardExpYear: z.string().max(4).optional().refine(
+    (val) => !val || /^\d{4}$/.test(val),
+    { message: 'Expiry year must be 4 digits' }
+  ),
+  cardholderName: optionalText(255),
+
+  bankName: optionalText(255),
+  bankAccountLast4: last4('Account number'),
+  bankAccountType: z.string().max(20).optional().refine(
+    (val) => !val || ['checking', 'savings'].includes(val),
+    { message: 'Account type must be checking or savings' }
+  ),
+  bankAccountHolder: optionalText(255),
+
+  billingContactName: optionalText(255),
+  billingEmail: z.string().max(255).optional().refine(
+    (val) => !val || z.string().email().safeParse(val).success,
+    { message: 'Billing email address is not valid' }
+  ),
+  billingPhone: z.string().max(30).optional().refine(
+    (val) => !val || phoneRegex.test(val),
+    { message: 'Billing phone number contains invalid characters' }
+  ),
+  billingAddressLine1: optionalText(255),
+  billingAddressLine2: optionalText(255),
+  billingCity: optionalText(100),
+  billingState: optionalText(50),
+  billingZipCode: z.string().max(15).optional().refine(
+    (val) => !val || /^\d{5}(-\d{4})?$/.test(val.trim()),
+    { message: 'ZIP code must be 12345 or 12345-6789' }
+  ),
+}).superRefine((data, ctx) => {
+  // The chosen method has to be complete enough to bill against.
+  if (data.methodType === 'card' && data.cardLast4 === '') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['cardLast4'], message: 'Card number is required' });
+  }
+  if (data.methodType === 'ach' && data.bankAccountLast4 === '') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['bankAccountLast4'], message: 'Account number is required' });
+  }
+});
+
+// Team member schema
+//
+// What a clinic manager may change about a login on their own account. The
+// data mode is deliberately absent: it decides whether eligibility calls reach
+// the real payer network, so it stays with the InSpline administrator.
+export const updateTeamMemberSchema = z.object({
+  username: z.string().min(2, 'Name must be at least 2 characters').max(50).optional().refine(
+    (val) => val === undefined || /^[A-Za-z0-9._-]+$/.test(val),
+    { message: 'Name may use letters, numbers, dots, dashes and underscores' }
+  ),
+  email: z.string().max(255).optional().refine(
+    (val) => val === undefined || z.string().email().safeParse(val).success,
+    { message: 'Email address is not valid' }
+  ),
+  role: z.enum(['manager', 'dental'], {
+    errorMap: () => ({ message: 'Role must be manager or dental' }),
+  }).optional(),
+});
+
+// Single sign-on link schema
+//
+// The identity a manager links to a team member so they can sign in with it.
+export const SSO_PROVIDERS = ['google', 'microsoft'] as const;
+export type SsoProvider = typeof SSO_PROVIDERS[number];
+
+export const linkSsoIdentitySchema = z.object({
+  provider: z.enum(SSO_PROVIDERS, {
+    errorMap: () => ({ message: 'Sign-in provider must be google or microsoft' }),
+  }),
+  email: z.string().max(255).refine(
+    (val) => z.string().email().safeParse(val).success,
+    { message: 'Email address is not valid' }
+  ),
+});
+
 // Login schema
 export const loginSchema = z.object({
   email: z.string().email().max(255),
@@ -194,7 +354,7 @@ export const registerSchema = z.object({
       { message: 'Password must contain at least one number' }
     ),
   name: z.string().max(255).optional(),
-  role: z.enum(['dental', 'insurance', 'admin']).optional(),
+  role: z.enum(USER_ROLES).optional(),
 });
 
 /**
@@ -209,6 +369,34 @@ export function validateCreatePatient(data: unknown) {
  */
 export function validateUpdatePatient(data: unknown) {
   return updatePatientSchema.safeParse(data);
+}
+
+/**
+ * Validate account (clinic) update input
+ */
+export function validateUpdateAccount(data: unknown) {
+  return updateAccountSchema.safeParse(data);
+}
+
+/**
+ * Validate account payment setup input
+ */
+export function validateUpdatePaymentSetup(data: unknown) {
+  return updatePaymentSetupSchema.safeParse(data);
+}
+
+/**
+ * Validate a clinic manager's edit of a team member
+ */
+export function validateUpdateTeamMember(data: unknown) {
+  return updateTeamMemberSchema.safeParse(data);
+}
+
+/**
+ * Validate a single sign-on identity link
+ */
+export function validateLinkSsoIdentity(data: unknown) {
+  return linkSsoIdentitySchema.safeParse(data);
 }
 
 /**

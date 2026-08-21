@@ -11,6 +11,7 @@
     },
     "gender": "female",
     "birthDate": "1985-03-15",
+    "ssn": "600-10-1000",
     "verificationStatus": {
       "fetchPMS": "completed",
       "saveToPMS": "completed",
@@ -158,6 +159,7 @@
     },
     "gender": "male",
     "birthDate": "1978-07-22",
+    "ssn": "600-11-1001",
     "verificationStatus": {
       "fetchPMS": "in_progress",
       "saveToPMS": "pending",
@@ -313,6 +315,7 @@
     },
     "gender": "female",
     "birthDate": "1992-11-08",
+    "ssn": "600-12-1002",
     "verificationStatus": {
       "fetchPMS": "pending",
       "saveToPMS": "pending",
@@ -431,6 +434,7 @@
     },
     "gender": "male",
     "birthDate": "1965-05-30",
+    "ssn": "600-13-1003",
     "telecom": [
       {
         "system": "phone",
@@ -501,6 +505,7 @@
     },
     "gender": "female",
     "birthDate": "1988-09-12",
+    "ssn": "600-14-1004",
     "verificationStatus": {
       "fetchPMS": "in_progress",
       "saveToPMS": "pending",
@@ -657,6 +662,7 @@
     },
     "gender": "male",
     "birthDate": "1975-02-18",
+    "ssn": "600-15-1005",
     "verificationStatus": {
       "fetchPMS": "pending",
       "saveToPMS": "pending",
@@ -775,6 +781,7 @@
     },
     "gender": "female",
     "birthDate": "1995-12-25",
+    "ssn": "600-16-1006",
     "verificationStatus": {
       "fetchPMS": "completed",
       "saveToPMS": "completed",
@@ -885,6 +892,7 @@
     },
     "gender": "male",
     "birthDate": "1982-04-07",
+    "ssn": "600-17-1007",
     "verificationStatus": {
       "fetchPMS": "in_progress",
       "saveToPMS": "pending",
@@ -1003,6 +1011,7 @@
     },
     "gender": "female",
     "birthDate": "1970-08-14",
+    "ssn": "600-18-1008",
     "verificationStatus": {
       "fetchPMS": "pending",
       "saveToPMS": "pending",
@@ -1141,6 +1150,7 @@
     },
     "gender": "male",
     "birthDate": "2010-03-22",
+    "ssn": "600-19-1009",
     "verificationStatus": {
       "fetchPMS": "completed",
       "saveToPMS": "pending",

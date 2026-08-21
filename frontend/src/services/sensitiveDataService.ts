@@ -46,6 +46,40 @@ export async function decryptSensitiveData(
 }
 
 /**
+ * Record a reveal the server did not already audit.
+ *
+ * `decryptSensitiveData` and `decryptInsuranceField` are logged by the endpoints
+ * they call. When a value is unmasked without one of those round trips - a
+ * mockup patient falling back to its local value, or a field that has no
+ * database column at all - this is what keeps the audit trail complete.
+ *
+ * Never blocks or fails the reveal: an audit that cannot be written is logged to
+ * the console rather than shown to the user mid-action.
+ */
+export async function reportSensitiveDataView(params: {
+  patientId: string;
+  fieldName: string;
+  insuranceId?: string;
+  /** How the value reached the screen, e.g. 'fallback' or 'local'. */
+  source?: string;
+}): Promise<void> {
+  try {
+    await fetch('/api/audit/phi-view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        patientId: params.patientId,
+        field: params.fieldName,
+        insuranceId: params.insuranceId,
+        source: params.source,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to record PHI view for audit', error);
+  }
+}
+
+/**
  * Mask sensitive data for display
  * @param value - The value to mask
  * @param type - The type of data (determines masking pattern)

@@ -1,0 +1,156 @@
+[
+  {
+    "id": "TRT-0001",
+    "patientId": "P0000001",
+    "name": "Dental Crown - Tooth #14",
+    "date": "2024-02-20",
+    "cost": "$1,200"
+  },
+  {
+    "id": "TRT-0002",
+    "patientId": "P0000001",
+    "name": "Teeth Cleaning",
+    "date": "2024-08-10",
+    "cost": "$120"
+  },
+  {
+    "id": "TRT-0003",
+    "patientId": "P0000001",
+    "name": "X-Ray (Full Mouth)",
+    "date": "2024-02-15",
+    "cost": "$150"
+  },
+  {
+    "id": "TRT-0004",
+    "patientId": "P0000002",
+    "name": "Composite Filling - Tooth #18",
+    "date": "2024-09-15",
+    "cost": "$250"
+  },
+  {
+    "id": "TRT-0005",
+    "patientId": "P0000002",
+    "name": "Regular Checkup",
+    "date": "2024-03-10",
+    "cost": "$100"
+  },
+  {
+    "id": "TRT-0006",
+    "patientId": "P0000003",
+    "name": "Regular Checkup",
+    "date": "2024-07-08",
+    "cost": "$100"
+  },
+  {
+    "id": "TRT-0007",
+    "patientId": "P0000003",
+    "name": "Panoramic X-Ray",
+    "date": "2024-07-08",
+    "cost": "$180"
+  },
+  {
+    "id": "TRT-0008",
+    "patientId": "P0000004",
+    "name": "Regular Checkup",
+    "date": "2023-11-20",
+    "cost": "$100"
+  },
+  {
+    "id": "TRT-0009",
+    "patientId": "P0000004",
+    "name": "Teeth Cleaning",
+    "date": "2023-11-20",
+    "cost": "$120"
+  },
+  {
+    "id": "TRT-0010",
+    "patientId": "P0000005",
+    "name": "Teeth Cleaning",
+    "date": "2024-06-18",
+    "cost": "$120"
+  },
+  {
+    "id": "TRT-0011",
+    "patientId": "P0000005",
+    "name": "Fluoride Treatment",
+    "date": "2024-06-18",
+    "cost": "$50"
+  },
+  {
+    "id": "TRT-0012",
+    "patientId": "P0000006",
+    "name": "Composite Filling - Tooth #30",
+    "date": "2024-08-22",
+    "cost": "$280"
+  },
+  {
+    "id": "TRT-0013",
+    "patientId": "P0000006",
+    "name": "Regular Checkup",
+    "date": "2024-02-14",
+    "cost": "$100"
+  },
+  {
+    "id": "TRT-0014",
+    "patientId": "P0000007",
+    "name": "Orthodontic Adjustment",
+    "date": "2024-09-10",
+    "cost": "$200"
+  },
+  {
+    "id": "TRT-0015",
+    "patientId": "P0000007",
+    "name": "Regular Checkup",
+    "date": "2024-09-10",
+    "cost": "$100"
+  },
+  {
+    "id": "TRT-0016",
+    "patientId": "P0000008",
+    "name": "Teeth Cleaning",
+    "date": "2024-06-05",
+    "cost": "$120"
+  },
+  {
+    "id": "TRT-0017",
+    "patientId": "P0000008",
+    "name": "Bitewing X-Rays",
+    "date": "2024-06-05",
+    "cost": "$80"
+  },
+  {
+    "id": "TRT-0018",
+    "patientId": "P0000009",
+    "name": "Dental Consultation",
+    "date": "2024-09-20",
+    "cost": "$150"
+  },
+  {
+    "id": "TRT-0019",
+    "patientId": "P0000009",
+    "name": "Regular Checkup",
+    "date": "2024-05-15",
+    "cost": "$100"
+  },
+  {
+    "id": "TRT-0020",
+    "patientId": "P0000009",
+    "name": "Teeth Cleaning",
+    "date": "2024-05-15",
+    "cost": "$120"
+  },
+  {
+    "id": "TRT-0021",
+    "patientId": "P0000010",
+    "name": "Dental Sealants",
+    "date": "2024-07-10",
+    "cost": "$180"
+  },
+  {
+    "id": "TRT-0022",
+    "patientId": "P0000010",
+    "name": "Fluoride Treatment",
+    "date": "2024-07-10",
+    "cost": "$50"
+  }
+]

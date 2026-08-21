@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { decryptSensitiveData } from '@/services/sensitiveDataService';
+import { decryptSensitiveData, reportSensitiveDataView } from '@/services/sensitiveDataService';
 
 interface SensitiveDataFieldProps {
   patientId: string;
@@ -7,6 +7,18 @@ interface SensitiveDataFieldProps {
   maskedValue: string;
   label: string;
   isEncrypted?: boolean;
+  /**
+   * Plain value to reveal when the decrypt endpoint has no record for this
+   * patient - the mockup dataset is served from JSON rather than the database.
+   * Ignored when it is itself masked, so real data mode stays server-authoritative.
+   */
+  fallbackValue?: string;
+  /**
+   * Reveal `fallbackValue` without asking the server. For values that only live
+   * in the mockup fixture - the subscriber's SSN and date of birth - there is no
+   * column to decrypt, so the request would only ever fail.
+   */
+  localOnly?: boolean;
   autoHideDelay?: number; // milliseconds, default 10000 (10 seconds)
 }
 
@@ -16,6 +28,8 @@ const SensitiveDataField: React.FC<SensitiveDataFieldProps> = ({
   maskedValue,
   label,
   isEncrypted = false,
+  fallbackValue,
+  localOnly = false,
   autoHideDelay = 10000
 }) => {
   const [isRevealed, setIsRevealed] = useState(false);
@@ -35,8 +49,7 @@ const SensitiveDataField: React.FC<SensitiveDataFieldProps> = ({
     setIsLoading(true);
     setError('');
 
-    try {
-      const value = await decryptSensitiveData(patientId, fieldName);
+    const revealFor = (value: string) => {
       setDecryptedValue(value);
       setIsRevealed(true);
 
@@ -45,8 +58,26 @@ const SensitiveDataField: React.FC<SensitiveDataFieldProps> = ({
         setIsRevealed(false);
         setDecryptedValue('');
       }, autoHideDelay);
+    };
+
+    if (localOnly) {
+      revealFor(fallbackValue || maskedValue);
+      reportSensitiveDataView({ patientId, fieldName, source: 'local' });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      revealFor(await decryptSensitiveData(patientId, fieldName));
     } catch (err: any) {
-      setError(err.message || 'Failed to decrypt');
+      // Mockup patients are not in the database; fall back to the local value.
+      // The decrypt endpoint never ran, so the reveal is reported here instead.
+      if (fallbackValue && !fallbackValue.includes('*')) {
+        revealFor(fallbackValue);
+        reportSensitiveDataView({ patientId, fieldName, source: 'fallback' });
+      } else {
+        setError(err.message || 'Failed to decrypt');
+      }
     } finally {
       setIsLoading(false);
     }

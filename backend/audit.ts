@@ -149,17 +149,44 @@ export function logPhiAccess(
 
 /**
  * Log PHI decryption event (sensitive operation)
+ *
+ * `details` carries whatever narrows the event down - the insurance record a
+ * field belongs to, or how the value reached the screen.
  */
 export function logPhiDecrypt(
   patientId: string,
   field: string,
-  request: { session?: any; ip?: string; headers?: Record<string, any> }
+  request: { session?: any; ip?: string; headers?: Record<string, any> },
+  details?: Record<string, unknown>
 ): void {
   auditLog('PHI_DECRYPT', {
     patientId,
     field,
     resourceType: 'Patient',
     action: 'decrypt',
+    details,
+  }, request);
+}
+
+/**
+ * Log a sensitive value being revealed on screen.
+ *
+ * Most reveals decrypt server-side and are already covered by logPhiDecrypt.
+ * This covers the rest: values the client held and unmasked on its own, which
+ * would otherwise leave no trace even though a human read PHI.
+ */
+export function logPhiView(
+  patientId: string,
+  field: string,
+  request: { session?: any; ip?: string; headers?: Record<string, any> },
+  details?: Record<string, unknown>
+): void {
+  auditLog('PHI_ACCESS', {
+    patientId,
+    field,
+    resourceType: 'Patient',
+    action: 'reveal',
+    details,
   }, request);
 }
 

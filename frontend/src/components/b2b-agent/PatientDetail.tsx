@@ -17,12 +17,12 @@ import CoverageVerificationResults from "./CoverageVerificationResults";
 import SmartAITransactionHistory from "./SmartAITransactionHistory";
 import CoverageByCodeView from "./CoverageByCodeView";
 import AppointmentManagement from "./AppointmentManagement";
-import SensitiveDataField from "@/components/SensitiveDataField";
-import InsuranceSensitiveDataField from "@/components/InsuranceSensitiveDataField";
+import { SensitiveDataField, InsuranceSensitiveDataField } from "@/components/sensitive-data";
+import { maskSensitiveData } from "@/services/sensitiveDataService";
 import { PRIMARY_BUTTON } from "@/styles/buttonStyles";
 
 import { deriveVerificationStatusFromTransactions, type Transaction, type VerificationStatus } from '@/utils/transactionStatus';
-import VerificationStepper from '@/components/VerificationStepper';
+import { VerificationStepper } from '@/components/verificationStepper';
 import Breadcrumb from './Breadcrumb';
 
 interface PatientDetailProps {
@@ -62,7 +62,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
 }) => {
   const [showAICenter, setShowAICenter] = useState(false);
   const [showAgentVerification, setShowAgentVerification] = useState(false);
-  const [insuranceSubTab, setInsuranceSubTab] = useState<InsuranceSubTabType>(INSURANCE_SUB_TAB_TYPES.COVERAGE_DETAILS);
+  // Insurance Coverage opens on the form view; the by-code view is one click away.
+  const [insuranceSubTab, setInsuranceSubTab] = useState<InsuranceSubTabType>(INSURANCE_SUB_TAB_TYPES.VERIFICATION_FORM);
 
   // Coverage Verification Results Modal state
   const [isCoverageResultsOpen, setIsCoverageResultsOpen] = useState(false);
@@ -487,35 +488,6 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </p>
           </div>
 
-          <div className={`flex gap-2 ${patient.id.startsWith('new-') ? 'invisible' : ''}`}>
-
-            {/* Start AI Verification (API + Call) */}
-            <button
-              onClick={() => setShowAICenter(true)}
-              className="ml-3 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-medium transition-colors bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700"
-              title="Start AI call verification (can re-run)"
-            >
-              <span className={`material-symbols-outlined text-base ${effectiveVerificationStatus?.aiAnalysisAndCall === 'completed'
-                ? 'text-green-500'
-                : effectiveVerificationStatus?.aiAnalysisAndCall === 'in_progress'
-                  ? 'text-blue-500'
-                  : ''
-                }`}>
-                {effectiveVerificationStatus?.aiAnalysisAndCall === 'completed' ? 'check_circle' : 'smart_toy'}
-              </span>
-               AI 
-            </button>
-            {/* Agent AI Verification */}
-            {/* <button
-              onClick={() => setShowAgentVerification(true)}
-              className="ml-3 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-medium transition-colors bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700"
-              title="Use Agent AI Verification"
-            >
-              <span className="material-symbols-outlined text-base">psychology</span>
-              .
-            </button> */}
-          </div>
-
           {/* Verification Steps Progress - Compact */}
           <div className="flex items-center gap-4 max-w-2xl flex-1 ml-auto">
             <VerificationStepper
@@ -666,9 +638,10 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                     <SensitiveDataField
                       patientId={patient.id}
                       fieldName="ssn"
-                      maskedValue={(patient as any).ssn || '***-**-****'}
+                      maskedValue={maskSensitiveData((patient as any).ssn, 'ssn')}
                       label="SSN"
-                      isEncrypted={(patient as any).ssnEncrypted || false}
+                      isEncrypted={Boolean((patient as any).ssn) || (patient as any).ssnEncrypted || false}
+                      fallbackValue={(patient as any).ssn}
                     />
                   )}
                 </div>
@@ -693,9 +666,10 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                     <SensitiveDataField
                       patientId={patient.id}
                       fieldName="birthDate"
-                      maskedValue={patient.birthDate || '****-**-**'}
+                      maskedValue={maskSensitiveData(patient.birthDate, 'date')}
                       label="Date of Birth"
-                      isEncrypted={(patient as any).birthDateEncrypted || false}
+                      isEncrypted={Boolean(patient.birthDate) || (patient as any).birthDateEncrypted || false}
+                      fallbackValue={patient.birthDate}
                     />
                   )}
                 </div>

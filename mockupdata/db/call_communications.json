@@ -1,0 +1,106 @@
+[
+  {
+    "id": "CMM-0001",
+    "transactionId": "TXN-0005",
+    "timestamp": "2025-11-29 11:30:12",
+    "speaker": "System",
+    "message": "Outbound call placed to Delta Dental provider line (800) 555-0193.",
+    "type": "note"
+  },
+  {
+    "id": "CMM-0002",
+    "transactionId": "TXN-0005",
+    "timestamp": "2025-11-29 11:31:40",
+    "speaker": "System",
+    "message": "Navigated IVR menu: option 2 (dental provider), option 1 (benefits and eligibility).",
+    "type": "note"
+  },
+  {
+    "id": "CMM-0003",
+    "transactionId": "TXN-0005",
+    "timestamp": "2025-11-29 11:34:02",
+    "speaker": "InsuranceRep",
+    "message": "Thank you for calling Delta Dental, this is Karen. May I have your provider NPI?",
+    "type": "question"
+  },
+  {
+    "id": "CMM-0004",
+    "transactionId": "TXN-0005",
+    "timestamp": "2025-11-29 11:34:18",
+    "speaker": "AI",
+    "message": "NPI 1861345572 for Riverside Family Dentistry, tax ID 36-4520918.",
+    "type": "answer"
+  },
+  {
+    "id": "CMM-0005",
+    "transactionId": "TXN-0005",
+    "timestamp": "2025-11-29 11:35:47",
+    "speaker": "InsuranceRep",
+    "message": "Thank you. Which member are we verifying today?",
+    "type": "question"
+  },
+  {
+    "id": "CMM-0006",
+    "transactionId": "TXN-0005",
+    "timestamp": "2025-11-29 11:36:05",
+    "speaker": "AI",
+    "message": "Michael Anderson, subscriber ID 987654321, group GRP-45678, date of birth on file.",
+    "type": "answer"
+  },
+  {
+    "id": "CMM-0007",
+    "transactionId": "TXN-0005",
+    "timestamp": "2025-11-29 11:37:22",
+    "speaker": "InsuranceRep",
+    "message": "One moment while I pull that up.",
+    "type": "hold"
+  },
+  {
+    "id": "CMM-0008",
+    "transactionId": "TXN-0005",
+    "timestamp": "2025-11-29 11:39:10",
+    "speaker": "InsuranceRep",
+    "message": "Coverage is active. Major services are covered at 50%, the 12 month waiting period was satisfied in March 2025.",
+    "type": "answer"
+  },
+  {
+    "id": "CMM-0009",
+    "transactionId": "TXN-0005",
+    "timestamp": "2025-11-29 11:40:02",
+    "speaker": "AI",
+    "message": "Confirming: major at 50%, waiting period satisfied 03/2025, annual maximum $2,500 with $1,850 used. Is that correct?",
+    "type": "confirmation"
+  },
+  {
+    "id": "CMM-0010",
+    "transactionId": "TXN-0005",
+    "timestamp": "2025-11-29 11:41:15",
+    "speaker": "InsuranceRep",
+    "message": "That is correct. Reference number for this call is DD-2025-889231.",
+    "type": "confirmation"
+  },
+  {
+    "id": "CMM-0011",
+    "transactionId": "TXN-0005",
+    "timestamp": "2025-11-29 11:42:31",
+    "speaker": "System",
+    "message": "Call ended. Reference DD-2025-889231 stored with the transaction.",
+    "type": "note"
+  },
+  {
+    "id": "CMM-0012",
+    "transactionId": "TXN-0002",
+    "timestamp": "2025-11-28 09:30:20",
+    "speaker": "System",
+    "message": "270 eligibility request submitted to Blue Cross Blue Shield.",
+    "type": "note"
+  },
+  {
+    "id": "CMM-0013",
+    "transactionId": "TXN-0002",
+    "timestamp": "2025-11-28 09:31:25",
+    "speaker": "System",
+    "message": "271 response received: active coverage, 38 benefit segments parsed.",
+    "type": "note"
+  }
+]
