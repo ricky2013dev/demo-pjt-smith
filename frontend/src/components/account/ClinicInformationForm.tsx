@@ -27,7 +27,7 @@ const SECTIONS: SectionDef[] = [
     icon: 'badge',
     fields: [
       { key: 'name', label: 'Clinic Name', required: true, placeholder: 'Bright Smile Dental Group', width: 'wide' },
-      { key: 'npiNumber', label: 'NPI', placeholder: '1999999984', hint: '10 digits' },
+      { key: 'npiNumber', label: 'Group NPI', placeholder: '1999999984', hint: '10 digits' },
       { key: 'legalName', label: 'Legal Entity Name', placeholder: 'Bright Smile Dental Group, PLLC', width: 'wide' },
       { key: 'taxId', label: 'Tax ID (EIN)', placeholder: '74-3011882', hint: 'XX-XXXXXXX' },
     ],

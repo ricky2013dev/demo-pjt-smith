@@ -58,7 +58,7 @@ export const generateJobsForDate = (date: Date, patientList: Patient[]): Patient
   const isPastDate = checkDate < today;
   const isFutureDate = checkDate > today;
 
-  return patientList.slice(0, 5 + (seed % 6)).map((patient, idx) => {
+  const jobs = patientList.slice(0, 5 + (seed % 6)).map((patient, idx) => {
     const rng = (seed + idx * 7) % 100;
     const startHour = 8 + (rng % 12);
     const startMin = (rng * 13) % 60;
@@ -69,17 +69,11 @@ export const generateJobsForDate = (date: Date, patientList: Patient[]): Patient
 
     const endDate = new Date(startDateObj.getTime() + durationMin * 60000);
 
-    // Past days are finished, future days have not started, today is mixed.
-    const steps: Record<JobStepId, JobStepStatus> = isPastDate
-      ? { fetch_pms: 'completed', api_call: 'completed', ai_analysis_and_call: 'completed', save_pms: 'completed' }
-      : isFutureDate
-        ? { fetch_pms: 'pending', api_call: 'pending', ai_analysis_and_call: 'pending', save_pms: 'pending' }
-        : {
-          fetch_pms: rng > 30 ? 'completed' : 'in_progress',
-          api_call: rng > 45 ? 'completed' : 'in_progress',
-          ai_analysis_and_call: rng > 65 ? 'completed' : 'in_progress',
-          save_pms: rng > 85 ? 'completed' : 'in_progress'
-        };
+    // Past days are finished, future days have not started; today is filled in
+    // below, once the jobs can be put in run order.
+    const steps: Record<JobStepId, JobStepStatus> = isFutureDate
+      ? { fetch_pms: 'pending', api_call: 'pending', ai_analysis_and_call: 'pending', save_pms: 'pending' }
+      : { fetch_pms: 'completed', api_call: 'completed', ai_analysis_and_call: 'completed', save_pms: 'completed' };
 
     // Set appointment date to 1 week after job start date
     const appointmentDate = new Date(startDateObj);
@@ -96,6 +90,43 @@ export const generateJobsForDate = (date: Date, patientList: Patient[]): Patient
       appointmentDate
     };
   });
+
+  // Jobs run one after another, so today's day is mostly done: everything but
+  // the last two runs is finished, and those two are still working through
+  // their steps. Past and future days are uniform already.
+  if (!isPastDate && !isFutureDate) {
+    const inRunOrder = [...jobs].sort((a, b) => a.jobDate.getTime() - b.jobDate.getTime());
+    inRunOrder.forEach((job, i) => {
+      const fromEnd = inRunOrder.length - 1 - i;
+      if (fromEnd === 1) {
+        job.steps = { fetch_pms: 'completed', api_call: 'completed', ai_analysis_and_call: 'in_progress', save_pms: 'pending' };
+      } else if (fromEnd === 0) {
+        job.steps = { fetch_pms: 'completed', api_call: 'in_progress', ai_analysis_and_call: 'pending', save_pms: 'pending' };
+      } else {
+        job.steps = { ...COMPLETED_STEPS };
+      }
+    });
+  }
+
+  return jobs;
+};
+
+/**
+ * Step states the two queue tabs show. An upcoming job has its patient data
+ * pulled from the PMS and is waiting on verification; a past job is finished.
+ */
+export const DATA_READY_STEPS: Record<JobStepId, JobStepStatus> = {
+  fetch_pms: 'completed',
+  api_call: 'pending',
+  ai_analysis_and_call: 'pending',
+  save_pms: 'pending'
+};
+
+export const COMPLETED_STEPS: Record<JobStepId, JobStepStatus> = {
+  fetch_pms: 'completed',
+  api_call: 'completed',
+  ai_analysis_and_call: 'completed',
+  save_pms: 'completed'
 };
 
 /** Roll the underlying steps of a stage up into a single status. */
@@ -106,7 +137,7 @@ export const getStepStatus = (job: PatientJob, step: JobStep): JobStepStatus => 
   return 'pending';
 };
 
-export type JobStatusKind = 'completed' | 'in_progress' | 'pending';
+export type JobStatusKind = 'completed' | 'in_progress' | 'data_ready' | 'pending';
 
 export const getJobStatusKind = (job: PatientJob): JobStatusKind => {
   const statuses = Object.values(job.steps);
@@ -117,6 +148,7 @@ export const getJobStatusKind = (job: PatientJob): JobStatusKind => {
 
 export const JOB_STATUS_STYLES: Record<JobStatusKind, { text: string; color: string; bg: string }> = {
   completed: { text: 'Completed', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30' },
+  data_ready: { text: 'Data Ready', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-900/30' },
   in_progress: { text: 'In Progress', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
   pending: { text: 'Pending', color: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-100 dark:bg-slate-800' }
 };

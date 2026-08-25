@@ -157,15 +157,15 @@ const payers: Row[] = [
 const payerIdByName = new Map(payers.map((payer) => [payer.name, payer.payerId]));
 
 // Three logins: the InSpline system admin (no clinic), plus a manager and a
-// dental user at the first clinic account. `admin` is a system role and never
-// belongs to an account; `manager` and `dental` are the two clinic roles.
-// Passwords are plaintext here on purpose; mock-db bcrypt-hashes them on load.
+// member at the first clinic account. `admin` is a system role and never
+// belongs to an account; `manager` and `member` are the two clinic roles.
+// The demo signs in through the mock SSO dialog, which matches on email, so
+// these seed rows carry no password at all.
 const users: Row[] = [
   {
     id: "USR-0001",
-    email: "admin01@inspline.com",
-    username: "admin01",
-    password: "Admin@123",
+    email: "admin@inspline.com",
+    username: "admin",
     role: "admin",
     stediMode: "mockup",
     accountId: null,
@@ -173,19 +173,17 @@ const users: Row[] = [
   },
   {
     id: "USR-0002",
-    email: "dental01@inspline.com",
+    email: "dental01@smile.com",
     username: "dental01",
-    password: "Dental@123",
-    role: "dental",
+    role: "member",
     stediMode: "mockup",
     accountId: accounts[0].id,
     providerId: providers[0].id,
   },
   {
     id: "USR-0003",
-    email: "manager01@inspline.com",
+    email: "manager01@smile.com",
     username: "manager01",
-    password: "Manager@123",
     role: "manager",
     stediMode: "mockup",
     accountId: accounts[0].id,
@@ -193,7 +191,7 @@ const users: Row[] = [
   },
 ];
 
-const dentalUserIds = users.filter((user) => user.role === "dental").map((user) => user.id);
+const memberUserIds = users.filter((user) => user.role === "member").map((user) => user.id);
 
 // Provider accounts a clinic manager has linked to a team member, so that
 // member can sign in with Google or Microsoft Teams instead of a password.
@@ -258,7 +256,7 @@ sourcePatients.forEach((source, index) => {
 
   patients.push({
     id: patientId,
-    userId: dentalUserIds[index % dentalUserIds.length],
+    userId: memberUserIds[index % memberUserIds.length],
     active: source.active,
     givenName,
     middleName: middleParts.join(" ") || null,

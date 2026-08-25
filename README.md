@@ -59,17 +59,17 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ### Sample logins
 
-One account per role. Passwords are stored in plaintext in `users.json` and
-bcrypt-hashed during seeding, so `/api/auth/login` still compares hashes.
+One account per role, and none of them has a password. Sign-in goes through the
+mock SSO dialog, which matches the picked account on email alone.
 
-| Email | Password | Role | Clinic |
-| --- | --- | --- | --- |
-| `admin01@inspline.com` | `Admin@123` | admin (system) | — |
-| `manager01@inspline.com` | `Manager@123` | manager | Bright Smile Dental Group |
-| `dental01@inspline.com` | `Dental@123` | dental | Bright Smile Dental Group |
+| Email | Role | Clinic |
+| --- | --- | --- |
+| `admin@inspline.com` | admin (system) | — |
+| `manager01@smile.com` | manager | Bright Smile Dental Group |
+| `dental01@smile.com` | member | Bright Smile Dental Group |
 
 `admin` is the InSpline system administrator: it belongs to no clinic and signs
-in through the admin portal. `manager` and `dental` are the clinic roles and use
+in through the admin portal. `manager` and `member` are the clinic roles and use
 the B2B portal; only a manager may edit the clinic's own details.
 
 All 10 sample patients belong to `dental01`. An admin's own `/api/patients` list

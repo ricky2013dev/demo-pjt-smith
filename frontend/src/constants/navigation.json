@@ -44,29 +44,12 @@
   ],
   "accountMenu": [
     {
-      "label": "Clinic Settings",
+      "label": "Account Settings",
       "icon": "settings",
       "path": "/b2b-agent/account",
       "authOnly": true,
       "subMenu": [
-        {
-          "path": "/b2b-agent/account/clinic",
-          "label": "Clinic Profile"
-        },
-        {
-          "path": "/b2b-agent/account/users",
-          "label": "Team Members"
-        },
-        {
-          "path": "/b2b-agent/account/payment",
-          "label": "Payment Setup",
-          "managerOnly": true
-        },
-        {
-          "path": "/b2b-agent/account/payment-history",
-          "label": "Payment History",
-          "managerOnly": true
-        }
+
       ]
     }
   ],

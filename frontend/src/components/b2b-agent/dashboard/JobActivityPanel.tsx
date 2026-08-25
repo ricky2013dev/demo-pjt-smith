@@ -1,14 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import { TRANSACTION_TYPE_STYLES } from '@/constants/transactionTypes';
-import { JOB_STATUS_STYLES, JOB_STEPS, PatientJob, getJobStatusKind, getPatientName, getStepStatus } from './jobs';
+import { JOB_STATUS_STYLES, JOB_STEPS, JobStatusKind, PatientJob, getJobStatusKind, getPatientName, getStepStatus } from './jobs';
 
 interface JobActivityPanelProps {
   jobs: PatientJob[];
   expandedJobId: string | null;
   onToggleExpand: (jobId: string) => void;
   onGoToDetail: (job: PatientJob) => void;
-  /** Changes the empty state wording when a queue filter hid everything. */
-  isQueueFiltered: boolean;
+  /** Status shown for every row, when the tab dictates it. Defaults to the job's own status. */
+  statusKind?: JobStatusKind;
+  /** Empty state wording for the active tab. */
+  emptyMessage?: string;
 }
 
 /** Mock transaction history for one job, mirroring the AI workflow steps. */
@@ -103,10 +105,10 @@ const getStepLineColor = (status: string) =>
   status === 'completed' ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600';
 
 /**
- * The "Job Activity" tab body: every verification job in the selected period,
+ * The "Verification Queue" body: every verification job in the selected period,
  * expandable into its transaction history.
  */
-const JobActivityPanel: React.FC<JobActivityPanelProps> = ({ jobs, expandedJobId, onToggleExpand, onGoToDetail, isQueueFiltered }) => {
+const JobActivityPanel: React.FC<JobActivityPanelProps> = ({ jobs, expandedJobId, onToggleExpand, onGoToDetail, statusKind, emptyMessage = 'No patients are scheduled for this period.' }) => {
   const expandedRowRef = useRef<HTMLDivElement>(null);
 
   // A job expanded from Today's View may sit below the fold of the scroll area.
@@ -119,16 +121,13 @@ const JobActivityPanel: React.FC<JobActivityPanelProps> = ({ jobs, expandedJobId
     {/* Table Header with Step Labels */}
     <div className="flex gap-3 px-3 py-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
       <div className="w-6"></div>
-      <div style={{ width: '15%' }}>
+      <div style={{ width: '20%' }}>
         <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Date & Time</p>
-      </div>
-      <div style={{ width: '10%' }}>
-        <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Duration</p>
       </div>
       <div style={{ width: '15%' }}>
         <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Appointment Date</p>
       </div>
-      <div style={{ width: '15%' }}>
+      <div style={{ width: '20%' }}>
         <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Patient</p>
       </div>
       <div style={{ width: '35%' }}>
@@ -148,10 +147,7 @@ const JobActivityPanel: React.FC<JobActivityPanelProps> = ({ jobs, expandedJobId
     {/* Table Rows */}
     <div className="divide-y divide-slate-100 dark:divide-slate-700 max-h-[420px] overflow-y-auto">
       {jobs.map((job) => {
-        const jobStatus = JOB_STATUS_STYLES[getJobStatusKind(job)];
-        const [startHour, startMin] = job.startTime.split(':');
-        const [endHour, endMin] = job.endTime.split(':');
-        const durationMin = (parseInt(endHour) * 60 + parseInt(endMin)) - (parseInt(startHour) * 60 + parseInt(startMin));
+        const jobStatus = JOB_STATUS_STYLES[statusKind ?? getJobStatusKind(job)];
         const isExpanded = expandedJobId === job.id;
 
         return (
@@ -169,16 +165,11 @@ const JobActivityPanel: React.FC<JobActivityPanelProps> = ({ jobs, expandedJobId
               </div>
 
               {/* Date & Time */}
-              <div style={{ width: '15%' }}>
+              <div style={{ width: '20%' }}>
                 <div className="flex flex-col">
                   <p className="text-sm text-slate-600 dark:text-slate-400">{job.jobDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                   <p className="text-xs text-slate-900 dark:text-white font-medium">{job.startTime} - {job.endTime}</p>
                 </div>
-              </div>
-
-              {/* Duration */}
-              <div style={{ width: '10%' }}>
-                <p className="text-xs text-slate-600 dark:text-slate-400">{durationMin}m</p>
               </div>
 
               {/* Appointment Date */}
@@ -192,7 +183,7 @@ const JobActivityPanel: React.FC<JobActivityPanelProps> = ({ jobs, expandedJobId
               </div>
 
               {/* Patient Name */}
-              <div style={{ width: '15%' }}>
+              <div style={{ width: '20%' }}>
                 <p className="font-medium text-slate-900 dark:text-white text-sm truncate">{getPatientName(job.patient)}</p>
               </div>
 
@@ -336,7 +327,7 @@ const JobActivityPanel: React.FC<JobActivityPanelProps> = ({ jobs, expandedJobId
           </div>
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">No jobs to show</h3>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            {isQueueFiltered ? 'No jobs are sitting in this queue for the selected period.' : 'No patients are scheduled for this period.'}
+            {emptyMessage}
           </p>
         </div>
       )}

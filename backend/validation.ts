@@ -173,17 +173,17 @@ export const updatePatientSchema = z.object({
  * User roles.
  *
  * `admin` is the InSpline system administrator: it manages users and system
- * data from the admin portal and belongs to no clinic. `manager` and `dental`
+ * data from the admin portal and belongs to no clinic. `manager` and `member`
  * are the clinic roles and always sit under an account; only a manager may
  * edit the clinic's own details.
  */
-export const USER_ROLES = ['admin', 'manager', 'dental'] as const;
+export const USER_ROLES = ['admin', 'manager', 'member'] as const;
 export type UserRole = typeof USER_ROLES[number];
 
 /** The roles that belong to a clinic account. */
-export const CLINIC_ROLES: UserRole[] = ['manager', 'dental'];
+export const CLINIC_ROLES: UserRole[] = ['manager', 'member'];
 
-export const isClinicRole = (role: unknown): role is 'manager' | 'dental' =>
+export const isClinicRole = (role: unknown): role is 'manager' | 'member' =>
   CLINIC_ROLES.includes(role as UserRole);
 
 // Account (clinic) update schema
@@ -308,8 +308,8 @@ export const updateTeamMemberSchema = z.object({
     (val) => val === undefined || z.string().email().safeParse(val).success,
     { message: 'Email address is not valid' }
   ),
-  role: z.enum(['manager', 'dental'], {
-    errorMap: () => ({ message: 'Role must be manager or dental' }),
+  role: z.enum(['manager', 'member'], {
+    errorMap: () => ({ message: 'Role must be manager or member' }),
   }).optional(),
 });
 

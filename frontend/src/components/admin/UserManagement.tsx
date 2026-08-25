@@ -26,14 +26,14 @@ interface Account {
 }
 
 /** Clinic roles sit under an account; `admin` is the InSpline system administrator. */
-const isClinicRole = (role: string) => role === 'manager' || role === 'dental';
+const isClinicRole = (role: string) => role === 'manager' || role === 'member';
 
 /** A blank create form; also what the modals reset to. */
 const EMPTY_FORM = {
   email: '',
   username: '',
   password: '',
-  role: 'dental',
+  role: 'member',
   stediMode: 'mockup',
   accountId: '',
   providerId: '',
@@ -434,7 +434,7 @@ const UserManagement: React.FC = () => {
                   })}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
                 >
-                  <option value="dental">Dental (clinic)</option>
+                  <option value="member">Member (clinic)</option>
                   <option value="manager">Manager (clinic)</option>
                   <option value="admin">System Admin</option>
                 </select>
@@ -471,7 +471,7 @@ const UserManagement: React.FC = () => {
                 </select>
                 <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                   {isClinicRole(formData.role)
-                    ? 'Manager and dental users belong to one clinic.'
+                    ? 'Manager and member users belong to one clinic.'
                     : 'System admins are not part of a clinic.'}
                 </p>
               </div>
@@ -548,7 +548,7 @@ const UserManagement: React.FC = () => {
                   })}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
                 >
-                  <option value="dental">Dental (clinic)</option>
+                  <option value="member">Member (clinic)</option>
                   <option value="manager">Manager (clinic)</option>
                   <option value="admin">System Admin</option>
                 </select>
@@ -585,7 +585,7 @@ const UserManagement: React.FC = () => {
                 </select>
                 <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                   {isClinicRole(formData.role)
-                    ? 'Manager and dental users belong to one clinic.'
+                    ? 'Manager and member users belong to one clinic.'
                     : 'System admins are not part of a clinic.'}
                 </p>
               </div>

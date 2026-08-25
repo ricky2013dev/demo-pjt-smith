@@ -121,6 +121,13 @@ export async function registerRoutes(
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
+      // Demo and SSO-only accounts carry no password hash; they can only
+      // sign in through /api/auth/sso/mock.
+      if (!user.password) {
+        logAuth('AUTH_LOGIN_FAILURE', email, false, req, 'Account has no password; sign-in is identity-provider only');
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         // HIPAA Audit: Log failed login attempt
@@ -209,7 +216,7 @@ export async function registerRoutes(
    *               email:
    *                 type: string
    *                 format: email
-   *                 example: dental01@inspline.com
+   *                 example: dental01@smile.com
    *               provider:
    *                 type: string
    *                 enum: [google, microsoft]
@@ -1203,7 +1210,7 @@ export async function registerRoutes(
   });
 
   /**
-   * Checks a role/account pairing: clinic roles (`manager`, `dental`) need an
+   * Checks a role/account pairing: clinic roles (`manager`, `member`) need an
    * existing account, the system `admin` role must not carry one. Returns an
    * error message, or null when the pairing is valid.
    */
@@ -1215,7 +1222,7 @@ export async function registerRoutes(
     if (!isClinicRole(role)) return null;
 
     if (!accountId) {
-      return "A clinic account is required for manager and dental users";
+      return "A clinic account is required for manager and member users";
     }
 
     const account = await storage.getAccountById(accountId);

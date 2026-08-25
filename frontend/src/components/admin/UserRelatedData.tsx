@@ -157,7 +157,7 @@ const UserRelatedData: React.FC = () => {
       const response = await fetch('/api/users', { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch users');
       const data = await response.json();
-      setUsers(data.users.filter((u: User) => u.role === 'dental'));
+      setUsers(data.users.filter((u: User) => u.role === 'member'));
       setError('');
     } catch {
       setError('Failed to load users');

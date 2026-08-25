@@ -3,7 +3,6 @@ import {
   Patient,
   Appointment,
   Insurance,
-  Treatment,
   TabType,
   TAB_TYPES,
   InsuranceSubTabType,
@@ -1248,43 +1247,6 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 }
               }}
             />
-          </TabContent>
-        )}
-
-        {/* Tab Content - Treatment History */}
-        {activeTab === TAB_TYPES.TREATMENT_HISTORY && (
-          <TabContent className="space-y-4">
-            {(patient as any).treatments &&
-              (patient as any).treatments.length > 0 ? (
-              (patient as any).treatments.map(
-                (treatment: Treatment, index: number) => (
-                  <div
-                    key={index}
-                    className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="font-semibold text-slate-900 dark:text-white">
-                          {treatment.name}
-                        </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
-                          {treatment.date}
-                        </p>
-                      </div>
-                      <p className="font-semibold text-primary">
-                        {treatment.cost}
-                      </p>
-                    </div>
-                  </div>
-                )
-              )
-            ) : (
-              <div className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-12 text-center">
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  No treatment history available
-                </p>
-              </div>
-            )}
           </TabContent>
         )}
 

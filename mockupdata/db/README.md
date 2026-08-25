@@ -44,21 +44,21 @@ rows. Column names may be written in either JS (`stediMode`) or SQL
 
 ## Sample logins
 
-Passwords are stored here in plaintext for convenience; the loader bcrypt-hashes
-them on the way in, so `/api/auth/login` still compares hashes.
+These users carry no password. Sign-in is the mock SSO dialog, which matches on
+email alone, so there is nothing to type and nothing to hash.
 
-One login per role: the system administrator, plus a manager and a dental user
-at the first clinic account.
+One login per role: the system administrator, plus a manager and a member at the
+first clinic account.
 
-| Email | Password | Role | Clinic | Patients |
-| --- | --- | --- | --- | --- |
-| `admin01@inspline.com` | `Admin@123` | admin (system) | — | — |
-| `manager01@inspline.com` | `Manager@123` | manager | Bright Smile Dental Group (`ACC-0001`) | — |
-| `dental01@inspline.com` | `Dental@123` | dental | Bright Smile Dental Group (`ACC-0001`) | all 10 (P0000001–P0000010) |
+| Email | Role | Clinic | Patients |
+| --- | --- | --- | --- |
+| `admin@inspline.com` | admin (system) | — | — |
+| `manager01@smile.com` | manager | Bright Smile Dental Group (`ACC-0001`) | — |
+| `dental01@smile.com` | member | Bright Smile Dental Group (`ACC-0001`) | all 10 (P0000001–P0000010) |
 
 Only `admin` may sign in through the admin entry point, and it is the only role
-without an `accountId`; `manager` and `dental` land on the clinic workspace.
-Patients belong to the dental users, so an admin's own `/api/patients` list is
+without an `accountId`; `manager` and `member` land on the clinic workspace.
+Patients belong to the member users, so an admin's own `/api/patients` list is
 empty — admins read any user's patients through
 `/api/admin/users/:userId/patients`.
 

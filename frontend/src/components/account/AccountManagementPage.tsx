@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
 import Header from '@/components/Header';
 import SideNav from '@/components/b2b-agent/SideNav';
 import Breadcrumb from '@/components/b2b-agent/Breadcrumb';
@@ -13,28 +13,36 @@ import PaymentHistoryPanel from './PaymentHistoryPanel';
 import type { Account, AccountPayment, AccountPaymentMethod, AccountUser } from './types';
 
 /** Which sub-page of Account Management is open. */
-type AccountSection = 'clinic' | 'users' | 'payment' | 'payment-history';
+type AccountSection = 'clinic' | 'users' | 'payment';
+
+/** The two halves of Payment Settings, shown as tabs on the one page. */
+type PaymentTab = 'setup' | 'history';
 
 const CLINIC_PATH = '/b2b-agent/account/clinic';
+const PAYMENT_PATH = '/b2b-agent/account/payment';
 
 /** Sub-page headings, so the title and the nav label always agree. */
 const SECTION_HEADINGS: Record<AccountSection, { title: string; description: string }> = {
   clinic: { title: 'Clinic Profile', description: 'Clinic details used on insurance verifications.' },
   users: { title: 'Team Members', description: 'Everyone who signs in under this clinic account.' },
-  payment: { title: 'Payment Setup', description: 'How this clinic pays for InSpline.' },
-  'payment-history': { title: 'Payment History', description: 'Invoices billed to this clinic.' },
+  payment: { title: 'Payment Settings', description: 'How this clinic pays for InSpline, and what it has been billed.' },
 };
 
 /** The sub-page a path opens. Unknown paths land on the clinic form. */
 const sectionForPath = (path: string): AccountSection => {
   if (path.endsWith('/users')) return 'users';
-  if (path.endsWith('/payment-history')) return 'payment-history';
   if (path.endsWith('/payment')) return 'payment';
   return 'clinic';
 };
 
+const PAYMENT_TABS: { id: PaymentTab; label: string; icon: string }[] = [
+  { id: 'setup', label: 'Payment Setup', icon: 'credit_card' },
+  { id: 'history', label: 'Payment History', icon: 'receipt_long' },
+];
+
 const AccountManagementPage: React.FC = () => {
   const [location, navigate] = useLocation();
+  const search = useSearch();
   const { toast } = useToast();
   const { user } = useCurrentUser();
 
@@ -49,14 +57,21 @@ const AccountManagementPage: React.FC = () => {
 
   const path = location.split('?')[0];
   const section: AccountSection = sectionForPath(path);
-  const isBillingSection = section === 'payment' || section === 'payment-history';
+  const isBillingSection = section === 'payment';
+  // The open payment tab rides in the URL, so an invoice link can be shared.
+  const paymentTab: PaymentTab =
+    new URLSearchParams(search).get('tab') === 'history' ? 'history' : 'setup';
 
   // Clinic details belong to the manager; dental users read them.
   const isManager = user?.role === 'manager';
 
   // The section landing page is the clinic form; keep the URL honest about it.
+  // Payment History used to be its own page, so old links land on its tab.
   useEffect(() => {
     if (path === '/b2b-agent/account') navigate(CLINIC_PATH, { replace: true });
+    if (path === '/b2b-agent/account/payment-history') {
+      navigate(`${PAYMENT_PATH}?tab=history`, { replace: true });
+    }
   }, [path, navigate]);
 
   const loadAccount = useCallback(async () => {
@@ -228,17 +243,42 @@ const AccountManagementPage: React.FC = () => {
 
     if (section === 'payment') {
       return (
-        <PaymentSetupForm
-          paymentMethod={paymentMethod}
-          onSave={handleSavePayment}
-          fieldErrors={paymentFieldErrors}
-          canEdit={isManager}
-        />
-      );
-    }
+        <div className="space-y-4">
+          <div className="border-b border-slate-200 dark:border-slate-700">
+            <nav className="-mb-px flex space-x-8" aria-label="Payment settings">
+              {PAYMENT_TABS.map((tab) => {
+                const isActive = paymentTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => navigate(`${PAYMENT_PATH}?tab=${tab.id}`, { replace: true })}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`${
+                      isActive
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300'
+                    } whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                  >
+                    <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
 
-    if (section === 'payment-history') {
-      return <PaymentHistoryPanel account={account} payments={payments} paymentMethod={paymentMethod} />;
+          {paymentTab === 'history' ? (
+            <PaymentHistoryPanel account={account} payments={payments} paymentMethod={paymentMethod} />
+          ) : (
+            <PaymentSetupForm
+              paymentMethod={paymentMethod}
+              onSave={handleSavePayment}
+              fieldErrors={paymentFieldErrors}
+              canEdit={isManager}
+            />
+          )}
+        </div>
+      );
     }
 
     return (

@@ -214,7 +214,6 @@ export const TAB_TYPES = {
   INSURANCE_INFO: 'INSURANCE_INFO',
   INSURANCE: 'INSURANCE',
   APPOINTMENTS: 'APPOINTMENTS',
-  TREATMENT_HISTORY: 'TREATMENT_HISTORY',
 } as const;
 
 export type TabType = typeof TAB_TYPES[keyof typeof TAB_TYPES];
@@ -226,7 +225,6 @@ export const TAB_LABELS: Record<TabType, string> = {
   [TAB_TYPES.INSURANCE]: 'Insurance - Coverage',
   [TAB_TYPES.AI_CALL_HISTORY]: 'Smart AI Transaction History',
   [TAB_TYPES.APPOINTMENTS]: 'Appointments',
-  [TAB_TYPES.TREATMENT_HISTORY]: 'Treatment History',
 };
 
 // Insurance sub-tab type constants

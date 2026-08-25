@@ -5,117 +5,103 @@ import Header from '@/components/Header';
 import SideNav from './SideNav';
 import Breadcrumb from './Breadcrumb';
 import patientsData from '@mockupdata/patients.json';
-import TodaysViewPanel from './dashboard/TodaysViewPanel';
-import ProcessingQueuesPanel from './dashboard/ProcessingQueuesPanel';
+import DashboardCard from './dashboard/DashboardCard';
+import DailySchedulePanel from './dashboard/DailySchedulePanel';
 import ActionRequiredPanel from './dashboard/ActionRequiredPanel';
 import JobActivityPanel from './dashboard/JobActivityPanel';
 import { SEVERITY_ORDER, SEVERITY_STYLES, buildActionItems } from './dashboard/alerts';
-import { JOB_STEPS, PatientJob, generateJobsForDate, getJobStatusKind, getStepStatus } from './dashboard/jobs';
+import { COMPLETED_STEPS, DATA_READY_STEPS, PatientJob, generateJobsForDate } from './dashboard/jobs';
 
 interface DailyJobDashboardProps {
   patients?: Patient[];
   onDetailClick?: (patientId: string) => void;
 }
 
-type ViewMode = 'day' | 'week' | 'month';
+/** The queue splits on the clock: work still to run, and work already run. */
+type QueueTab = 'next' | 'past';
 
-/** The two work lists share one panel, one at a time. */
-type WorkTab = 'actions' | 'activity';
+/** How far ahead the Next Jobs tab looks, in days. */
+const NEXT_QUEUE_DAYS = 7;
 
-/** A job sits in a queue until that stage completes - the same rule the queue counts use. */
-const isInQueue = (job: PatientJob, queueId: string): boolean => {
-  const step = JOB_STEPS.find(candidate => candidate.id === queueId);
-  return step ? getStepStatus(job, step) !== 'completed' : true;
-};
+/** How far back the Past Jobs tab looks, in days. */
+const PAST_QUEUE_DAYS = 7;
+
+/** Row counts the queue can page by. */
+const PAGE_SIZES = [20, 50, 100];
 
 const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patientsPropsOverride, onDetailClick }) => {
   const [, navigate] = useLocation();
   const patients = patientsPropsOverride || (patientsData as Patient[]);
 
-  const [viewMode, setViewMode] = useState<ViewMode>('day');
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
-  const [queueFilter, setQueueFilter] = useState<string | null>(null);
-  const [workTab, setWorkTab] = useState<WorkTab>('actions');
+  const [queueTab, setQueueTab] = useState<QueueTab>('next');
+  const [scheduleDate, setScheduleDate] = useState(new Date());
+  const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
+  const [page, setPage] = useState(1);
 
-  /** The command center panels always report on now, not on the browsed date. */
+  /** Action Required always reports on now, not on any browsed date. */
   const todaysJobs = useMemo(() => generateJobsForDate(new Date(), patients), [patients]);
+
+  /** The schedule panel browses one day at a time. */
+  const scheduleJobs = useMemo(() => generateJobsForDate(scheduleDate, patients), [scheduleDate, patients]);
 
   const actionItems = useMemo(() => buildActionItems(todaysJobs, new Date()), [todaysJobs]);
 
-  // Jobs for the period the activity table is browsing.
+  /** Past Jobs mirrors Next Jobs: the same window, looking back instead. */
   const periodJobs: PatientJob[] = useMemo(() => {
     const jobs: PatientJob[] = [];
 
-    if (viewMode === 'day') {
-      jobs.push(...generateJobsForDate(selectedDate, patients));
-    } else if (viewMode === 'week') {
-      const startOfWeek = new Date(selectedDate);
-      startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
-
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(startOfWeek);
-        date.setDate(startOfWeek.getDate() + i);
-        jobs.push(...generateJobsForDate(date, patients));
-      }
-    } else if (viewMode === 'month') {
-      const year = selectedDate.getFullYear();
-      const month = selectedDate.getMonth();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        jobs.push(...generateJobsForDate(new Date(year, month, day), patients));
-      }
+    for (let dayOffset = PAST_QUEUE_DAYS; dayOffset >= 0; dayOffset--) {
+      const date = new Date();
+      date.setDate(date.getDate() - dayOffset);
+      jobs.push(...generateJobsForDate(date, patients));
     }
 
     // Sort by latest time first
     return jobs.sort((a, b) => b.jobDate.getTime() - a.jobDate.getTime());
-  }, [selectedDate, viewMode, patients]);
+  }, [patients]);
 
-  const filteredJobs = useMemo(
-    () => (queueFilter ? periodJobs.filter(job => isInQueue(job, queueFilter)) : periodJobs),
-    [periodJobs, queueFilter]
+  /**
+   * Next Jobs looks forward from now across the whole upcoming window rather
+   * than the browsed period, so the queue always shows what runs next. Their
+   * patient data is ready and nothing else has run yet.
+   */
+  const nextJobs = useMemo(() => {
+    const now = Date.now();
+    const jobs: PatientJob[] = [];
+
+    for (let dayOffset = 0; dayOffset <= NEXT_QUEUE_DAYS; dayOffset++) {
+      const date = new Date();
+      date.setDate(date.getDate() + dayOffset);
+      generateJobsForDate(date, patients).forEach(job => {
+        if (job.jobDate.getTime() > now) jobs.push({ ...job, steps: DATA_READY_STEPS });
+      });
+    }
+
+    return jobs.sort((a, b) => a.jobDate.getTime() - b.jobDate.getTime());
+  }, [patients]);
+
+  /** Past Jobs is history: everything in the window that has already run. */
+  const pastJobs = useMemo(
+    () => periodJobs
+      .filter(job => job.jobDate.getTime() < Date.now())
+      .map(job => ({ ...job, steps: COMPLETED_STEPS })),
+    [periodJobs]
   );
 
-  const stats = useMemo(() => {
-    let completedJobs = 0;
-    let inProgressJobs = 0;
+  const visibleJobs = queueTab === 'next' ? nextJobs : pastJobs;
 
-    filteredJobs.forEach(job => {
-      const kind = getJobStatusKind(job);
-      if (kind === 'completed') completedJobs++;
-      else if (kind === 'in_progress') inProgressJobs++;
-    });
+  // The queue shows one page at a time; clamping keeps the page valid when the
+  // list shrinks under it (a different tab, a larger page size).
+  const totalPages = Math.max(1, Math.ceil(visibleJobs.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const pagedJobs = visibleJobs.slice(pageStart, pageStart + pageSize);
 
-    const totalJobs = filteredJobs.length;
-    return { totalJobs, completedJobs, inProgressJobs, pendingJobs: totalJobs - completedJobs - inProgressJobs };
-  }, [filteredJobs]);
-
-  // Get display date range
-  const getDateRange = () => {
-    if (viewMode === 'day') {
-      return selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    } else if (viewMode === 'week') {
-      const startOfWeek = new Date(selectedDate);
-      startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-      return `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-    } else {
-      return selectedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-    }
-  };
-
-  const shiftPeriod = (direction: 1 | -1) => {
-    const newDate = new Date(selectedDate);
-    if (viewMode === 'day') {
-      newDate.setDate(newDate.getDate() + direction);
-    } else if (viewMode === 'week') {
-      newDate.setDate(newDate.getDate() + direction * 7);
-    } else {
-      newDate.setMonth(newDate.getMonth() + direction);
-    }
-    setSelectedDate(newDate);
+  const shiftScheduleDay = (direction: 1 | -1) => {
+    const newDate = new Date(scheduleDate);
+    newDate.setDate(newDate.getDate() + direction);
+    setScheduleDate(newDate);
   };
 
   const handleLogout = async () => {
@@ -137,35 +123,18 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
   // The dashboard is transaction-oriented, so open that tab rather than Basic Info
   const handleGoToDetail = (job: PatientJob) => openPatient(job.patient.id, TAB_TYPES.AI_CALL_HISTORY);
 
-  /** Jump the activity tab to a job picked from a command center panel. */
-  const handleFocusJob = (job: PatientJob) => {
-    setViewMode('day');
-    setSelectedDate(job.jobDate);
-    setQueueFilter(null);
-    setExpandedJobId(job.id);
-    setWorkTab('activity');
-  };
-
-  /** Selecting a queue filters the activity tab, so switch to it as well. */
-  const handleQueueSelect = (queueId: string | null) => {
-    setQueueFilter(queueId);
-    if (queueId) setWorkTab('activity');
-  };
-
   const toggleJobExpansion = (jobId: string) => {
     setExpandedJobId(expandedJobId === jobId ? null : jobId);
   };
 
-  const activeQueueLabel = JOB_STEPS.find(step => step.id === queueFilter)?.shortLabel;
+  const queueTabs: { id: QueueTab; label: string; icon: string; count: number }[] = [
+    { id: 'next', label: 'Next Jobs', icon: 'pending_actions', count: nextJobs.length },
+    { id: 'past', label: 'Past Jobs', icon: 'history', count: pastJobs.length }
+  ];
 
   const severityCounts = SEVERITY_ORDER
     .map(severity => ({ severity, count: actionItems.filter(item => item.severity === severity).length }))
     .filter(entry => entry.count > 0);
-
-  const tabs: { id: WorkTab; label: string; icon: string; count: number }[] = [
-    { id: 'actions', label: 'Action Required', icon: 'notification_important', count: actionItems.length },
-    { id: 'activity', label: 'Job Activity', icon: 'list_alt', count: filteredJobs.length }
-  ];
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden font-sans">
@@ -189,52 +158,22 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Today's AI insurance verification at a glance</p>
             </div>
 
-            {/* Row 1: Today's View + Processing Queues */}
+            {/* Row 1: Daily schedule + Action Required */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              <TodaysViewPanel jobs={todaysJobs} onJobClick={handleFocusJob} />
-              <ProcessingQueuesPanel
-                jobs={todaysJobs}
-                activeQueueId={queueFilter}
-                onQueueSelect={handleQueueSelect}
+              <DailySchedulePanel
+                jobs={scheduleJobs}
+                date={scheduleDate}
+                onShiftDay={shiftScheduleDay}
+                onToday={() => setScheduleDate(new Date())}
+                onJobClick={handleGoToDetail}
               />
-            </div>
 
-            {/* Row 2: Action Required / Job Activity, tabbed so neither needs scrolling to reach */}
-            <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-              <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-2 border-b border-slate-200 dark:border-slate-700">
-                {/* Tabs */}
-                <div className="flex items-end gap-1" role="tablist">
-                  {tabs.map(tab => {
-                    const isActive = workTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        role="tab"
-                        aria-selected={isActive}
-                        onClick={() => setWorkTab(tab.id)}
-                        className={`flex items-center gap-2 px-4 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors ${isActive
-                          ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                          : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                          }`}
-                      >
-                        <span className="material-symbols-outlined text-lg">{tab.icon}</span>
-                        {tab.label}
-                        <span className={`inline-flex items-center justify-center min-w-[20px] px-1.5 py-0.5 rounded-full text-[11px] font-bold ${isActive
-                          ? tab.id === 'actions' && tab.count > 0
-                            ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400'
-                            : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                          : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                          }`}>
-                          {tab.count}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Controls for the active tab */}
-                {workTab === 'actions' ? (
-                  <div className="flex items-center gap-2 pb-2">
+              <DashboardCard
+                title="Action Required"
+                icon="notification_important"
+                subtitle="Jobs the AI cannot finish on its own"
+                headerRight={
+                  <div className="flex items-center gap-2 shrink-0">
                     {severityCounts.map(entry => (
                       <span
                         key={entry.severity}
@@ -245,75 +184,105 @@ const DailyJobDashboard: React.FC<DailyJobDashboardProps> = ({ patients: patient
                       </span>
                     ))}
                   </div>
-                ) : (
-                  <div className="flex items-center gap-4 pb-2">
-                    <div className="hidden xl:flex items-center gap-3 text-xs font-medium">
-                      <span className="text-green-600 dark:text-green-400">{stats.completedJobs} done</span>
-                      <span className="text-blue-600 dark:text-blue-400">{stats.inProgressJobs} running</span>
-                      <span className="text-slate-500 dark:text-slate-400">{stats.pendingJobs} pending</span>
-                    </div>
+                }
+              >
+                <ActionRequiredPanel items={actionItems} onResolve={openPatient} />
+              </DashboardCard>
+            </div>
 
-                    {/* Period navigation */}
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => shiftPeriod(-1)}
-                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-600 dark:text-slate-400"
-                        title="Previous"
-                      >
-                        <span className="material-symbols-outlined text-lg">chevron_left</span>
-                      </button>
-                      <button
-                        onClick={() => setSelectedDate(new Date())}
-                        className="px-3 py-1.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
-                      >
-                        Today
-                      </button>
-                      <button
-                        onClick={() => shiftPeriod(1)}
-                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-600 dark:text-slate-400"
-                        title="Next"
-                      >
-                        <span className="material-symbols-outlined text-lg">chevron_right</span>
-                      </button>
-                    </div>
-
-                    {/* View Mode Buttons */}
-                    <div className="flex items-center gap-1.5">
-                      {(['day', 'week', 'month'] as ViewMode[]).map(mode => (
-                        <button
-                          key={mode}
-                          onClick={() => setViewMode(mode)}
-                          className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors capitalize ${viewMode === mode
-                            ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                            : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                            }`}
-                        >
-                          {mode}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+            {/* Row 2: Verification Queue */}
+            <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-200 dark:border-slate-700">
+                <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-xl">list_alt</span>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Verification Queue</h2>
               </div>
 
-              {/* Sub-heading for the active tab */}
+              <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-2 border-b border-slate-200 dark:border-slate-700">
+                {/* Tabs */}
+                <div className="flex items-end gap-1" role="tablist">
+                  {queueTabs.map(tab => {
+                    const isActive = queueTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        role="tab"
+                        aria-selected={isActive}
+                        onClick={() => { setQueueTab(tab.id); setPage(1); }}
+                        className={`flex items-center gap-2 px-4 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors ${isActive
+                          ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                          : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                          }`}
+                      >
+                        <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+                        {tab.label}
+                        <span className={`inline-flex items-center justify-center min-w-[20px] px-1.5 py-0.5 rounded-full text-[11px] font-bold ${isActive
+                          ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                          }`}>
+                          {tab.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center gap-4 pb-2">
+
+                  {/* Rows per page + page navigation */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-slate-500 dark:text-slate-400">Rows</label>
+                    <select
+                      value={pageSize}
+                      onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
+                      className="px-2 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                    >
+                      {PAGE_SIZES.map(size => (
+                        <option key={size} value={size}>{size}</option>
+                      ))}
+                    </select>
+
+                    <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400 px-1">
+                      {visibleJobs.length === 0
+                        ? '0 of 0'
+                        : `${pageStart + 1}-${Math.min(pageStart + pageSize, visibleJobs.length)} of ${visibleJobs.length}`}
+                    </span>
+
+                    <button
+                      onClick={() => setPage(currentPage - 1)}
+                      disabled={currentPage <= 1}
+                      title="Previous page"
+                      className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+                    >
+                      <span className="material-symbols-outlined text-lg">chevron_left</span>
+                    </button>
+                    <button
+                      onClick={() => setPage(currentPage + 1)}
+                      disabled={currentPage >= totalPages}
+                      title="Next page"
+                      className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+                    >
+                      <span className="material-symbols-outlined text-lg">chevron_right</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <p className="px-5 py-2 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700">
-                {workTab === 'actions'
-                  ? 'Jobs the AI cannot finish on its own'
-                  : `${getDateRange()}${activeQueueLabel ? ` · filtered to ${activeQueueLabel}` : ''}`}
+                {queueTab === 'next'
+                  ? `Next ${NEXT_QUEUE_DAYS} days · ${visibleJobs.length} scheduled, patient data ready`
+                  : `Past ${PAST_QUEUE_DAYS} days · ${visibleJobs.length} verified`}
               </p>
 
-              {workTab === 'actions' ? (
-                <ActionRequiredPanel items={actionItems} onResolve={openPatient} />
-              ) : (
-                <JobActivityPanel
-                  jobs={filteredJobs}
-                  expandedJobId={expandedJobId}
-                  onToggleExpand={toggleJobExpansion}
-                  onGoToDetail={handleGoToDetail}
-                  isQueueFiltered={queueFilter !== null}
-                />
-              )}
+              <JobActivityPanel
+                jobs={pagedJobs}
+                expandedJobId={expandedJobId}
+                onToggleExpand={toggleJobExpansion}
+                onGoToDetail={handleGoToDetail}
+                statusKind={queueTab === 'next' ? 'data_ready' : 'completed'}
+                emptyMessage={queueTab === 'next'
+                  ? 'No verifications are waiting to run in this period.'
+                  : 'No verifications have run in this period yet.'}
+              />
             </section>
           </div>
         </div>

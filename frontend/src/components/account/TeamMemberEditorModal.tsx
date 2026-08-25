@@ -29,7 +29,7 @@ const PROVIDERS: {
 ];
 
 const ROLE_OPTIONS = [
-  { value: 'dental', label: 'Dental — works the verification queue' },
+  { value: 'member', label: 'Member — works the verification queue' },
   { value: 'manager', label: 'Manager — maintains the clinic and its team' },
 ];
 

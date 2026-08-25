@@ -21,7 +21,7 @@ interface AccountUsersPanelProps {
 /** Clinic roles. The system admin belongs to no account, so it never shows up here. */
 const ROLE_STYLES: Record<string, string> = {
   manager: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
-  dental: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+  member: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
 };
 
 const roleClassName = (role: string) =>
@@ -157,7 +157,7 @@ const AccountUsersPanel: React.FC<AccountUsersPanelProps> = ({
       <p className="px-5 py-3 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-400 dark:text-slate-500">
         {canEdit
           ? 'Managers maintain the clinic’s details and their team’s. Adding and removing users is done by the InSpline system administrator.'
-          : 'Managers maintain the clinic’s details; dental users work the verification queue. Adding and removing users is done by the InSpline system administrator.'}
+          : 'Managers maintain the clinic’s details; members work the verification queue. Adding and removing users is done by the InSpline system administrator.'}
       </p>
 
       {canEdit && editing && onSaveMember && onLinkSso && onUnlinkSso && (

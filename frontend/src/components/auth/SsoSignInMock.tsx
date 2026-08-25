@@ -22,18 +22,18 @@ export interface MockSsoAccount {
 }
 
 /**
- * Demo B2B agent accounts, mirroring the dental users in the mockup database.
+ * Demo B2B agent accounts, mirroring the clinic users in the mockup database.
  * The dataset carries one account per role, so the chooser offers just the one.
  */
 export const MOCK_DENTAL_ACCOUNTS: MockSsoAccount[] = [
     {
-        email: 'manager01@inspline.com',
+        email: 'manager01@smile.com',
         name: 'Clinic Manager 01',
         organization: 'Bright Smile Dental Group',
         avatarColor: 'bg-blue-600',
     },
     {
-        email: 'dental01@inspline.com',
+        email: 'dental01@smile.com',
         name: 'Dental Office 01',
         organization: 'Bright Smile Dental Group',
         avatarColor: 'bg-orange-600',
@@ -43,8 +43,8 @@ export const MOCK_DENTAL_ACCOUNTS: MockSsoAccount[] = [
 /** Demo system-admin accounts. System admins belong to no clinic. */
 export const MOCK_ADMIN_ACCOUNTS: MockSsoAccount[] = [
     {
-        email: 'admin01@inspline.com',
-        name: 'System Admin 01',
+        email: 'admin@inspline.com',
+        name: 'System Admin',
         organization: 'InSpline AI — System Administration',
         avatarColor: 'bg-slate-700',
     },

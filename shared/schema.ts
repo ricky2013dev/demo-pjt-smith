@@ -121,13 +121,17 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  /**
+   * Null for accounts that only ever sign in through an identity provider,
+   * including every seeded demo user.
+   */
+  password: text("password"),
   /**
    * `admin` is the InSpline system administrator and belongs to no clinic;
-   * `manager` and `dental` are the two clinic roles, and both must have an
+   * `manager` and `member` are the two clinic roles, and both must have an
    * `accountId`. Only a manager may edit the clinic's account details.
    */
-  role: text("role").notNull().default("dental"),
+  role: text("role").notNull().default("member"),
   stediMode: text("stedi_mode").notNull().default("mockup"),
   /** Clinic the user signs in under. */
   accountId: varchar("account_id").references(() => accounts.id),

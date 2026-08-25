@@ -198,7 +198,7 @@ blocks or fails the reveal; a failed report goes to the browser console.
 ```jsonc
 // PHI read without a server decrypt
 {"timestamp":"…","eventType":"PHI_ACCESS","patientId":"1001","field":"subscriberSsn",
- "action":"reveal","details":{"source":"local"},"userEmail":"dental01@inspline.com",
+ "action":"reveal","details":{"source":"local"},"userEmail":"dental01@smile.com",
  "sessionId":"…","ipAddress":"127.0.0.1","success":true}
 ```
 
