@@ -33,11 +33,6 @@
         {
           "tab": "AI_CALL_HISTORY",
           "label": "Transaction History"
-        },
-        {
-          "tab": "TREATMENT_HISTORY",
-          "label": "Treatment History",
-          "managerOnly": true
         }
       ]
     }
